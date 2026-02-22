@@ -2,6 +2,9 @@
 data/
 output/
 
+# GitHub Pages site is tracked
+!docs/
+
 # Python
 __pycache__/
 *.pyc
