@@ -316,6 +316,65 @@ table.zone-table tbody tr:hover {
   font-weight: 600;
 }
 
+/* Pnode Drilldown */
+.pnode-zone-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 1rem;
+}
+.pnode-zone-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.pnode-zone-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+.pnode-zone-count {
+  font-size: 0.82rem;
+  color: #7f8c8d;
+}
+.pnode-tier-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.tier-badge {
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+table.pnode-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+table.pnode-table th {
+  background: #5d6d7e;
+  color: #fff;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+table.pnode-table td {
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid #ecf0f1;
+}
+table.pnode-table tbody tr:hover {
+  background: #f0f4f8;
+}
+
 /* Footer */
 .footer {
   text-align: center;
@@ -510,6 +569,263 @@ table.zone-table tbody tr:hover {
       <div class="pressure-grid"><div class="pressure-card"><div class="pressure-zone">DOM <span class="cls-badge" style="background:#e74c3c">transmission</span></div><div class="pressure-stats"><span><b>305</b> proposed DCs</span><span><b>925</b> total DCs</span><span><b>43,122</b> MW est. capacity</span><span>T-score: <b>0.742</b></span></div></div><div class="pressure-card"><div class="pressure-zone">COMED <span class="cls-badge" style="background:#9b59b6">both</span></div><div class="pressure-stats"><span><b>13</b> proposed DCs</span><span><b>63</b> total DCs</span><span><b>1,874</b> MW est. capacity</span><span>T-score: <b>0.525</b></span></div></div></div>
     </div>
     
+  </div>
+
+  <!-- Pnode Drilldown -->
+  <div class="section">
+    <h2 class="section-title">Pnode Congestion Hotspots</h2>
+    <p style="font-size:0.85rem;color:#7f8c8d;margin-bottom:1rem;">Top 3 congestion
+    hotspots per constrained zone, ranked by severity score. Full pnode tables with
+    12x24 loadshapes are available in the interactive dashboard.</p>
+    
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">DPL</span>
+            <span class="cls-badge" style="background:#e74c3c">transmission</span>
+            <span class="pnode-zone-count">55 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#e67e22">elevated: 27</span> <span class="tier-badge" style="background:#f1c40f">moderate: 14</span> <span class="tier-badge" style="background:#27ae60">low: 13</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>MARDELA</td><td>0.7539</td><td>$14.70</td><td>$1354.48</td><td>61.8%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
+<tr><td>HEBRON</td><td>0.7339</td><td>$14.74</td><td>$1154.08</td><td>61.8%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>INDIANRI</td><td>0.7167</td><td>$15.15</td><td>$483.28</td><td>61.2%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
+          </table>
+        </div>
+        
+
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">COMED</span>
+            <span class="cls-badge" style="background:#9b59b6">both</span>
+            <span class="pnode-zone-count">92 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 2</span> <span class="tier-badge" style="background:#e67e22">elevated: 11</span> <span class="tier-badge" style="background:#f1c40f">moderate: 79</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>J375</td><td>0.8595</td><td>$15.81</td><td>$678.77</td><td>66.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
+<tr><td>958_HOGR</td><td>0.7896</td><td>$14.64</td><td>$515.57</td><td>62.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
+<tr><td>72 GOOSE</td><td>0.6693</td><td>$12.93</td><td>$382.52</td><td>66.6%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
+          </table>
+        </div>
+        
+
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">DOM</span>
+            <span class="cls-badge" style="background:#e74c3c">transmission</span>
+            <span class="pnode-zone-count">188 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 2</span> <span class="tier-badge" style="background:#e67e22">elevated: 4</span> <span class="tier-badge" style="background:#f1c40f">moderate: 178</span> <span class="tier-badge" style="background:#27ae60">low: 4</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>CELESTIA</td><td>0.8990</td><td>$30.96</td><td>$2161.75</td><td>73.5%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
+<tr><td>HAMILTN</td><td>0.8032</td><td>$19.33</td><td>$1186.59</td><td>65.0%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
+<tr><td>TYSONS</td><td>0.6023</td><td>$15.04</td><td>$469.46</td><td>67.8%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
+          </table>
+        </div>
+        
+
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">AECO</span>
+            <span class="cls-badge" style="background:#e74c3c">transmission</span>
+            <span class="pnode-zone-count">29 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#e67e22">elevated: 11</span> <span class="tier-badge" style="background:#f1c40f">moderate: 8</span> <span class="tier-badge" style="background:#27ae60">low: 9</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>WINSLOW</td><td>0.8000</td><td>$7.34</td><td>$120.83</td><td>59.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
+<tr><td>GLASSBOR</td><td>0.7369</td><td>$7.31</td><td>$120.79</td><td>59.5%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>VINELAND</td><td>0.6958</td><td>$7.22</td><td>$124.86</td><td>59.4%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
+          </table>
+        </div>
+        
+
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">PSEG</span>
+            <span class="cls-badge" style="background:#e74c3c">transmission</span>
+            <span class="pnode-zone-count">83 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#e67e22">elevated: 16</span> <span class="tier-badge" style="background:#f1c40f">moderate: 67</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>SADDLEBR</td><td>0.6571</td><td>$7.40</td><td>$119.57</td><td>63.1%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>MAYWOOD</td><td>0.6409</td><td>$7.34</td><td>$119.45</td><td>63.1%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>HCS</td><td>0.6280</td><td>$7.32</td><td>$119.60</td><td>64.2%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
+          </table>
+        </div>
+        
+
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">JCPL</span>
+            <span class="cls-badge" style="background:#e74c3c">transmission</span>
+            <span class="pnode-zone-count">33 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#e67e22">elevated: 2</span> <span class="tier-badge" style="background:#f1c40f">moderate: 2</span> <span class="tier-badge" style="background:#27ae60">low: 28</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>PEQUESTR</td><td>1.0000</td><td>$8.96</td><td>$257.50</td><td>60.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
+<tr><td>FLANDERS</td><td>0.6662</td><td>$7.78</td><td>$233.66</td><td>60.3%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>MORRISPA</td><td>0.5260</td><td>$7.48</td><td>$256.59</td><td>60.1%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
+          </table>
+        </div>
+        
+
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">PEPCO</span>
+            <span class="cls-badge" style="background:#e74c3c">transmission</span>
+            <span class="pnode-zone-count">14 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#e67e22">elevated: 1</span> <span class="tier-badge" style="background:#f1c40f">moderate: 3</span> <span class="tier-badge" style="background:#27ae60">low: 9</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>DICKERSH</td><td>1.0000</td><td>$11.26</td><td>$457.84</td><td>63.1%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
+<tr><td>BETHESDA</td><td>0.5612</td><td>$9.21</td><td>$327.92</td><td>62.5%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>METZTAP</td><td>0.2744</td><td>$8.02</td><td>$273.95</td><td>62.4%</td><td><span class="tier-badge" style="background:#f1c40f">moderate</span></td></tr></tbody>
+          </table>
+        </div>
+        
+
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">OVEC</span>
+            <span class="cls-badge" style="background:#3498db">generation</span>
+            <span class="pnode-zone-count">2 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#27ae60">low: 1</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>KYGERCRE</td><td>0.8500</td><td>$3.57</td><td>$134.88</td><td>35.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
+<tr><td>CLIFTYCR</td><td>0.1500</td><td>$3.34</td><td>$133.10</td><td>35.4%</td><td><span class="tier-badge" style="background:#27ae60">low</span></td></tr></tbody>
+          </table>
+        </div>
+        
+
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">PPL</span>
+            <span class="cls-badge" style="background:#e74c3c">transmission</span>
+            <span class="pnode-zone-count">41 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#e67e22">elevated: 9</span> <span class="tier-badge" style="background:#f1c40f">moderate: 28</span> <span class="tier-badge" style="background:#27ae60">low: 4</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>LACKAENG</td><td>0.6666</td><td>$12.79</td><td>$129.54</td><td>86.0%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>ELDRED</td><td>0.6625</td><td>$9.55</td><td>$446.00</td><td>74.8%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>LACKAWAN</td><td>0.6214</td><td>$12.20</td><td>$124.72</td><td>85.3%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
+          </table>
+        </div>
+        
+
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">PECO</span>
+            <span class="cls-badge" style="background:#e74c3c">transmission</span>
+            <span class="pnode-zone-count">28 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#e67e22">elevated: 2</span> <span class="tier-badge" style="background:#f1c40f">moderate: 26</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>CONOWING</td><td>0.7189</td><td>$9.55</td><td>$168.47</td><td>57.4%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>DALESVIL</td><td>0.5947</td><td>$8.83</td><td>$139.48</td><td>58.2%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>MUDDYRN</td><td>0.4964</td><td>$7.62</td><td>$300.59</td><td>59.9%</td><td><span class="tier-badge" style="background:#f1c40f">moderate</span></td></tr></tbody>
+          </table>
+        </div>
+        
   </div>
 
   <!-- CTA: View Dashboard -->

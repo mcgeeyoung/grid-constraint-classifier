@@ -29,6 +29,13 @@ CLASSIFICATION_COLORS = {
     "unconstrained": "#2ecc71",
 }
 
+TIER_COLORS = {
+    "critical": "#c0392b",
+    "elevated": "#e67e22",
+    "moderate": "#f1c40f",
+    "low": "#27ae60",
+}
+
 
 def load_json() -> dict:
     path = OUTPUT / "classification_summary.json"
@@ -119,36 +126,87 @@ def build_growth_pressure(data: dict) -> str:
     """
 
 
-def build_pnode_summary(data: dict) -> str:
-    """Build pnode hotspot summary."""
+def build_pnode_drilldown(data: dict) -> str:
+    """Build the pnode drilldown section with per-zone hotspot tables."""
     pnode_drilldown = data.get("pnode_drilldown", {})
     if not pnode_drilldown:
         return ""
 
-    total_pnodes = 0
-    total_critical = 0
-    total_elevated = 0
-    zones_with_critical = []
+    cls_map = {zs["zone"]: zs for zs in data["zone_scores"]}
 
-    for zone, pd in pnode_drilldown.items():
-        total_pnodes += pd.get("total_pnodes", 0)
-        critical = pd.get("tier_distribution", {}).get("critical", 0)
-        elevated = pd.get("tier_distribution", {}).get("elevated", 0)
-        total_critical += critical
-        total_elevated += elevated
-        if critical > 0:
-            zones_with_critical.append(zone)
+    # Sort zones by number of critical+elevated pnodes descending
+    def zone_severity(zone):
+        td = pnode_drilldown[zone].get("tier_distribution", {})
+        return (td.get("critical", 0) * 10 + td.get("elevated", 0),
+                pnode_drilldown[zone].get("total_pnodes", 0))
 
-    return f"""
-    <div class="stat-card">
-      <div class="stat-value">{total_pnodes}</div>
-      <div class="stat-label">Pnodes Analyzed</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">{total_critical}</div>
-      <div class="stat-label">Critical Hotspots</div>
-    </div>
-    """
+    sorted_zones = sorted(pnode_drilldown.keys(), key=zone_severity, reverse=True)
+
+    zone_cards = []
+    for zone in sorted_zones:
+        zd = pnode_drilldown[zone]
+        td = zd.get("tier_distribution", {})
+        hotspots = zd.get("hotspots", [])
+        total = zd.get("total_pnodes", 0)
+        zs = cls_map.get(zone, {})
+        cls = zs.get("classification", "unconstrained")
+        cls_color = CLASSIFICATION_COLORS.get(cls, "#888")
+
+        # Tier distribution badges
+        tier_badges = []
+        for tier in ("critical", "elevated", "moderate", "low"):
+            count = td.get(tier, 0)
+            if count > 0:
+                color = TIER_COLORS[tier]
+                tier_badges.append(
+                    f'<span class="tier-badge" style="background:{color}">'
+                    f'{tier}: {count}</span>'
+                )
+        badges_html = " ".join(tier_badges)
+
+        # Top 3 hotspot rows
+        hotspot_rows = []
+        for hs in hotspots[:3]:
+            tier = hs.get("tier", "low")
+            tier_color = TIER_COLORS.get(tier, "#27ae60")
+            hotspot_rows.append(
+                f"<tr>"
+                f"<td>{html.escape(str(hs.get('pnode_name', '')))}</td>"
+                f"<td>{hs.get('severity_score', 0):.4f}</td>"
+                f"<td>${hs.get('avg_congestion', 0):.2f}</td>"
+                f"<td>${hs.get('max_congestion', 0):.2f}</td>"
+                f"<td>{hs.get('congested_hours_pct', 0):.1%}</td>"
+                f'<td><span class="tier-badge" style="background:{tier_color}">'
+                f'{tier}</span></td>'
+                f"</tr>"
+            )
+        rows_html = "\n".join(hotspot_rows)
+
+        zone_cards.append(f"""
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">{html.escape(zone)}</span>
+            <span class="cls-badge" style="background:{cls_color}">{cls}</span>
+            <span class="pnode-zone-count">{total} pnodes</span>
+          </div>
+          <div class="pnode-tier-row">{badges_html}</div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody>{rows_html}</tbody>
+          </table>
+        </div>
+        """)
+
+    return "\n".join(zone_cards)
 
 
 def build_executive_summary(data: dict) -> str:
@@ -192,6 +250,7 @@ def build_executive_summary(data: dict) -> str:
 
     zone_table_rows = build_zone_table_rows(data)
     growth_pressure = build_growth_pressure(data)
+    pnode_section = build_pnode_drilldown(data)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -511,6 +570,65 @@ table.zone-table tbody tr:hover {{
   font-weight: 600;
 }}
 
+/* Pnode Drilldown */
+.pnode-zone-card {{
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 1rem;
+}}
+.pnode-zone-header {{
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}}
+.pnode-zone-name {{
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2c3e50;
+}}
+.pnode-zone-count {{
+  font-size: 0.82rem;
+  color: #7f8c8d;
+}}
+.pnode-tier-row {{
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}}
+.tier-badge {{
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}}
+table.pnode-table {{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}}
+table.pnode-table th {{
+  background: #5d6d7e;
+  color: #fff;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.78rem;
+}}
+table.pnode-table td {{
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid #ecf0f1;
+}}
+table.pnode-table tbody tr:hover {{
+  background: #f0f4f8;
+}}
+
 /* Footer */
 .footer {{
   text-align: center;
@@ -676,6 +794,15 @@ table.zone-table tbody tr:hover {{
   <div class="section">
     <h2 class="section-title">Growth Pressure Analysis</h2>
     {growth_pressure}
+  </div>
+
+  <!-- Pnode Drilldown -->
+  <div class="section">
+    <h2 class="section-title">Pnode Congestion Hotspots</h2>
+    <p style="font-size:0.85rem;color:#7f8c8d;margin-bottom:1rem;">Top 3 congestion
+    hotspots per constrained zone, ranked by severity score. Full pnode tables with
+    12x24 loadshapes are available in the interactive dashboard.</p>
+    {pnode_section}
   </div>
 
   <!-- CTA: View Dashboard -->
