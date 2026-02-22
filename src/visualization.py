@@ -130,6 +130,7 @@ def create_interactive_map(
     transmission_geojson: Optional[dict] = None,
     pnode_data: Optional[dict] = None,
     zone_boundaries: Optional[dict] = None,
+    pjm_backbone_geojson: Optional[dict] = None,
     output_path: Optional[Path] = None,
 ) -> str:
     """
@@ -328,6 +329,36 @@ def create_interactive_map(
         where_clause="VOLTAGE >= 230",
     ).add_to(m)
 
+    # ── PJM Backbone Transmission Lines (from PJM GIS) ──
+    if pjm_backbone_geojson and pjm_backbone_geojson.get("features"):
+        backbone_layer = folium.FeatureGroup(name="PJM Backbone Lines (345kV+)", show=True)
+
+        def backbone_style(feature):
+            voltage = (feature.get("properties") or {}).get("VOLTAGE", 0) or 0
+            if voltage >= 765:
+                return {"color": "#8b0000", "weight": 4, "opacity": 0.9}
+            if voltage >= 500:
+                return {"color": "#cc0000", "weight": 3, "opacity": 0.85}
+            if voltage >= 345:
+                return {"color": "#e65c00", "weight": 2, "opacity": 0.75}
+            return {"color": "#ff8c00", "weight": 1.5, "opacity": 0.6}
+
+        folium.GeoJson(
+            pjm_backbone_geojson,
+            style_function=backbone_style,
+            tooltip=folium.GeoJsonTooltip(
+                fields=["NAME", "VOLTAGE", "MILES"],
+                aliases=["Line:", "Voltage (kV):", "Miles:"],
+                sticky=True,
+            ),
+        ).add_to(backbone_layer)
+
+        backbone_layer.add_to(m)
+        logger.info(
+            f"Added PJM backbone layer with "
+            f"{len(pjm_backbone_geojson['features'])} lines"
+        )
+
     # ── Pnode congestion markers ──
     if pnode_data:
         coordinates = pnode_data.get("coordinates", {})
@@ -410,9 +441,11 @@ def create_interactive_map(
     <i style="background: #e67e22; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Construction<br>
     <hr style="margin: 4px 0;">
     <b>Transmission Lines</b><br>
-    <i style="background: #cc0000; width: 16px; height: 3px; display: inline-block;"></i> 500 kV+<br>
+    <i style="background: #8b0000; width: 16px; height: 4px; display: inline-block;"></i> 765 kV+<br>
+    <i style="background: #cc0000; width: 16px; height: 3px; display: inline-block;"></i> 500 kV<br>
     <i style="background: #e65c00; width: 16px; height: 3px; display: inline-block;"></i> 345 kV<br>
     <i style="background: #ff8c00; width: 16px; height: 3px; display: inline-block;"></i> 230 kV<br>
+    <span style="font-size: 11px; color: #666;"><i>Thick = PJM Backbone | Thin = HIFLD</i></span><br>
     <hr style="margin: 4px 0;">
     <b>Pnode Severity Tier</b><br>
     <i style="background: #e74c3c; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Critical (&ge;0.75)<br>
