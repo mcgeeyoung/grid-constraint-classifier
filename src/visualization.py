@@ -261,14 +261,65 @@ def create_interactive_map(
     # ── Data center markers ──
     dc_layer = folium.FeatureGroup(name="Data Center Clusters", show=True)
 
-    for dc in data_center_locations:
-        folium.Marker(
-            location=[dc["lat"], dc["lon"]],
-            popup=f"<b>{dc['name']}</b><br>Zone: {dc['zone']}<br>{dc['notes']}",
-            tooltip=dc["name"],
-            icon=folium.Icon(color="darkblue", icon="server", prefix="fa"),
-        ).add_to(dc_layer)
+    dc_status_colors = {
+        "operational": "#27ae60",   # Green
+        "proposed": "#3498db",      # Blue
+        "construction": "#e67e22",  # Orange
+    }
 
+    dc_cluster = plugins.MarkerCluster(
+        options={
+            "maxClusterRadius": 50,
+            "disableClusteringAtZoom": 10,
+        },
+    )
+
+    for dc in data_center_locations:
+        status = dc.get("status", "").lower()
+        color = dc_status_colors.get(status, "#34495e")
+        capacity_mw = dc.get("capacity_mw", 0)
+
+        # Radius scaled by capacity (4-10 range)
+        if capacity_mw > 0:
+            radius = min(4 + (capacity_mw / 75) * 3, 10)
+        else:
+            radius = 5
+
+        # Build popup
+        popup_parts = [f"<b>{dc.get('name', '')}</b>"]
+        popup_parts.append(f"<b>Zone:</b> {dc.get('zone', '')}")
+        if status:
+            popup_parts.append(f"<b>Status:</b> {status.title()}")
+        cap = dc.get("capacity", "")
+        if cap:
+            popup_parts.append(f"<b>Capacity:</b> {cap}")
+        county = dc.get("county", "")
+        state_code = dc.get("state_code", "")
+        if county or state_code:
+            popup_parts.append(f"<b>Location:</b> {county}, {state_code}".rstrip(", "))
+        operator = dc.get("operator", "")
+        if operator:
+            popup_parts.append(f"<b>Operator:</b> {operator}")
+        notes = dc.get("notes", "")
+        if notes and not operator:
+            popup_parts.append(notes)
+        popup_html = "<br>".join(popup_parts)
+
+        tooltip_text = dc.get("name", "Data Center")
+
+        folium.CircleMarker(
+            location=[dc["lat"], dc["lon"]],
+            radius=radius,
+            popup=folium.Popup(popup_html, max_width=300),
+            tooltip=tooltip_text,
+            color=color,
+            fill=True,
+            fill_color=color,
+            fill_opacity=0.7,
+            weight=1,
+        ).add_to(dc_cluster)
+
+    dc_cluster.add_to(dc_layer)
     dc_layer.add_to(m)
 
     # ── Transmission lines (live from HIFLD ArcGIS FeatureServer) ──
@@ -352,7 +403,11 @@ def create_interactive_map(
     <i style="background: #3498db; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Generation<br>
     <i style="background: #9b59b6; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Both<br>
     <i style="background: #2ecc71; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Unconstrained<br>
-    <i style="background: darkblue; width: 12px; height: 12px; display: inline-block;"></i> Data Center<br>
+    <hr style="margin: 4px 0;">
+    <b>Data Centers</b><br>
+    <i style="background: #27ae60; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Operational<br>
+    <i style="background: #3498db; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Proposed<br>
+    <i style="background: #e67e22; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Construction<br>
     <hr style="margin: 4px 0;">
     <b>Transmission Lines</b><br>
     <i style="background: #cc0000; width: 16px; height: 3px; display: inline-block;"></i> 500 kV+<br>

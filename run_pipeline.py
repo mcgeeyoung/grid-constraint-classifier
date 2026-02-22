@@ -36,6 +36,14 @@ from src.data_acquisition import (
     get_data_center_locations,
     geocode_pnodes,
 )
+from src.dc_scraper import (
+    scrape_state_listings,
+    scrape_detail_pages,
+    combine_dc_data,
+    geocode_dc_addresses,
+    build_dc_summary,
+    load_dc_data,
+)
 from src.constraint_classifier import (
     compute_zone_metrics,
     classify_zones,
@@ -77,12 +85,13 @@ def run_pipeline(
     skip_download: bool = False,
     zone_only: bool = True,
     pnode_drilldown: bool = False,
+    dc_scrape: bool = False,
 ):
     """Execute the full pipeline."""
     logger = setup_logging()
     logger.info("=" * 60)
     logger.info("Grid Constraint → DER Mapping Pipeline")
-    logger.info(f"Year: {year} | Skip download: {skip_download} | Zone only: {zone_only} | Pnode drill-down: {pnode_drilldown}")
+    logger.info(f"Year: {year} | Skip download: {skip_download} | Zone only: {zone_only} | Pnode drill-down: {pnode_drilldown} | DC scrape: {dc_scrape}")
     logger.info("=" * 60)
 
     # Check for API key (required for live pulls, optional with --skip-download)
@@ -115,7 +124,49 @@ def run_pipeline(
     logger.info(f"Zone boundaries: {len(zone_boundary_geojson.get('features', []))} polygons")
 
     zone_centroids = get_zone_centroids()
-    dc_locations = get_data_center_locations()
+    dc_locations_static = get_data_center_locations()
+
+    # ── Phase 1.5: Data Center Overlay ──
+    dc_summary = {}
+    if dc_scrape:
+        logger.info("")
+        logger.info("Phase 1.5: Data Center Scrape")
+        dc_listings = scrape_state_listings()
+        dc_details = scrape_detail_pages(dc_listings)
+        dc_records = combine_dc_data(dc_listings, dc_details)
+        dc_coordinates = geocode_dc_addresses(dc_records)
+        dc_summary = build_dc_summary(dc_records)
+        logger.info(f"Data centers: {len(dc_records)} PJM records, {len(dc_coordinates)} geocoded")
+    else:
+        # Try loading cached data
+        dc_records, dc_coordinates = load_dc_data()
+        dc_summary = build_dc_summary(dc_records) if dc_records else {}
+
+    # Build map-format DC locations from scraped data or fall back to static
+    if dc_records and dc_coordinates:
+        dc_locations = []
+        for rec in dc_records:
+            slug = rec.get("slug", "")
+            coord = dc_coordinates.get(slug)
+            if not coord:
+                continue
+            dc_locations.append({
+                "name": rec.get("facility_name", ""),
+                "lat": coord["lat"],
+                "lon": coord["lon"],
+                "zone": rec.get("pjm_zone", ""),
+                "status": rec.get("status", ""),
+                "capacity": rec.get("capacity", ""),
+                "capacity_mw": rec.get("capacity_mw", 0),
+                "county": rec.get("county", ""),
+                "state_code": rec.get("state_code", ""),
+                "operator": rec.get("operator", ""),
+                "notes": f"{rec.get('operator', '')} | {rec.get('capacity', '')}",
+            })
+        logger.info(f"Using {len(dc_locations)} scraped DC locations for map")
+    else:
+        dc_locations = dc_locations_static
+        logger.info(f"Using {len(dc_locations)} static DC locations for map")
 
     # ── Phase 2: Constraint Classification ──
     logger.info("")
@@ -235,6 +286,10 @@ def run_pipeline(
     if pnode_results:
         summary["pnode_drilldown"] = pnode_results
 
+    # Data center summary
+    if dc_summary:
+        summary["data_centers"] = dc_summary
+
     summary_path = OUTPUT_DIR / "classification_summary.json"
     with open(summary_path, "w") as f:
         json.dump(summary, f, indent=2)
@@ -259,6 +314,7 @@ if __name__ == "__main__":
     parser.add_argument("--skip-download", action="store_true", help="Use cached data only")
     parser.add_argument("--zone-only", action="store_true", help="Skip node-level data pulls")
     parser.add_argument("--pnode-drilldown", action="store_true", help="Run pnode congestion hotspot analysis for constrained zones")
+    parser.add_argument("--dc-scrape", action="store_true", help="Scrape data center listings from interconnection.fyi")
 
     args = parser.parse_args()
     run_pipeline(
@@ -266,4 +322,5 @@ if __name__ == "__main__":
         skip_download=args.skip_download,
         zone_only=args.zone_only,
         pnode_drilldown=args.pnode_drilldown,
+        dc_scrape=args.dc_scrape,
     )
