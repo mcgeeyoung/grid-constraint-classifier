@@ -380,6 +380,138 @@ def build_methodology() -> str:
     """
 
 
+def build_dc_section(data: dict) -> str:
+    """Build Data Centers dashboard section with stats, growth pressure, and zone table."""
+    dc = data.get("data_centers", {})
+    if not dc:
+        return ""
+
+    total = dc.get("total_count", 0)
+    total_mw = dc.get("total_estimated_mw", 0)
+    status_totals = dc.get("status_totals", {})
+    by_zone = dc.get("by_zone", {})
+
+    operational = status_totals.get("operational", 0)
+    proposed = status_totals.get("proposed", 0)
+    construction = status_totals.get("construction", 0)
+
+    # Build classification lookup for constraint info
+    cls_map = {}
+    for zs in data.get("zone_scores", []):
+        cls_map[zs["zone"]] = zs["classification"]
+
+    # Stat cards
+    stat_cards = f"""
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-value">{total:,}</div>
+        <div class="stat-label">PJM Data Centers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{total_mw:,.0f} MW</div>
+        <div class="stat-label">Estimated Total Capacity</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{operational:,}</div>
+        <div class="stat-label">Operational</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{proposed:,}</div>
+        <div class="stat-label">Proposed</div>
+      </div>
+    </div>
+    """
+
+    # Growth Pressure: zones that are constrained AND have 5+ proposed DCs
+    constrained_types = {"transmission", "both"}
+    pressure_zones = []
+    for zone, zdata in by_zone.items():
+        zone_cls = cls_map.get(zone, "unconstrained")
+        if zone_cls in constrained_types and zdata.get("proposed", 0) >= 5:
+            pressure_zones.append({
+                "zone": zone,
+                "classification": zone_cls,
+                "proposed": zdata["proposed"],
+                "total": zdata["total"],
+                "estimated_mw": zdata["estimated_mw"],
+            })
+
+    pressure_html = ""
+    if pressure_zones:
+        pressure_items = []
+        for pz in sorted(pressure_zones, key=lambda x: -x["proposed"]):
+            cls_color = CLASSIFICATION_COLORS.get(pz["classification"], "#888")
+            pressure_items.append(
+                f'<li><b>{html.escape(pz["zone"])}</b> '
+                f'<span class="cls-badge" style="background:{cls_color}">{pz["classification"]}</span> '
+                f'&mdash; {pz["proposed"]} proposed, {pz["total"]} total, '
+                f'~{pz["estimated_mw"]:,.0f} MW</li>'
+            )
+        pressure_html = f"""
+        <div class="pressure-callout">
+          <h3>Growth Pressure Zones</h3>
+          <p>These grid-constrained zones have significant proposed data center growth:</p>
+          <ul>{"".join(pressure_items)}</ul>
+        </div>
+        """
+
+    # Zone DC table
+    table_rows = []
+    for zone in sorted(by_zone.keys()):
+        zdata = by_zone[zone]
+        zone_cls = cls_map.get(zone, "unconstrained")
+        cls_color = CLASSIFICATION_COLORS.get(zone_cls, "#888")
+        is_pressure = (
+            zone_cls in constrained_types and zdata.get("proposed", 0) >= 5
+        )
+        row_class = ' class="dc-pressure-row"' if is_pressure else ""
+
+        top_county = zdata["top_counties"][0]["name"] if zdata.get("top_counties") else ""
+
+        table_rows.append(
+            f"<tr{row_class}>"
+            f"<td>{html.escape(zone)}</td>"
+            f'<td><span class="cls-badge" style="background:{cls_color}">{zone_cls}</span></td>'
+            f"<td>{zdata['total']}</td>"
+            f"<td>{zdata.get('operational', 0)}</td>"
+            f"<td>{zdata.get('proposed', 0)}</td>"
+            f"<td>{zdata.get('construction', 0)}</td>"
+            f"<td>{zdata['estimated_mw']:,.0f}</td>"
+            f"<td>{html.escape(top_county)}</td>"
+            f"</tr>"
+        )
+
+    rows_html = "\n".join(table_rows)
+
+    table_html = f"""
+    <div class="table-wrap">
+      <table class="zone-table" id="dcZoneTable">
+        <thead>
+          <tr>
+            <th data-col="0" data-type="str">Zone <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="1" data-type="str">Classification <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="2" data-type="num">Total DCs <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="3" data-type="num">Operational <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="4" data-type="num">Proposed <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="5" data-type="num">Construction <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="6" data-type="num">Est. MW <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="7" data-type="str">Top County <span class="sort-arrow">&udarr;</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows_html}
+        </tbody>
+      </table>
+    </div>
+    """
+
+    return f"""
+    {stat_cards}
+    {pressure_html}
+    {table_html}
+    """
+
+
 def build_html(data: dict, charts: dict[str, str], map_html: str) -> str:
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     year = data["metadata"]["year"]
@@ -387,6 +519,7 @@ def build_html(data: dict, charts: dict[str, str], map_html: str) -> str:
     zone_rows = build_zone_table(data)
     chart_section = build_charts(charts)
     methodology = build_methodology()
+    dc_section = build_dc_section(data)
     escaped_map = html.escape(map_html)
 
     return f"""<!DOCTYPE html>
@@ -758,6 +891,40 @@ table.ls-heatmap td.ls-cell:hover {{
   border-radius: 6px;
 }}
 
+/* ── Data Center Pressure ── */
+.pressure-callout {{
+  background: #fef9e7;
+  border: 2px solid #f1c40f;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}}
+.pressure-callout h3 {{
+  font-size: 1rem;
+  color: #7d6608;
+  margin-bottom: 0.5rem;
+}}
+.pressure-callout p {{
+  font-size: 0.85rem;
+  color: #7d6608;
+  margin-bottom: 0.5rem;
+}}
+.pressure-callout ul {{
+  list-style: none;
+  padding: 0;
+}}
+.pressure-callout li {{
+  font-size: 0.85rem;
+  color: #2c3e50;
+  padding: 0.3rem 0;
+}}
+tr.dc-pressure-row {{
+  background: #fef9e7;
+}}
+tr.dc-pressure-row:hover {{
+  background: #fcf3cf;
+}}
+
 /* ── Footer ── */
 .footer {{
   text-align: center;
@@ -799,6 +966,7 @@ table.ls-heatmap td.ls-cell:hover {{
 <nav class="section-nav">
   <a href="#map">Map</a>
   <a href="#zones">Zone Data</a>
+  <a href="#datacenters">Data Centers</a>
   <a href="#charts">Charts</a>
   <a href="#methodology">Methodology</a>
 </nav>
@@ -834,6 +1002,12 @@ table.ls-heatmap td.ls-cell:hover {{
       </tbody>
     </table>
   </div>
+</div>
+
+<!-- Data Centers Section -->
+<div class="section" id="datacenters">
+  <h2 class="section-title">Data Center Overlay</h2>
+  {dc_section}
 </div>
 
 <!-- Charts Section -->
@@ -986,6 +1160,53 @@ document.querySelectorAll('table.pnode-table').forEach(function(table) {{
     }});
   }});
 }});
+
+// ── Sortable DC zone table ──
+(function() {{
+  var table = document.getElementById('dcZoneTable');
+  if (!table) return;
+  var thead = table.querySelector('thead');
+  var tbody = table.querySelector('tbody');
+  var headers = thead.querySelectorAll('th');
+  var sortState = {{ col: -1, asc: true }};
+
+  function parseVal(td, type) {{
+    var txt = td.textContent.trim().replace(/[$,%,]/g, '');
+    if (type === 'num') {{
+      var n = parseFloat(txt);
+      return isNaN(n) ? 0 : n;
+    }}
+    return txt.toLowerCase();
+  }}
+
+  headers.forEach(function(th) {{
+    th.addEventListener('click', function() {{
+      var col = parseInt(this.getAttribute('data-col'));
+      var type = this.getAttribute('data-type');
+      var asc = (sortState.col === col) ? !sortState.asc : true;
+      sortState = {{ col: col, asc: asc }};
+
+      headers.forEach(function(h) {{
+        var arrow = h.querySelector('.sort-arrow');
+        arrow.classList.remove('active');
+        arrow.textContent = '\u21C5';
+      }});
+      var activeArrow = this.querySelector('.sort-arrow');
+      activeArrow.classList.add('active');
+      activeArrow.textContent = asc ? '\u2191' : '\u2193';
+
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort(function(a, b) {{
+        var va = parseVal(a.children[col], type);
+        var vb = parseVal(b.children[col], type);
+        if (va < vb) return asc ? -1 : 1;
+        if (va > vb) return asc ? 1 : -1;
+        return 0;
+      }});
+      rows.forEach(function(row) {{ tbody.appendChild(row); }});
+    }});
+  }});
+}})();
 </script>
 </body>
 </html>"""
