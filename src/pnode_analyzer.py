@@ -17,12 +17,17 @@ Scores are min-max normalized within each zone and combined into a
 weighted "congestion severity score" (0-1).
 """
 
+import json
 import logging
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+DATA_DIR = Path(__file__).parent.parent / "data"
+PNODE_RESULTS_CACHE = DATA_DIR / "pnodes" / "pnode_drilldown_results.json"
 
 # Metric weights
 MAGNITUDE_WEIGHT = 0.30
@@ -380,4 +385,49 @@ def analyze_all_constrained_zones(zone_data_dict: dict) -> dict:
         f"{total_pnodes} total pnodes, {total_critical} critical hotspots"
     )
 
+    # Cache results so they persist across pipeline runs
+    _save_pnode_results(results)
+
     return results
+
+
+def _save_pnode_results(results: dict):
+    """Cache pnode drilldown results to JSON for reuse without re-analysis."""
+    PNODE_RESULTS_CACHE.parent.mkdir(parents=True, exist_ok=True)
+    # Convert any numpy/pandas types to native Python for JSON serialization
+    clean = {}
+    for zone, analysis in results.items():
+        clean[zone] = _make_serializable(analysis)
+    with open(PNODE_RESULTS_CACHE, "w") as f:
+        json.dump(clean, f, indent=2)
+    logger.info(f"Cached pnode drilldown results to {PNODE_RESULTS_CACHE}")
+
+
+def _make_serializable(obj):
+    """Recursively convert numpy types to native Python for JSON."""
+    if isinstance(obj, dict):
+        return {k: _make_serializable(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_make_serializable(v) for v in obj]
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, (np.floating,)):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    return obj
+
+
+def load_pnode_results() -> dict:
+    """
+    Load cached pnode drilldown results.
+
+    Returns {zone: analysis_dict} or {} if no cache exists.
+    """
+    if PNODE_RESULTS_CACHE.exists():
+        with open(PNODE_RESULTS_CACHE) as f:
+            results = json.load(f)
+        total = sum(r.get("total_pnodes", 0) for r in results.values())
+        logger.info(f"Loaded cached pnode drilldown: {len(results)} zones, {total} pnodes")
+        return results
+    return {}

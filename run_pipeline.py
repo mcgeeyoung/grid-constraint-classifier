@@ -56,7 +56,7 @@ from src.constraint_classifier import (
     get_congestion_value,
 )
 from src.der_recommender import recommend_ders, format_recommendation_text
-from src.pnode_analyzer import analyze_all_constrained_zones
+from src.pnode_analyzer import analyze_all_constrained_zones, load_pnode_results
 from src.visualization import (
     create_interactive_map,
     create_score_bar_chart,
@@ -218,7 +218,7 @@ def run_pipeline(
             f"Cong=${row['avg_abs_congestion']:.2f}/MWh"
         )
 
-    # ── Phase 2.5: Pnode Drill-Down (optional) ──
+    # ── Phase 2.5: Pnode Drill-Down (optional, with cached fallback) ──
     pnode_results = {}
     pnode_coordinates = {}
     if pnode_drilldown:
@@ -245,6 +245,12 @@ def run_pipeline(
         logger.info("Geocoding pnode names for map layer...")
         pnode_coordinates = geocode_pnodes(pnode_results)
         logger.info(f"Pnode coordinates: {len(pnode_coordinates)} names resolved")
+    else:
+        # Load cached pnode results if available
+        pnode_results = load_pnode_results()
+        if pnode_results:
+            pnode_coordinates = geocode_pnodes(pnode_results)
+            logger.info(f"Loaded cached pnode data: {len(pnode_results)} zones, {len(pnode_coordinates)} coordinates")
 
     # ── Phase 3: DER Recommendations ──
     logger.info("")
