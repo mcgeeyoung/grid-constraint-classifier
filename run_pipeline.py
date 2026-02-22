@@ -44,6 +44,11 @@ from src.dc_scraper import (
     build_dc_summary,
     load_dc_data,
 )
+from src.pjm_gis import (
+    fetch_backbone_lines,
+    fetch_zone_boundaries as fetch_pjm_zone_boundaries,
+    load_pjm_gis_data,
+)
 from src.constraint_classifier import (
     compute_zone_metrics,
     classify_zones,
@@ -86,12 +91,13 @@ def run_pipeline(
     zone_only: bool = True,
     pnode_drilldown: bool = False,
     dc_scrape: bool = False,
+    pjm_gis: bool = False,
 ):
     """Execute the full pipeline."""
     logger = setup_logging()
     logger.info("=" * 60)
     logger.info("Grid Constraint → DER Mapping Pipeline")
-    logger.info(f"Year: {year} | Skip download: {skip_download} | Zone only: {zone_only} | Pnode drill-down: {pnode_drilldown} | DC scrape: {dc_scrape}")
+    logger.info(f"Year: {year} | Skip download: {skip_download} | Zone only: {zone_only} | Pnode drill-down: {pnode_drilldown} | DC scrape: {dc_scrape} | PJM GIS: {pjm_gis}")
     logger.info("=" * 60)
 
     # Check for API key (required for live pulls, optional with --skip-download)
@@ -126,7 +132,31 @@ def run_pipeline(
     zone_centroids = get_zone_centroids()
     dc_locations_static = get_data_center_locations()
 
-    # ── Phase 1.5: Data Center Overlay ──
+    # ── Phase 1.5a: PJM GIS Data (backbone lines + official zone boundaries) ──
+    pjm_backbone_geojson = {"type": "FeatureCollection", "features": []}
+    pjm_zones_geojson = {"type": "FeatureCollection", "features": []}
+
+    if pjm_gis:
+        logger.info("")
+        logger.info("Phase 1.5a: PJM GIS Data (Backbone Lines + Zone Boundaries)")
+        pjm_backbone_geojson = fetch_backbone_lines(force=False)
+        pjm_zones_geojson = fetch_pjm_zone_boundaries(force=False)
+        logger.info(
+            f"PJM GIS: {len(pjm_backbone_geojson.get('features', []))} backbone lines, "
+            f"{len(pjm_zones_geojson.get('features', []))} zone boundaries"
+        )
+    else:
+        # Try loading cached PJM GIS data
+        pjm_backbone_geojson, pjm_zones_geojson = load_pjm_gis_data()
+
+    # Use PJM official zone boundaries if available, otherwise HIFLD
+    if pjm_zones_geojson.get("features"):
+        zone_boundary_geojson = pjm_zones_geojson
+        logger.info("Using PJM official zone boundaries for map")
+    else:
+        logger.info("Using HIFLD zone boundaries for map (no PJM GIS data)")
+
+    # ── Phase 1.5b: Data Center Overlay ──
     dc_summary = {}
     if dc_scrape:
         logger.info("")
@@ -243,6 +273,7 @@ def run_pipeline(
         transmission_geojson=tx_geojson,
         pnode_data=pnode_map_data,
         zone_boundaries=zone_boundary_geojson,
+        pjm_backbone_geojson=pjm_backbone_geojson,
     )
 
     create_score_bar_chart(classification_df)
@@ -259,6 +290,8 @@ def run_pipeline(
             "total_zone_lmp_rows": len(zone_lmps),
             "zones_analyzed": len(classification_df),
             "transmission_line_features": tx_features,
+            "pjm_backbone_lines": len(pjm_backbone_geojson.get("features", [])),
+            "pjm_zone_boundaries": len(pjm_zones_geojson.get("features", [])),
         },
         "classifications": {},
         "recommendations": recommendations,
@@ -315,6 +348,7 @@ if __name__ == "__main__":
     parser.add_argument("--zone-only", action="store_true", help="Skip node-level data pulls")
     parser.add_argument("--pnode-drilldown", action="store_true", help="Run pnode congestion hotspot analysis for constrained zones")
     parser.add_argument("--dc-scrape", action="store_true", help="Scrape data center listings from interconnection.fyi")
+    parser.add_argument("--pjm-gis", action="store_true", help="Fetch backbone lines and zone boundaries from PJM GIS (requires PJM_GIS_USERNAME/PASSWORD)")
 
     args = parser.parse_args()
     run_pipeline(
@@ -323,4 +357,5 @@ if __name__ == "__main__":
         zone_only=args.zone_only,
         pnode_drilldown=args.pnode_drilldown,
         dc_scrape=args.dc_scrape,
+        pjm_gis=args.pjm_gis,
     )
