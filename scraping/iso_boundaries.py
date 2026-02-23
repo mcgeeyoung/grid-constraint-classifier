@@ -19,6 +19,22 @@ NYISO_LOAD_ZONES_URL = (
     "NYISO_Load_Zones/FeatureServer/0/query"
 )
 
+# Map single-letter zone codes to the gridstatus abbreviated names
+# used in classification data (these come from NYISO's own LMP feed)
+NYISO_LETTER_TO_GRIDSTATUS = {
+    "A": "WEST",
+    "B": "GENESE",
+    "C": "CENTRL",
+    "D": "NORTH",
+    "E": "MHK VL",
+    "F": "CAPITL",
+    "G": "HUD VL",
+    "H": "MILLWD",
+    "I": "DUNWOD",
+    "J": "N.Y.C.",
+    "K": "LONGIL",
+}
+
 
 def download_nyiso_zone_boundaries(
     cache_path: Path,
@@ -27,8 +43,9 @@ def download_nyiso_zone_boundaries(
     """
     Download NYISO load zone boundary polygons from ArcGIS Online.
 
-    Returns GeoJSON FeatureCollection with iso_zone property on each feature.
-    Zone_Name field contains single-letter codes (A-K) directly.
+    Returns GeoJSON FeatureCollection with iso_zone property set to the
+    gridstatus abbreviated zone name (e.g. LONGIL, N.Y.C.) so it matches
+    the classification data.
     """
     if cache_path.exists() and not force:
         logger.info(f"Loading cached NYISO zone boundaries from {cache_path}")
@@ -49,16 +66,15 @@ def download_nyiso_zone_boundaries(
         resp.raise_for_status()
         geojson = resp.json()
 
-        # Tag each feature with iso_zone from Zone_Name field
+        # Tag each feature with iso_zone using gridstatus zone names
         matched = 0
         for feat in geojson.get("features", []):
             props = feat.get("properties", {})
-            zone_code = (props.get("Zone_Name") or "").strip().upper()
-            if zone_code in "ABCDEFGHIJK" and len(zone_code) == 1:
-                feat["properties"]["iso_zone"] = zone_code
+            letter = (props.get("Zone_Name") or "").strip().upper()
+            gs_name = NYISO_LETTER_TO_GRIDSTATUS.get(letter, "")
+            feat["properties"]["iso_zone"] = gs_name
+            if gs_name:
                 matched += 1
-            else:
-                feat["properties"]["iso_zone"] = zone_code
 
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         with open(cache_path, "w") as f:
