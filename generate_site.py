@@ -952,7 +952,7 @@ def build_landing_page(iso_summaries: Dict[str, dict]) -> str:
         badge_html = " ".join(badges)
 
         iso_cards.append(f"""
-        <a href="{iso_id}/" class="iso-card">
+        <a href="{iso_id}/index.html" class="iso-card">
           <div class="iso-card-header">
             <span class="iso-card-name">{html.escape(iso_name)}</span>
             <span class="iso-card-id">{iso_id.upper()}</span>
