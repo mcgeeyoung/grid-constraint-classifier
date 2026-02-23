@@ -47,3 +47,32 @@ zone_centroids:
   NP15: [38.58, -121.49]
   SP15: [34.05, -118.24]
   ZP26: [35.37, -119.02]
+
+dc_zone_to_cls_zones:
+  PGAE:
+    - SLAP_PGCC-APND
+    - SLAP_PGEB-APND
+    - SLAP_PGF1-APND
+    - SLAP_PGFG-APND
+    - SLAP_PGHB-APND
+    - SLAP_PGKN-APND
+    - SLAP_PGLP-APND
+    - SLAP_PGNB-APND
+    - SLAP_PGNC-APND
+    - SLAP_PGNP-APND
+    - SLAP_PGP2-APND
+    - SLAP_PGSB-APND
+    - SLAP_PGSF-APND
+    - SLAP_PGSI-APND
+    - SLAP_PGST-APND
+  SCE:
+    - SLAP_SCEC-APND
+    - SLAP_SCEN-APND
+    - SLAP_SCEW-APND
+    - SLAP_SCHD-APND
+    - SLAP_SCLD-APND
+    - SLAP_SCNW-APND
+  SDGE:
+    - SLAP_SDG1-APND
+  VEA:
+    - SLAP_VEA-APND

@@ -420,7 +420,9 @@ table.pnode-table tbody tr:hover {
           transmission-constrained, generation-constrained, both, or unconstrained using weighted
           multi-factor scoring</span></li>
         
-        
+        <li><span class="bullet"></span>
+          <span>Scrapes <b>634</b> data center records from interconnection queues and
+          maps them to California ISO zones, identifying growth pressure areas</span></li>
         
         <li><span class="bullet"></span>
           <span>Generates DER deployment recommendations per zone, aligned with WattCarbon WEATS
@@ -445,7 +447,12 @@ table.pnode-table tbody tr:hover {
         <div class="stat-detail">T-score 0.672,
         $12.18/MWh avg congestion</div>
       </div>
-      
+      <div class="stat-card">
+        <div class="stat-value">634</div>
+        <div class="stat-label">California ISO Data Centers</div>
+        <div class="stat-detail">1,142 MW estimated capacity,
+        20 proposed</div>
+      </div>
       
       
     </div>
@@ -463,7 +470,7 @@ table.pnode-table tbody tr:hover {
       <div class="pipeline-step">
         <div class="pipeline-phase">Phase 1.5</div>
         <div class="pipeline-name">Data Center Scrape</div>
-        <div class="pipeline-desc">Interconnection queue scraping, geocoding, and zone mapping</div>
+        <div class="pipeline-desc">Interconnection queue scraping, geocoding, and zone mapping for 634 facilities</div>
       </div>
       <div class="pipeline-step">
         <div class="pipeline-phase">Phase 2</div>
@@ -536,6 +543,15 @@ table.pnode-table tbody tr:hover {
   <div class="section">
     <h2 class="section-title">Growth Pressure Analysis</h2>
     
+    <div class="pressure-section">
+      <h3>Growth Pressure Zones</h3>
+      <p class="pressure-desc">Zones that are transmission-constrained AND have significant
+      proposed data center capacity represent the highest-priority areas for DER deployment.
+      New load in these zones will worsen existing congestion, increasing costs for all
+      ratepayers and creating reliability risks.</p>
+      <div class="pressure-grid"><div class="pressure-card"><div class="pressure-zone">PGAE <span class="cls-badge" style="background:#e74c3c">transmission</span></div><div class="pressure-stats"><span><b>9</b> proposed DCs</span><span><b>145</b> total DCs</span><span><b>818</b> MW est. capacity</span><span>T-score: <b>0.000</b></span></div></div></div>
+    </div>
+    
   </div>
 
   <!-- Pnode Drilldown -->
@@ -596,7 +612,7 @@ table.pnode-table tbody tr:hover {
           <b>LMP data:</b> California ISO day-ahead hourly LMPs (2025)<br>
           <b>Transmission:</b> HIFLD transmission line data<br>
           <b>Zone boundaries:</b> HIFLD territory boundaries<br>
-          
+          <b>Data centers:</b> interconnection queue listings<br>
           
         </p>
       </div>
@@ -606,7 +622,7 @@ table.pnode-table tbody tr:hover {
 </div>
 
 <div class="footer">
-  Generated 2026-02-22 | California ISO Grid Constraint Classifier |
+  Generated 2026-02-23 | California ISO Grid Constraint Classifier |
   Data: California ISO day-ahead hourly LMPs (2025)
 </div>
 

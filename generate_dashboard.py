@@ -446,6 +446,27 @@ def build_methodology() -> str:
     """
 
 
+def _resolve_dc_classification(zone, cls_map, dc_zone_mapping=None):
+    """Look up classification for a DC zone, with optional zone translation.
+
+    For ISOs where DC zones don't match classification zones (e.g. CAISO
+    utility zones vs Sub-LAP classification zones), aggregate across mapped
+    zones and return the worst classification.
+    """
+    direct = cls_map.get(zone)
+    if direct:
+        return direct
+    if not dc_zone_mapping or zone not in dc_zone_mapping:
+        return "unconstrained"
+    PRIORITY = {"both": 3, "transmission": 2, "generation": 1, "unconstrained": 0}
+    worst = "unconstrained"
+    for cls_zone in dc_zone_mapping[zone]:
+        cls = cls_map.get(cls_zone, "unconstrained")
+        if PRIORITY.get(cls, 0) > PRIORITY.get(worst, 0):
+            worst = cls
+    return worst
+
+
 def build_dc_section(data: dict, iso_name: str = "PJM") -> str:
     """Build Data Centers dashboard section with stats, growth pressure, and zone table."""
     dc = data.get("data_centers", {})
@@ -465,6 +486,9 @@ def build_dc_section(data: dict, iso_name: str = "PJM") -> str:
     cls_map = {}
     for zs in data.get("zone_scores", []):
         cls_map[zs["zone"]] = zs["classification"]
+
+    # Zone translation mapping (for ISOs where DC zones != classification zones)
+    dc_zone_mapping = dc.get("dc_zone_to_cls_zones")
 
     # Stat cards
     stat_cards = f"""
@@ -492,7 +516,7 @@ def build_dc_section(data: dict, iso_name: str = "PJM") -> str:
     constrained_types = {"transmission", "both"}
     pressure_zones = []
     for zone, zdata in by_zone.items():
-        zone_cls = cls_map.get(zone, "unconstrained")
+        zone_cls = _resolve_dc_classification(zone, cls_map, dc_zone_mapping)
         if zone_cls in constrained_types and zdata.get("proposed", 0) >= 5:
             pressure_zones.append({
                 "zone": zone,
@@ -525,7 +549,7 @@ def build_dc_section(data: dict, iso_name: str = "PJM") -> str:
     table_rows = []
     for zone in sorted(by_zone.keys()):
         zdata = by_zone[zone]
-        zone_cls = cls_map.get(zone, "unconstrained")
+        zone_cls = _resolve_dc_classification(zone, cls_map, dc_zone_mapping)
         cls_color = CLASSIFICATION_COLORS.get(zone_cls, "#888")
         is_pressure = (
             zone_cls in constrained_types and zdata.get("proposed", 0) >= 5

@@ -208,6 +208,11 @@ def run_single_iso(
             dc_summary = build_dc_summary(dc_records, zone_key="iso_zone")
             log.info(f"Data centers: {len(dc_records)} {iso_id.upper()} records")
 
+            # Store zone translation mapping if present in DC config
+            dc_zone_mapping = dc_config.get("dc_zone_to_cls_zones", {})
+            if dc_zone_mapping:
+                dc_summary["dc_zone_to_cls_zones"] = dc_zone_mapping
+
             # Convert to map-format locations
             zone_centroid_map = dc_config.get("zone_centroids", {})
             for rec in dc_records:
@@ -236,8 +241,16 @@ def run_single_iso(
             try:
                 with open(dc_combined_path) as f:
                     dc_records = json.load(f)
-                from scraping.dc_scraper import build_dc_summary
+                from scraping.dc_scraper import build_dc_summary, load_dc_config
                 dc_summary = build_dc_summary(dc_records, zone_key="iso_zone")
+                # Load zone translation mapping from DC config
+                try:
+                    cached_dc_config = load_dc_config(iso_id)
+                    cached_zone_mapping = cached_dc_config.get("dc_zone_to_cls_zones", {})
+                    if cached_zone_mapping:
+                        dc_summary["dc_zone_to_cls_zones"] = cached_zone_mapping
+                except Exception:
+                    pass
                 log.info(f"Loaded {len(dc_records)} cached DC records")
             except Exception:
                 pass
@@ -371,23 +384,26 @@ def run_single_iso(
         zone_key=zone_key,
     )
 
-    create_score_bar_chart(
-        classification_df,
-        output_path=output_dir / "score_comparison.png",
-        iso_name=config.iso_name,
-    )
-    create_congestion_heatmap(
-        zone_lmps,
-        output_path=output_dir / "congestion_heatmap.png",
-        rto_aggregates=config.rto_aggregates,
-        iso_name=config.iso_name,
-    )
-    create_monthly_trend_chart(
-        zone_lmps,
-        output_path=output_dir / "monthly_congestion_trends.png",
-        rto_aggregates=config.rto_aggregates,
-        iso_name=config.iso_name,
-    )
+    try:
+        create_score_bar_chart(
+            classification_df,
+            output_path=output_dir / "score_comparison.png",
+            iso_name=config.iso_name,
+        )
+        create_congestion_heatmap(
+            zone_lmps,
+            output_path=output_dir / "congestion_heatmap.png",
+            rto_aggregates=config.rto_aggregates,
+            iso_name=config.iso_name,
+        )
+        create_monthly_trend_chart(
+            zone_lmps,
+            output_path=output_dir / "monthly_congestion_trends.png",
+            rto_aggregates=config.rto_aggregates,
+            iso_name=config.iso_name,
+        )
+    except Exception as e:
+        log.warning(f"Chart generation failed (non-fatal): {e}")
 
     # -- Phase 5: Export Summary --
     log.info("")
@@ -428,6 +444,31 @@ def run_single_iso(
         summary["pnode_drilldown"] = pnode_results
 
     if dc_summary:
+        # Build dynamic zone mapping for SPP (settlement locations -> DC zones)
+        if iso_id == "spp" and "dc_zone_to_cls_zones" not in dc_summary:
+            dc_config_path = PROJECT_ROOT / "scraping" / "dc_configs" / "spp.yaml"
+            if dc_config_path.exists():
+                import yaml
+                with open(dc_config_path) as f:
+                    spp_dc_config = yaml.safe_load(f)
+                all_cls_zones = [zs["zone"] for zs in summary["zone_scores"]]
+                spp_dc_zones = list(set(
+                    z for z in (spp_dc_config.get("operator_to_zone", {}).values())
+                    if z
+                ))
+                dc_zone_mapping = {}
+                # Apply static overrides first (e.g. AEPW -> CSWS prefix)
+                static_map = spp_dc_config.get("dc_zone_to_cls_zones_static", {})
+                for dc_zone in spp_dc_zones:
+                    prefix = static_map.get(dc_zone, dc_zone)
+                    matched = [z for z in all_cls_zones
+                               if z.startswith(prefix + ".") or z.startswith(prefix + "_") or z == prefix]
+                    if matched:
+                        dc_zone_mapping[dc_zone] = matched
+                if dc_zone_mapping:
+                    dc_summary["dc_zone_to_cls_zones"] = dc_zone_mapping
+                    log.info(f"SPP dynamic zone mapping: {len(dc_zone_mapping)} DC zones mapped")
+
         summary["data_centers"] = dc_summary
 
     # Compute zone-level 12x24 congestion heatmaps

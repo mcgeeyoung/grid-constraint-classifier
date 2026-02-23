@@ -420,7 +420,9 @@ table.pnode-table tbody tr:hover {
           transmission-constrained, generation-constrained, both, or unconstrained using weighted
           multi-factor scoring</span></li>
         
-        
+        <li><span class="bullet"></span>
+          <span>Scrapes <b>30</b> data center records from interconnection queues and
+          maps them to Southwest Power Pool zones, identifying growth pressure areas</span></li>
         
         <li><span class="bullet"></span>
           <span>Generates DER deployment recommendations per zone, aligned with WattCarbon WEATS
@@ -445,7 +447,12 @@ table.pnode-table tbody tr:hover {
         <div class="stat-detail">T-score 0.762,
         $18.62/MWh avg congestion</div>
       </div>
-      
+      <div class="stat-card">
+        <div class="stat-value">30</div>
+        <div class="stat-label">Southwest Power Pool Data Centers</div>
+        <div class="stat-detail">1,446 MW estimated capacity,
+        5 proposed</div>
+      </div>
       
       
     </div>
@@ -463,7 +470,7 @@ table.pnode-table tbody tr:hover {
       <div class="pipeline-step">
         <div class="pipeline-phase">Phase 1.5</div>
         <div class="pipeline-name">Data Center Scrape</div>
-        <div class="pipeline-desc">Interconnection queue scraping, geocoding, and zone mapping</div>
+        <div class="pipeline-desc">Interconnection queue scraping, geocoding, and zone mapping for 30 facilities</div>
       </div>
       <div class="pipeline-step">
         <div class="pipeline-phase">Phase 2</div>
@@ -1901,7 +1908,7 @@ table.pnode-table tbody tr:hover {
           <b>LMP data:</b> Southwest Power Pool day-ahead hourly LMPs (2025)<br>
           <b>Transmission:</b> HIFLD transmission line data<br>
           <b>Zone boundaries:</b> HIFLD territory boundaries<br>
-          
+          <b>Data centers:</b> interconnection queue listings<br>
           
         </p>
       </div>
@@ -1911,7 +1918,7 @@ table.pnode-table tbody tr:hover {
 </div>
 
 <div class="footer">
-  Generated 2026-02-22 | Southwest Power Pool Grid Constraint Classifier |
+  Generated 2026-02-23 | Southwest Power Pool Grid Constraint Classifier |
   Data: Southwest Power Pool day-ahead hourly LMPs (2025)
 </div>
 
