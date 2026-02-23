@@ -4,65 +4,65 @@ states:
 
 operator_to_zone:
   # ConEd
-  "consolidated edison": J
-  "con edison": J
-  "coned": J
-  "con ed": J
+  "consolidated edison": "N.Y.C."
+  "con edison": "N.Y.C."
+  "coned": "N.Y.C."
+  "con ed": "N.Y.C."
   # National Grid
-  "national grid": E
-  "niagara mohawk": E
-  "niagara mohawk power": E
+  "national grid": "MHK VL"
+  "niagara mohawk": "MHK VL"
+  "niagara mohawk power": "MHK VL"
   # NYSEG
-  "nyseg": C
-  "new york state electric and gas": C
-  "new york state electric & gas": C
+  "nyseg": CENTRL
+  "new york state electric and gas": CENTRL
+  "new york state electric & gas": CENTRL
   # RG&E
-  "rochester gas and electric": B
-  "rochester gas & electric": B
-  "rge": B
-  "rg&e": B
+  "rochester gas and electric": GENESE
+  "rochester gas & electric": GENESE
+  "rge": GENESE
+  "rg&e": GENESE
   # Central Hudson
-  "central hudson": G
-  "central hudson gas and electric": G
-  "central hudson gas & electric": G
+  "central hudson": "HUD VL"
+  "central hudson gas and electric": "HUD VL"
+  "central hudson gas & electric": "HUD VL"
   # Orange & Rockland
-  "orange and rockland": G
-  "orange & rockland": G
-  "o&r": G
+  "orange and rockland": "HUD VL"
+  "orange & rockland": "HUD VL"
+  "o&r": "HUD VL"
   # LIPA / PSEG Long Island
-  "long island power authority": K
-  "lipa": K
-  "pseg long island": K
+  "long island power authority": LONGIL
+  "lipa": LONGIL
+  "pseg long island": LONGIL
   # NYPA
-  "new york power authority": A
-  "nypa": A
+  "new york power authority": WEST
+  "nypa": WEST
   # Non-NYISO
   "eversource": null
   "pjm": null
 
 operator_substring_map:
-  "consolidated edison": J
-  "con edison": J
-  "con ed": J
-  "national grid": E
-  "niagara mohawk": E
-  "nyseg": C
-  "rochester gas": B
-  "central hudson": G
-  "orange and rockland": G
-  "long island power": K
-  "pseg long island": K
-  "nypa": A
+  "consolidated edison": "N.Y.C."
+  "con edison": "N.Y.C."
+  "con ed": "N.Y.C."
+  "national grid": "MHK VL"
+  "niagara mohawk": "MHK VL"
+  "nyseg": CENTRL
+  "rochester gas": GENESE
+  "central hudson": "HUD VL"
+  "orange and rockland": "HUD VL"
+  "long island power": LONGIL
+  "pseg long island": LONGIL
+  "nypa": WEST
 
 zone_centroids:
-  A: [43.16, -77.61]
-  B: [43.16, -77.61]
-  C: [42.44, -76.50]
-  D: [43.05, -76.15]
-  E: [42.65, -73.76]
-  F: [42.45, -74.20]
-  G: [41.50, -74.01]
-  H: [41.18, -73.86]
-  I: [41.03, -73.76]
-  J: [40.71, -74.01]
-  K: [40.79, -73.20]
+  WEST: [43.16, -77.61]
+  GENESE: [43.16, -77.61]
+  CENTRL: [42.44, -76.50]
+  NORTH: [43.05, -76.15]
+  "MHK VL": [42.65, -73.76]
+  CAPITL: [42.45, -74.20]
+  "HUD VL": [41.50, -74.01]
+  MILLWD: [41.18, -73.86]
+  DUNWOD: [41.03, -73.76]
+  "N.Y.C.": [40.71, -74.01]
+  LONGIL: [40.79, -73.20]

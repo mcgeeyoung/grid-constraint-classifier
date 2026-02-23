@@ -83,3 +83,9 @@ zone_centroids:
   NPPD: [40.82, -96.70]
   LES: [40.81, -96.68]
   SPS: [33.58, -101.85]
+
+# Static zone-to-classification-zones mapping for cases where prefix matching fails.
+# AEPW (PSO/SWEPCO) maps to CSWS settlement prefix, not AEPW.
+# Other DC zones (OKGE, WFEC, KCPL, etc.) use prefix matching built dynamically.
+dc_zone_to_cls_zones_static:
+  AEPW: CSWS

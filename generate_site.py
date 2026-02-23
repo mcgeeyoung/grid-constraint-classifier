@@ -76,16 +76,35 @@ def build_zone_table_rows(data: dict) -> str:
     return "\n".join(rows)
 
 
+def _resolve_dc_classification_site(zone, cls_map, dc_zone_mapping=None):
+    """Look up classification for a DC zone, with optional zone translation."""
+    direct = cls_map.get(zone)
+    if direct:
+        return direct
+    if not dc_zone_mapping or zone not in dc_zone_mapping:
+        return "unconstrained"
+    PRIORITY = {"both": 3, "transmission": 2, "generation": 1, "unconstrained": 0}
+    worst = "unconstrained"
+    for cls_zone in dc_zone_mapping[zone]:
+        cls = cls_map.get(cls_zone, "unconstrained")
+        if PRIORITY.get(cls, 0) > PRIORITY.get(worst, 0):
+            worst = cls
+    return worst
+
+
 def build_growth_pressure(data: dict) -> str:
     """Build growth pressure analysis section."""
-    cls_map = {zs["zone"]: zs for zs in data["zone_scores"]}
-    dc_by_zone = data.get("data_centers", {}).get("by_zone", {})
+    cls_map = {zs["zone"]: zs["classification"] for zs in data["zone_scores"]}
+    cls_scores_map = {zs["zone"]: zs for zs in data["zone_scores"]}
+    dc_data = data.get("data_centers", {})
+    dc_by_zone = dc_data.get("by_zone", {})
+    dc_zone_mapping = dc_data.get("dc_zone_to_cls_zones")
     constrained_types = {"transmission", "both"}
 
     pressure_zones = []
     for zone, zdata in dc_by_zone.items():
-        zone_scores = cls_map.get(zone, {})
-        zone_cls = zone_scores.get("classification", "unconstrained")
+        zone_cls = _resolve_dc_classification_site(zone, cls_map, dc_zone_mapping)
+        zone_scores = cls_scores_map.get(zone, {})
         proposed = zdata.get("proposed", 0)
         if zone_cls in constrained_types and proposed >= 5:
             pressure_zones.append({

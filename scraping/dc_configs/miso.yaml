@@ -18,49 +18,49 @@ states:
 
 operator_to_zone:
   # Ameren
-  "ameren": LRZ6
-  "ameren illinois": LRZ6
-  "ameren missouri": LRZ5
+  "ameren": AMIL
+  "ameren illinois": AMIL
+  "ameren missouri": AMMO
   # Consumers Energy
-  "consumers energy": LRZ7
+  "consumers energy": CONS
   # DTE
-  "dte energy": LRZ7
-  "dte electric": LRZ7
-  "detroit edison": LRZ7
+  "dte energy": DECO
+  "dte electric": DECO
+  "detroit edison": DECO
   # Xcel / NSP
-  "xcel energy": LRZ1
-  "northern states power": LRZ1
-  "nsp": LRZ1
+  "xcel energy": NSP
+  "northern states power": NSP
+  "nsp": NSP
   # NIPSCO
-  "northern indiana public service": LRZ6
-  "nipsco": LRZ6
+  "northern indiana public service": NIPS
+  "nipsco": NIPS
   # Indianapolis P&L / AES Indiana
-  "indianapolis power and light": LRZ6
-  "indianapolis power & light": LRZ6
-  "aes indiana": LRZ6
-  # Vectren
-  "vectren": LRZ6
+  "indianapolis power and light": IPL
+  "indianapolis power & light": IPL
+  "aes indiana": IPL
+  # Vectren / CenterPoint IN
+  "vectren": CIN
   # MidAmerican
-  "midamerican energy": LRZ3
+  "midamerican energy": MEC
   # Alliant / IPL
-  "alliant energy": LRZ3
-  "interstate power and light": LRZ3
+  "alliant energy": ALTW
+  "interstate power and light": ALTW
   # Entergy
-  "entergy": LRZ9
-  "entergy louisiana": LRZ9
-  "entergy arkansas": LRZ8
-  "entergy mississippi": LRZ10
-  "entergy texas": LRZ8
+  "entergy": EES
+  "entergy louisiana": EES
+  "entergy arkansas": EAI
+  "entergy mississippi": DEVI
+  "entergy texas": EAI
   # WEC Energy
-  "wisconsin electric": LRZ2
-  "we energies": LRZ2
-  "wec energy": LRZ2
-  "wisconsin energy": LRZ2
+  "wisconsin electric": WEC
+  "we energies": WEC
+  "wec energy": WEC
+  "wisconsin energy": WEC
   # Great Plains / OTP
-  "otter tail power": LRZ1
-  "great plains energy": LRZ1
+  "otter tail power": OTP
+  "great plains energy": OTP
   # Montana-Dakota
-  "montana-dakota utilities": LRZ1
+  "montana-dakota utilities": MDU
   # Non-MISO
   "dominion energy": null
   "duke energy": null
@@ -68,27 +68,34 @@ operator_to_zone:
   "pjm": null
 
 operator_substring_map:
-  "ameren": LRZ6
-  "consumers energy": LRZ7
-  "dte": LRZ7
-  "xcel": LRZ1
-  "northern states": LRZ1
-  "nipsco": LRZ6
-  "midamerican": LRZ3
-  "alliant": LRZ3
-  "entergy": LRZ9
-  "wisconsin electric": LRZ2
-  "we energies": LRZ2
-  "otter tail": LRZ1
+  "ameren": AMIL
+  "consumers energy": CONS
+  "dte": DECO
+  "xcel": NSP
+  "northern states": NSP
+  "nipsco": NIPS
+  "midamerican": MEC
+  "alliant": ALTW
+  "entergy": EES
+  "wisconsin electric": WEC
+  "we energies": WEC
+  "otter tail": OTP
 
 zone_centroids:
-  LRZ1: [45.00, -93.27]
-  LRZ2: [43.04, -87.91]
-  LRZ3: [41.59, -93.62]
-  LRZ4: [42.73, -84.56]
-  LRZ5: [38.63, -90.20]
-  LRZ6: [39.77, -86.16]
-  LRZ7: [42.33, -83.05]
-  LRZ8: [34.75, -92.29]
-  LRZ9: [30.45, -91.19]
-  LRZ10: [32.30, -90.18]
+  NSP: [44.95, -93.27]
+  OTP: [46.30, -96.00]
+  MDU: [46.88, -96.79]
+  WEC: [43.05, -87.95]
+  ALTE: [43.10, -89.40]
+  ALTW: [42.00, -93.50]
+  MEC: [41.60, -93.60]
+  CONS: [42.75, -84.55]
+  DECO: [42.33, -83.05]
+  AMMO: [38.65, -90.30]
+  AMIL: [39.80, -89.65]
+  NIPS: [41.50, -87.00]
+  IPL: [39.77, -86.16]
+  CIN: [39.00, -87.50]
+  EAI: [34.75, -92.30]
+  EES: [30.45, -91.19]
+  DEVI: [32.30, -90.18]
