@@ -1,0 +1,80 @@
+# Southwest Power Pool (SPP) configuration
+iso_id: spp
+iso_name: Southwest Power Pool
+timezone: US/Central
+gridstatus_class: SPP
+
+peak_hours:
+  start: 7
+  end: 23
+
+map_center: [37.0, -98.0]
+map_zoom: 5
+
+has_lmp_decomposition: true  # MEC + MCC + MLC
+has_node_level_pricing: true
+
+rto_aggregates: []
+
+states:
+  - AR
+  - IA
+  - KS
+  - LA
+  - MN
+  - MO
+  - MT
+  - NE
+  - NM
+  - ND
+  - OK
+  - SD
+  - TX
+  - WY
+
+zones:
+  SPS:
+    name: Southwestern Public Service
+    centroid_lat: 34.75
+    centroid_lon: -102.00
+    states: [TX, NM]
+  WFEC:
+    name: Western Farmers Electric Cooperative
+    centroid_lat: 35.20
+    centroid_lon: -97.50
+    states: [OK]
+  OKGE:
+    name: Oklahoma Gas & Electric
+    centroid_lat: 35.47
+    centroid_lon: -97.52
+    states: [OK]
+  KCPL:
+    name: Kansas City Power & Light
+    centroid_lat: 39.10
+    centroid_lon: -94.57
+    states: [MO, KS]
+  AEPW:
+    name: AEP West
+    centroid_lat: 35.50
+    centroid_lon: -95.00
+    states: [OK]
+  GRDA:
+    name: Grand River Dam Authority
+    centroid_lat: 36.30
+    centroid_lon: -95.30
+    states: [OK]
+  NPPD:
+    name: Nebraska Public Power District
+    centroid_lat: 41.00
+    centroid_lon: -100.00
+    states: [NE]
+  OPPD:
+    name: Omaha Public Power District
+    centroid_lat: 41.26
+    centroid_lon: -95.94
+    states: [NE]
+  WAUE:
+    name: Western Area Upper Great Plains
+    centroid_lat: 46.00
+    centroid_lon: -100.00
+    states: [ND, SD, MT]

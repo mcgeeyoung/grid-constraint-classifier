@@ -1,0 +1,52 @@
+# ERCOT data center scraping configuration
+states:
+  - TX
+
+operator_to_zone:
+  # Oncor (serves Dallas/Fort Worth - North zone)
+  "oncor": NORTH
+  "oncor electric delivery": NORTH
+  # CenterPoint (serves Houston - Houston zone)
+  "centerpoint energy": HOUSTON
+  "centerpoint": HOUSTON
+  # AEP Texas (serves South/West Texas - South/West zones)
+  "aep texas": SOUTH
+  "aep texas north": WEST
+  "aep texas central": SOUTH
+  # TNMP / PNM Resources
+  "texas-new mexico power": WEST
+  "tnmp": WEST
+  # CPS Energy (San Antonio - South zone)
+  "cps energy": SOUTH
+  # Austin Energy
+  "austin energy": SOUTH
+  # Lubbock Power & Light
+  "lubbock power and light": WEST
+  "lubbock power & light": WEST
+  "lp&l": WEST
+  # Bryan Texas Utilities
+  "bryan texas utilities": SOUTH
+  # Non-ERCOT (SPP territory in Texas)
+  "southwestern public service": null
+  "sps": null
+  "xcel energy": null
+  # Non-ERCOT (MISO territory)
+  "entergy texas": null
+  "entergy": null
+
+operator_substring_map:
+  "oncor": NORTH
+  "centerpoint": HOUSTON
+  "aep texas": SOUTH
+  "texas-new mexico": WEST
+  "tnmp": WEST
+  "cps energy": SOUTH
+  "austin energy": SOUTH
+  "lubbock power": WEST
+  "bryan texas": SOUTH
+
+zone_centroids:
+  NORTH: [32.78, -96.80]
+  SOUTH: [29.42, -98.49]
+  WEST: [31.76, -106.44]
+  HOUSTON: [29.76, -95.37]

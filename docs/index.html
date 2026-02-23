@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PJM Grid Constraint Classifier</title>
+<title>Grid Constraint Classifier - Multi-ISO</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -12,884 +12,136 @@ body {
   color: #2c3e50;
   line-height: 1.6;
 }
-
-/* Header */
 .header {
   background: linear-gradient(135deg, #1a252f, #2c3e50);
   color: #fff;
   padding: 3rem 2rem 2.5rem;
   text-align: center;
 }
-.header h1 {
-  font-size: 2rem;
+.header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
+.header .subtitle { color: #bdc3c7; font-size: 1rem; margin-bottom: 0.25rem; }
+.header .context { color: #7f8c8d; font-size: 0.85rem; }
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.iso-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.iso-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: block;
+}
+.iso-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+.iso-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.iso-card-name { font-size: 1.15rem; font-weight: 700; color: #2c3e50; }
+.iso-card-id {
+  background: #34495e;
+  color: #fff;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.iso-card-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.iso-stat {
+  font-size: 0.82rem;
+  color: #7f8c8d;
+}
+.iso-stat-val {
   font-weight: 700;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+.iso-card-badges {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
   margin-bottom: 0.5rem;
 }
-.header .subtitle {
-  color: #bdc3c7;
-  font-size: 1rem;
-  margin-bottom: 0.25rem;
+.badge {
+  display: inline-block;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
-.header .context {
-  color: #7f8c8d;
-  font-size: 0.85rem;
-}
-
-/* Container */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-/* Section */
-.section {
-  margin-bottom: 2.5rem;
+.iso-card-top {
+  font-size: 0.82rem;
+  color: #555;
 }
 .section-title {
   font-size: 1.35rem;
   font-weight: 700;
   color: #2c3e50;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid #3498db;
 }
-
-/* Stat Cards */
-.stat-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-.stat-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  text-align: center;
-}
-.stat-card.highlight {
-  border-left: 4px solid #e74c3c;
-}
-.stat-value {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #2c3e50;
-}
-.stat-label {
-  font-size: 0.8rem;
-  color: #7f8c8d;
-  margin-top: 0.25rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.stat-detail {
-  font-size: 0.78rem;
-  color: #95a5a6;
-  margin-top: 0.35rem;
-}
-
-/* Classification badges */
-.cls-badge {
-  display: inline-block;
-  padding: 0.15em 0.55em;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* What This Tool Does */
-.feature-list {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.5rem 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-.feature-list ul {
-  list-style: none;
-  padding: 0;
-}
-.feature-list li {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #ecf0f1;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-.feature-list li:last-child {
-  border-bottom: none;
-}
-.feature-list .bullet {
-  flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  background: #3498db;
-  border-radius: 50%;
-  margin-top: 0.5rem;
-}
-
-/* Pipeline */
-.pipeline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0;
-  align-items: stretch;
-}
-.pipeline-step {
-  flex: 1 1 180px;
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  position: relative;
-  min-width: 180px;
-}
-.pipeline-step::after {
-  content: "";
-  position: absolute;
-  right: -12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 12px solid transparent;
-  border-bottom: 12px solid transparent;
-  border-left: 12px solid #3498db;
-  z-index: 1;
-}
-.pipeline-step:last-child::after {
-  display: none;
-}
-.pipeline-phase {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #3498db;
-  letter-spacing: 0.5px;
-  margin-bottom: 0.25rem;
-}
-.pipeline-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.35rem;
-}
-.pipeline-desc {
-  font-size: 0.78rem;
-  color: #7f8c8d;
-}
-
-/* Table */
-.table-wrap {
-  background: #fff;
-  border-radius: 8px;
-  overflow-x: auto;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-table.zone-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-table.zone-table th {
-  background: #34495e;
-  color: #fff;
-  padding: 0.75rem;
-  text-align: left;
-  font-weight: 600;
-  white-space: nowrap;
-}
-table.zone-table td {
-  padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid #ecf0f1;
-}
-table.zone-table tbody tr:hover {
-  background: #f8f9fa;
-}
-
-/* Growth Pressure */
-.pressure-section {
-  background: #fef9e7;
-  border: 2px solid #f1c40f;
-  border-radius: 8px;
-  padding: 1.5rem;
-}
-.pressure-section h3 {
-  font-size: 1.1rem;
-  color: #7d6608;
-  margin-bottom: 0.5rem;
-}
-.pressure-desc {
-  font-size: 0.85rem;
-  color: #7d6608;
-  margin-bottom: 1rem;
-}
-.pressure-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-}
-.pressure-card {
-  background: #fff;
-  border-radius: 6px;
-  padding: 1rem 1.25rem;
-  border: 1px solid #f1c40f;
-}
-.pressure-zone {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-}
-.pressure-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  font-size: 0.82rem;
-  color: #555;
-}
-
-/* CTA Button */
-.cta-section {
-  text-align: center;
-  padding: 2rem;
-}
-.cta-btn {
-  display: inline-block;
-  padding: 1rem 2.5rem;
-  background: linear-gradient(135deg, #2c3e50, #34495e);
-  color: #fff;
-  text-decoration: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  transition: transform 0.15s, box-shadow 0.15s;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-.cta-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-}
-.cta-sub {
-  font-size: 0.82rem;
-  color: #7f8c8d;
-  margin-top: 0.75rem;
-}
-
-/* Methodology */
-.method-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-.method-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-.method-card h4 {
-  font-size: 0.9rem;
-  color: #34495e;
-  margin-bottom: 0.5rem;
-}
-.method-card p {
-  font-size: 0.82rem;
-  color: #666;
-  margin-bottom: 0.5rem;
-}
-.method-table {
-  width: 100%;
-  font-size: 0.8rem;
-  border-collapse: collapse;
-}
-.method-table td {
-  padding: 0.3rem 0.4rem;
-  border-bottom: 1px solid #ecf0f1;
-}
-.method-table td:last-child {
-  text-align: right;
-  font-weight: 600;
-}
-
-/* Pnode Drilldown */
-.pnode-zone-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  margin-bottom: 1rem;
-}
-.pnode-zone-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-.pnode-zone-name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #2c3e50;
-}
-.pnode-zone-count {
-  font-size: 0.82rem;
-  color: #7f8c8d;
-}
-.pnode-tier-row {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.75rem;
-}
-.tier-badge {
-  display: inline-block;
-  padding: 0.15em 0.55em;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-table.pnode-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-}
-table.pnode-table th {
-  background: #5d6d7e;
-  color: #fff;
-  padding: 0.5rem 0.6rem;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.78rem;
-}
-table.pnode-table td {
-  padding: 0.45rem 0.6rem;
-  border-bottom: 1px solid #ecf0f1;
-}
-table.pnode-table tbody tr:hover {
-  background: #f0f4f8;
-}
-
-/* Footer */
 .footer {
   text-align: center;
   padding: 2rem;
   color: #95a5a6;
   font-size: 0.78rem;
   border-top: 1px solid #e0e0e0;
-  margin-top: 1rem;
+  margin-top: 2rem;
 }
-
-/* Responsive */
 @media (max-width: 768px) {
   .container { padding: 1rem; }
   .header { padding: 2rem 1rem; }
   .header h1 { font-size: 1.5rem; }
-  .stat-cards { grid-template-columns: 1fr 1fr; }
-  .pipeline { flex-direction: column; }
-  .pipeline-step::after { display: none; }
-  .method-grid { grid-template-columns: 1fr; }
+  .iso-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
-
 <div class="header">
-  <h1>PJM Grid Constraint Classifier</h1>
-  <div class="subtitle">Identifying where the grid is congested and where DERs can help</div>
-  <div class="context">Built by WattCarbon | Data: PJM Interconnection 2025</div>
+  <h1>Grid Constraint Classifier</h1>
+  <div class="subtitle">Multi-ISO grid constraint analysis with DER deployment recommendations</div>
+  <div class="context">Built by WattCarbon | 1 ISOs analyzed</div>
 </div>
-
 <div class="container">
-
-  <!-- What This Tool Does -->
-  <div class="section">
-    <h2 class="section-title">What This Tool Does</h2>
-    <div class="feature-list">
-      <ul>
-        <li><span class="bullet"></span>
-          <span>Pulls <b>201,480</b> hourly LMP data points from the
-          PJM Data Miner 2 API (2025), decomposing each into congestion, energy, and loss components</span></li>
-        <li><span class="bullet"></span>
-          <span>Classifies all <b>21</b> PJM pricing zones as
-          transmission-constrained, generation-constrained, both, or unconstrained using weighted
-          multi-factor scoring</span></li>
-        <li><span class="bullet"></span>
-          <span>Drills down to <b>565</b> individual pricing nodes (pnodes) with
-          severity scoring and 12x24 constraint loadshapes showing monthly/hourly congestion patterns</span></li>
-        <li><span class="bullet"></span>
-          <span>Scrapes <b>1,124</b> data center records from interconnection queues and
-          maps them to PJM zones, identifying growth pressure areas</span></li>
-        <li><span class="bullet"></span>
-          <span>Overlays PJM GIS backbone transmission lines (<b>787</b>
-          lines, 345-765kV) and official zone boundaries on an interactive map</span></li>
-        <li><span class="bullet"></span>
-          <span>Generates DER deployment recommendations per zone, aligned with WattCarbon WEATS
-          asset categories (dispatchable, consistent, variable)</span></li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- Key Findings -->
-  <div class="section">
-    <h2 class="section-title">Key Findings</h2>
-    <div class="stat-cards">
-      <div class="stat-card">
-        <div class="stat-value">21</div>
-        <div class="stat-label">Zones Analyzed</div>
-        <div class="stat-detail">11 constrained (9 transmission,
-        1 both, 1 generation)</div>
-      </div>
-      <div class="stat-card highlight">
-        <div class="stat-value">DOM</div>
-        <div class="stat-label">Most Constrained Zone</div>
-        <div class="stat-detail">T-score 0.742,
-        $11.76/MWh avg congestion</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">1,124</div>
-        <div class="stat-label">PJM Data Centers</div>
-        <div class="stat-detail">48,884 MW estimated capacity,
-        364 proposed</div>
-      </div>
-      <div class="stat-card highlight">
-        <div class="stat-value">925</div>
-        <div class="stat-label">DOM Data Centers</div>
-        <div class="stat-detail">305 proposed. #1 growth pressure zone</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">565</div>
-        <div class="stat-label">Pnodes Analyzed</div>
-        <div class="stat-detail">9 critical hotspots across
-        10 zones</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">787</div>
-        <div class="stat-label">Transmission Lines Mapped</div>
-        <div class="stat-detail">345-765kV backbone, 21 zone boundaries</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- How It Works -->
-  <div class="section">
-    <h2 class="section-title">How It Works</h2>
-    <div class="pipeline">
-      <div class="pipeline-step">
-        <div class="pipeline-phase">Phase 1</div>
-        <div class="pipeline-name">Data Acquisition</div>
-        <div class="pipeline-desc">PJM API hourly LMPs + HIFLD transmission + PJM GIS backbone lines and zone boundaries</div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-phase">Phase 1.5</div>
-        <div class="pipeline-name">Data Center Scrape</div>
-        <div class="pipeline-desc">Interconnection queue scraping, geocoding, and zone mapping for 1,124 facilities</div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-phase">Phase 2</div>
-        <div class="pipeline-name">Constraint Classification</div>
-        <div class="pipeline-desc">Weighted scoring across congestion ratio, volatility, constrained hours, and peak/off-peak patterns</div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-phase">Phase 2.5</div>
-        <div class="pipeline-name">Pnode Drill-Down</div>
-        <div class="pipeline-desc">565 individual nodes with severity tiers and 12x24 constraint loadshapes</div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-phase">Phase 3</div>
-        <div class="pipeline-name">DER Recommendations</div>
-        <div class="pipeline-desc">Dispatchable, consistent, and variable DER strategies mapped to WEATS EAC categories</div>
-      </div>
-      <div class="pipeline-step">
-        <div class="pipeline-phase">Phase 4</div>
-        <div class="pipeline-name">Visualization</div>
-        <div class="pipeline-desc">Interactive Folium map with zone boundaries, transmission lines, pnode markers, and data center overlay</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Zone Classification Table -->
-  <div class="section">
-    <h2 class="section-title">Zone Classifications</h2>
-    <div class="table-wrap">
-      <table class="zone-table">
-        <thead>
-          <tr>
-            <th>Zone</th>
-            <th>Classification</th>
-            <th>T-Score</th>
-            <th>G-Score</th>
-            <th>Avg Congestion</th>
-            <th>Constrained Hrs</th>
-            <th>Data Centers</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>DOM</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.742</td><td>0.440</td><td>$11.76</td><td>65.1%</td><td>925</td></tr>
-<tr><td>DPL</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.689</td><td>0.494</td><td>$10.02</td><td>61.9%</td><td>9</td></tr>
-<tr><td>RECO</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.547</td><td>0.444</td><td>$7.44</td><td>74.4%</td><td>0</td></tr>
-<tr><td>PECO</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.544</td><td>0.448</td><td>$7.31</td><td>59.8%</td><td>7</td></tr>
-<tr><td>PPL</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.536</td><td>0.452</td><td>$7.51</td><td>68.2%</td><td>4</td></tr>
-<tr><td>PSEG</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.536</td><td>0.460</td><td>$6.85</td><td>60.7%</td><td>45</td></tr>
-<tr><td>COMED</td><td><span class="cls-badge" style="background:#9b59b6">both</span></td><td>0.525</td><td>0.600</td><td>$9.02</td><td>64.6%</td><td>63</td></tr>
-<tr><td>AECO</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.525</td><td>0.465</td><td>$7.10</td><td>59.3%</td><td>0</td></tr>
-<tr><td>JCPL</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.514</td><td>0.462</td><td>$6.78</td><td>58.3%</td><td>12</td></tr>
-<tr><td>PEPCO</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.508</td><td>0.475</td><td>$8.12</td><td>61.9%</td><td>0</td></tr>
-<tr><td>BGE</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.482</td><td>0.490</td><td>$8.80</td><td>64.0%</td><td>0</td></tr>
-<tr><td>PENELEC</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.453</td><td>0.433</td><td>$6.56</td><td>67.2%</td><td>0</td></tr>
-<tr><td>METED</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.439</td><td>0.441</td><td>$6.22</td><td>55.6%</td><td>1</td></tr>
-<tr><td>EKPC</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.410</td><td>0.485</td><td>$3.13</td><td>36.7%</td><td>0</td></tr>
-<tr><td>DUQ</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.384</td><td>0.418</td><td>$3.78</td><td>33.5%</td><td>0</td></tr>
-<tr><td>ATSI</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.382</td><td>0.400</td><td>$3.54</td><td>34.2%</td><td>9</td></tr>
-<tr><td>OVEC</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.373</td><td>0.505</td><td>$3.56</td><td>36.9%</td><td>0</td></tr>
-<tr><td>DAY</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.370</td><td>0.429</td><td>$3.44</td><td>36.5%</td><td>9</td></tr>
-<tr><td>DEOK</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.368</td><td>0.457</td><td>$3.50</td><td>37.1%</td><td>13</td></tr>
-<tr><td>AEP</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.363</td><td>0.425</td><td>$3.17</td><td>37.9%</td><td>27</td></tr>
-<tr><td>APS</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.339</td><td>0.410</td><td>$2.98</td><td>38.1%</td><td>0</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Growth Pressure -->
-  <div class="section">
-    <h2 class="section-title">Growth Pressure Analysis</h2>
+  <h2 class="section-title">Select an ISO/RTO</h2>
+  <div class="iso-grid">
     
-    <div class="pressure-section">
-      <h3>Growth Pressure Zones</h3>
-      <p class="pressure-desc">Zones that are transmission-constrained AND have significant
-      proposed data center capacity represent the highest-priority areas for DER deployment.
-      New load in these zones will worsen existing congestion, increasing costs for all
-      ratepayers and creating reliability risks.</p>
-      <div class="pressure-grid"><div class="pressure-card"><div class="pressure-zone">DOM <span class="cls-badge" style="background:#e74c3c">transmission</span></div><div class="pressure-stats"><span><b>305</b> proposed DCs</span><span><b>925</b> total DCs</span><span><b>43,122</b> MW est. capacity</span><span>T-score: <b>0.742</b></span></div></div><div class="pressure-card"><div class="pressure-zone">COMED <span class="cls-badge" style="background:#9b59b6">both</span></div><div class="pressure-stats"><span><b>13</b> proposed DCs</span><span><b>63</b> total DCs</span><span><b>1,874</b> MW est. capacity</span><span>T-score: <b>0.525</b></span></div></div></div>
-    </div>
-    
-  </div>
-
-  <!-- Pnode Drilldown -->
-  <div class="section">
-    <h2 class="section-title">Pnode Congestion Hotspots</h2>
-    <p style="font-size:0.85rem;color:#7f8c8d;margin-bottom:1rem;">Top 3 congestion
-    hotspots per constrained zone, ranked by severity score. Full pnode tables with
-    12x24 loadshapes are available in the interactive dashboard.</p>
-    
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">DPL</span>
-            <span class="cls-badge" style="background:#e74c3c">transmission</span>
-            <span class="pnode-zone-count">55 pnodes</span>
+        <a href="pjm/" class="iso-card">
+          <div class="iso-card-header">
+            <span class="iso-card-name">PJM Interconnection</span>
+            <span class="iso-card-id">PJM</span>
           </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#e67e22">elevated: 27</span> <span class="tier-badge" style="background:#f1c40f">moderate: 14</span> <span class="tier-badge" style="background:#27ae60">low: 13</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>MARDELA</td><td>0.7539</td><td>$14.70</td><td>$1354.48</td><td>61.8%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
-<tr><td>HEBRON</td><td>0.7339</td><td>$14.74</td><td>$1154.08</td><td>61.8%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>INDIANRI</td><td>0.7167</td><td>$15.15</td><td>$483.28</td><td>61.2%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
-          </table>
-        </div>
-        
-
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">COMED</span>
-            <span class="cls-badge" style="background:#9b59b6">both</span>
-            <span class="pnode-zone-count">92 pnodes</span>
+          <div class="iso-card-stats">
+            <div class="iso-stat"><span class="iso-stat-val">21</span> zones</div>
+            <div class="iso-stat"><span class="iso-stat-val">11</span> constrained</div>
+            <div class="iso-stat"><span class="iso-stat-val">201,480</span> LMP rows</div>
           </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 2</span> <span class="tier-badge" style="background:#e67e22">elevated: 11</span> <span class="tier-badge" style="background:#f1c40f">moderate: 79</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>J375</td><td>0.8595</td><td>$15.81</td><td>$678.77</td><td>66.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
-<tr><td>958_HOGR</td><td>0.7896</td><td>$14.64</td><td>$515.57</td><td>62.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
-<tr><td>72 GOOSE</td><td>0.6693</td><td>$12.93</td><td>$382.52</td><td>66.6%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
-          </table>
-        </div>
-        
-
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">DOM</span>
-            <span class="cls-badge" style="background:#e74c3c">transmission</span>
-            <span class="pnode-zone-count">188 pnodes</span>
-          </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 2</span> <span class="tier-badge" style="background:#e67e22">elevated: 4</span> <span class="tier-badge" style="background:#f1c40f">moderate: 178</span> <span class="tier-badge" style="background:#27ae60">low: 4</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>CELESTIA</td><td>0.8990</td><td>$30.96</td><td>$2161.75</td><td>73.5%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
-<tr><td>HAMILTN</td><td>0.8032</td><td>$19.33</td><td>$1186.59</td><td>65.0%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
-<tr><td>TYSONS</td><td>0.6023</td><td>$15.04</td><td>$469.46</td><td>67.8%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
-          </table>
-        </div>
-        
-
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">AECO</span>
-            <span class="cls-badge" style="background:#e74c3c">transmission</span>
-            <span class="pnode-zone-count">29 pnodes</span>
-          </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#e67e22">elevated: 11</span> <span class="tier-badge" style="background:#f1c40f">moderate: 8</span> <span class="tier-badge" style="background:#27ae60">low: 9</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>WINSLOW</td><td>0.8000</td><td>$7.34</td><td>$120.83</td><td>59.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
-<tr><td>GLASSBOR</td><td>0.7369</td><td>$7.31</td><td>$120.79</td><td>59.5%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>VINELAND</td><td>0.6958</td><td>$7.22</td><td>$124.86</td><td>59.4%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
-          </table>
-        </div>
-        
-
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">PSEG</span>
-            <span class="cls-badge" style="background:#e74c3c">transmission</span>
-            <span class="pnode-zone-count">83 pnodes</span>
-          </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#e67e22">elevated: 16</span> <span class="tier-badge" style="background:#f1c40f">moderate: 67</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>SADDLEBR</td><td>0.6571</td><td>$7.40</td><td>$119.57</td><td>63.1%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>MAYWOOD</td><td>0.6409</td><td>$7.34</td><td>$119.45</td><td>63.1%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>HCS</td><td>0.6280</td><td>$7.32</td><td>$119.60</td><td>64.2%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
-          </table>
-        </div>
-        
-
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">JCPL</span>
-            <span class="cls-badge" style="background:#e74c3c">transmission</span>
-            <span class="pnode-zone-count">33 pnodes</span>
-          </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#e67e22">elevated: 2</span> <span class="tier-badge" style="background:#f1c40f">moderate: 2</span> <span class="tier-badge" style="background:#27ae60">low: 28</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>PEQUESTR</td><td>1.0000</td><td>$8.96</td><td>$257.50</td><td>60.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
-<tr><td>FLANDERS</td><td>0.6662</td><td>$7.78</td><td>$233.66</td><td>60.3%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>MORRISPA</td><td>0.5260</td><td>$7.48</td><td>$256.59</td><td>60.1%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
-          </table>
-        </div>
-        
-
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">PEPCO</span>
-            <span class="cls-badge" style="background:#e74c3c">transmission</span>
-            <span class="pnode-zone-count">14 pnodes</span>
-          </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#e67e22">elevated: 1</span> <span class="tier-badge" style="background:#f1c40f">moderate: 3</span> <span class="tier-badge" style="background:#27ae60">low: 9</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>DICKERSH</td><td>1.0000</td><td>$11.26</td><td>$457.84</td><td>63.1%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
-<tr><td>BETHESDA</td><td>0.5612</td><td>$9.21</td><td>$327.92</td><td>62.5%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>METZTAP</td><td>0.2744</td><td>$8.02</td><td>$273.95</td><td>62.4%</td><td><span class="tier-badge" style="background:#f1c40f">moderate</span></td></tr></tbody>
-          </table>
-        </div>
-        
-
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">OVEC</span>
-            <span class="cls-badge" style="background:#3498db">generation</span>
-            <span class="pnode-zone-count">2 pnodes</span>
-          </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#c0392b">critical: 1</span> <span class="tier-badge" style="background:#27ae60">low: 1</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>KYGERCRE</td><td>0.8500</td><td>$3.57</td><td>$134.88</td><td>35.6%</td><td><span class="tier-badge" style="background:#c0392b">critical</span></td></tr>
-<tr><td>CLIFTYCR</td><td>0.1500</td><td>$3.34</td><td>$133.10</td><td>35.4%</td><td><span class="tier-badge" style="background:#27ae60">low</span></td></tr></tbody>
-          </table>
-        </div>
-        
-
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">PPL</span>
-            <span class="cls-badge" style="background:#e74c3c">transmission</span>
-            <span class="pnode-zone-count">41 pnodes</span>
-          </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#e67e22">elevated: 9</span> <span class="tier-badge" style="background:#f1c40f">moderate: 28</span> <span class="tier-badge" style="background:#27ae60">low: 4</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>LACKAENG</td><td>0.6666</td><td>$12.79</td><td>$129.54</td><td>86.0%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>ELDRED</td><td>0.6625</td><td>$9.55</td><td>$446.00</td><td>74.8%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>LACKAWAN</td><td>0.6214</td><td>$12.20</td><td>$124.72</td><td>85.3%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
-          </table>
-        </div>
-        
-
-        <div class="pnode-zone-card">
-          <div class="pnode-zone-header">
-            <span class="pnode-zone-name">PECO</span>
-            <span class="cls-badge" style="background:#e74c3c">transmission</span>
-            <span class="pnode-zone-count">28 pnodes</span>
-          </div>
-          <div class="pnode-tier-row"><span class="tier-badge" style="background:#e67e22">elevated: 2</span> <span class="tier-badge" style="background:#f1c40f">moderate: 26</span></div>
-          <table class="pnode-table">
-            <thead>
-              <tr>
-                <th>Pnode</th>
-                <th>Severity</th>
-                <th>Avg $/MWh</th>
-                <th>Max $/MWh</th>
-                <th>Constrained %</th>
-                <th>Tier</th>
-              </tr>
-            </thead>
-            <tbody><tr><td>CONOWING</td><td>0.7189</td><td>$9.55</td><td>$168.47</td><td>57.4%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>DALESVIL</td><td>0.5947</td><td>$8.83</td><td>$139.48</td><td>58.2%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
-<tr><td>MUDDYRN</td><td>0.4964</td><td>$7.62</td><td>$300.59</td><td>59.9%</td><td><span class="tier-badge" style="background:#f1c40f">moderate</span></td></tr></tbody>
-          </table>
-        </div>
+          <div class="iso-card-badges"><span class="badge" style="background:#e74c3c">T: 9</span> <span class="badge" style="background:#3498db">G: 1</span> <span class="badge" style="background:#9b59b6">B: 1</span> <span class="badge" style="background:#2ecc71">U: 10</span></div>
+          <div class="iso-card-top">Top: <b>DOM</b> (T=0.742)</div>
+        </a>
         
   </div>
-
-  <!-- CTA: View Dashboard -->
-  <div class="cta-section">
-    <a href="dashboard.html" class="cta-btn">View Full Interactive Dashboard</a>
-    <div class="cta-sub">Interactive map, sortable tables, congestion heatmaps, pnode loadshapes, and DER recommendations</div>
-    <div style="margin-top:1rem">
-      <a href="map.html" style="color:#3498db;font-size:0.9rem">Or view the standalone constraint map</a>
-    </div>
-  </div>
-
-  <!-- Methodology -->
-  <div class="section">
-    <h2 class="section-title">Methodology</h2>
-    <div class="method-grid">
-      <div class="method-card">
-        <h4>Transmission Score</h4>
-        <p>Weighted composite of congestion-based metrics:</p>
-        <table class="method-table">
-          <tr><td>Congestion Ratio</td><td>|congestion| / |LMP|</td><td>30%</td></tr>
-          <tr><td>Congestion Volatility</td><td>Std dev of congestion prices</td><td>25%</td></tr>
-          <tr><td>Congested Hours %</td><td>Hours with |congestion| > $2/MWh</td><td>25%</td></tr>
-          <tr><td>Peak/Off-Peak Ratio</td><td>Peak vs off-peak congestion</td><td>20%</td></tr>
-        </table>
-      </div>
-      <div class="method-card">
-        <h4>Generation Score</h4>
-        <p>Weighted composite of energy-price metrics:</p>
-        <table class="method-table">
-          <tr><td>Energy Deviation</td><td>Zone vs system energy price</td><td>35%</td></tr>
-          <tr><td>Energy Volatility</td><td>Energy price std/mean</td><td>30%</td></tr>
-          <tr><td>Loss Component</td><td>Marginal loss ratio</td><td>20%</td></tr>
-          <tr><td>High Energy Hours %</td><td>Hours > avg + $3/MWh</td><td>15%</td></tr>
-        </table>
-      </div>
-      <div class="method-card">
-        <h4>Classification Threshold</h4>
-        <p>Zones are classified based on a 0.5 threshold for each score.</p>
-        <p>
-          <span class="cls-badge" style="background:#e74c3c">transmission</span> T &ge; 0.5, G &lt; 0.5 &nbsp;
-          <span class="cls-badge" style="background:#3498db">generation</span> T &lt; 0.5, G &ge; 0.5 &nbsp;
-          <span class="cls-badge" style="background:#9b59b6">both</span> T &ge; 0.5, G &ge; 0.5 &nbsp;
-          <span class="cls-badge" style="background:#2ecc71">unconstrained</span> T &lt; 0.5, G &lt; 0.5
-        </p>
-      </div>
-      <div class="method-card">
-        <h4>Data Sources</h4>
-        <p>
-          <b>LMP data:</b> PJM Data Miner 2 API, day-ahead hourly LMPs (2025)<br>
-          <b>Transmission:</b> PJM GIS ArcGIS REST services (backbone lines 345-765kV)<br>
-          <b>Zone boundaries:</b> PJM official zone boundary GIS data<br>
-          <b>Data centers:</b> interconnection.fyi PJM queue listings<br>
-          <b>Pnode coordinates:</b> PJM pnode metadata + geocoding
-        </p>
-      </div>
-    </div>
-  </div>
-
 </div>
-
 <div class="footer">
-  Generated 2026-02-22 | PJM Grid Constraint Classifier |
-  Data: PJM Interconnection day-ahead hourly LMPs (2025)
+  Generated 2026-02-22 | Grid Constraint Classifier |
+  Covering 1 ISOs across the US power grid
 </div>
-
 </body>
 </html>

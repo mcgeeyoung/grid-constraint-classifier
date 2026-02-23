@@ -1,0 +1,68 @@
+# ISO New England (ISO-NE) configuration
+iso_id: isone
+iso_name: ISO New England
+timezone: US/Eastern
+gridstatus_class: ISONE
+
+peak_hours:
+  start: 7
+  end: 23  # HE 7-22 EPT
+
+map_center: [42.5, -72.0]
+map_zoom: 7
+
+has_lmp_decomposition: true
+has_node_level_pricing: true
+
+rto_aggregates:
+  - .H.INTERNAL_HUB
+
+states:
+  - CT
+  - MA
+  - ME
+  - NH
+  - RI
+  - VT
+
+zones:
+  MAINE:
+    name: Maine
+    centroid_lat: 44.80
+    centroid_lon: -69.00
+    states: [ME]
+  NEWHAMPSHIRE:
+    name: New Hampshire
+    centroid_lat: 43.70
+    centroid_lon: -71.50
+    states: [NH]
+  VERMONT:
+    name: Vermont
+    centroid_lat: 44.00
+    centroid_lon: -72.70
+    states: [VT]
+  CONNECTICUT:
+    name: Connecticut
+    centroid_lat: 41.60
+    centroid_lon: -72.70
+    states: [CT]
+  RHODEISLAND:
+    name: Rhode Island
+    centroid_lat: 41.70
+    centroid_lon: -71.50
+    states: [RI]
+  SEMASS:
+    name: Southeast Massachusetts
+    centroid_lat: 41.90
+    centroid_lon: -70.80
+    states: [MA]
+  WCMASS:
+    name: West/Central Massachusetts
+    centroid_lat: 42.30
+    centroid_lon: -72.60
+    states: [MA]
+  NEMASS:
+    name: Northeast Massachusetts
+    centroid_lat: 42.70
+    centroid_lon: -71.10
+    states: [MA]

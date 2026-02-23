@@ -2,18 +2,19 @@
 Generate a self-contained HTML dashboard from grid-constraint-classifier outputs.
 
 Reads:
-  output/classification_summary.json
-  output/grid_constraint_map.html
-  output/score_comparison.png
-  output/congestion_heatmap.png
-  output/monthly_congestion_trends.png
+  output/{iso_id}/classification_summary.json
+  output/{iso_id}/grid_constraint_map.html
+  output/{iso_id}/score_comparison.png
+  output/{iso_id}/congestion_heatmap.png
+  output/{iso_id}/monthly_congestion_trends.png
 
 Produces:
-  output/dashboard.html
+  output/{iso_id}/dashboard.html
 
 No external dependencies (stdlib only).
 """
 
+import argparse
 import base64
 import html
 import json
@@ -21,7 +22,6 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-OUTPUT = ROOT / "output"
 
 CLASSIFICATION_COLORS = {
     "transmission": "#e74c3c",
@@ -56,20 +56,24 @@ CHART_TITLES = {
 }
 
 
-def load_json() -> dict:
-    path = OUTPUT / "classification_summary.json"
+def load_json(output_dir: Path) -> dict:
+    path = output_dir / "classification_summary.json"
     with open(path) as f:
         return json.load(f)
 
 
-def encode_png(filename: str) -> str:
-    path = OUTPUT / filename
+def encode_png(output_dir: Path, filename: str) -> str:
+    path = output_dir / filename
+    if not path.exists():
+        return ""
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("ascii")
 
 
-def load_map_html() -> str:
-    path = OUTPUT / "grid_constraint_map.html"
+def load_map_html(output_dir: Path) -> str:
+    path = output_dir / "grid_constraint_map.html"
+    if not path.exists():
+        return "<p>Map not available for this ISO.</p>"
     with open(path) as f:
         return f.read()
 
@@ -309,27 +313,34 @@ def build_zone_table(data: dict) -> str:
 
 
 def build_charts(charts: dict[str, str]) -> str:
-    # Score comparison and heatmap side by side, monthly trends full-width
-    score_b64 = charts["score_comparison.png"]
-    heatmap_b64 = charts["congestion_heatmap.png"]
-    trends_b64 = charts["monthly_congestion_trends.png"]
+    parts = []
+    score_b64 = charts.get("score_comparison.png", "")
+    heatmap_b64 = charts.get("congestion_heatmap.png", "")
+    trends_b64 = charts.get("monthly_congestion_trends.png", "")
 
-    return f"""
-    <div class="charts-row">
+    row_cards = []
+    if score_b64:
+        row_cards.append(f"""
       <div class="chart-card">
         <h3>{CHART_TITLES["score_comparison.png"]}</h3>
         <img src="data:image/png;base64,{score_b64}" alt="Score Comparison">
-      </div>
+      </div>""")
+    if heatmap_b64:
+        row_cards.append(f"""
       <div class="chart-card">
         <h3>{CHART_TITLES["congestion_heatmap.png"]}</h3>
         <img src="data:image/png;base64,{heatmap_b64}" alt="Congestion Heatmap">
-      </div>
-    </div>
+      </div>""")
+    if row_cards:
+        parts.append(f'<div class="charts-row">{"".join(row_cards)}</div>')
+    if trends_b64:
+        parts.append(f"""
     <div class="chart-card chart-full">
       <h3>{CHART_TITLES["monthly_congestion_trends.png"]}</h3>
       <img src="data:image/png;base64,{trends_b64}" alt="Monthly Trends">
-    </div>
-    """
+    </div>""")
+
+    return "\n".join(parts) if parts else "<p>No charts available.</p>"
 
 
 def build_methodology() -> str:
@@ -380,7 +391,7 @@ def build_methodology() -> str:
     """
 
 
-def build_dc_section(data: dict) -> str:
+def build_dc_section(data: dict, iso_name: str = "PJM") -> str:
     """Build Data Centers dashboard section with stats, growth pressure, and zone table."""
     dc = data.get("data_centers", {})
     if not dc:
@@ -405,7 +416,7 @@ def build_dc_section(data: dict) -> str:
     <div class="stat-cards">
       <div class="stat-card">
         <div class="stat-value">{total:,}</div>
-        <div class="stat-label">PJM Data Centers</div>
+        <div class="stat-label">{iso_name} Data Centers</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">{total_mw:,.0f} MW</div>
@@ -512,14 +523,14 @@ def build_dc_section(data: dict) -> str:
     """
 
 
-def build_html(data: dict, charts: dict[str, str], map_html: str) -> str:
+def build_html(data: dict, charts: dict[str, str], map_html: str, iso_name: str = "PJM") -> str:
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     year = data["metadata"]["year"]
     stat_cards = build_stat_cards(data)
     zone_rows = build_zone_table(data)
     chart_section = build_charts(charts)
     methodology = build_methodology()
-    dc_section = build_dc_section(data)
+    dc_section = build_dc_section(data, iso_name=iso_name)
     escaped_map = html.escape(map_html)
 
     return f"""<!DOCTYPE html>
@@ -527,7 +538,7 @@ def build_html(data: dict, charts: dict[str, str], map_html: str) -> str:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PJM Grid Constraint Dashboard ({year})</title>
+<title>{iso_name} Grid Constraint Dashboard ({year})</title>
 <style>
 /* ── Reset & base ── */
 *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -956,7 +967,7 @@ tr.dc-pressure-row:hover {{
 
 <!-- Header -->
 <div class="header">
-  <h1>PJM Grid Constraint Classification Dashboard</h1>
+  <h1>{iso_name} Grid Constraint Dashboard</h1>
   <div class="subtitle">Zone-level constraint analysis with DER investment recommendations</div>
 </div>
 
@@ -1024,7 +1035,7 @@ tr.dc-pressure-row:hover {{
 
 <!-- Footer -->
 <div class="footer">
-  Generated {now} | Data source: PJM Interconnection day-ahead hourly LMPs ({year})
+  Generated {now} | Data source: {iso_name} day-ahead hourly LMPs ({year})
 </div>
 
 <script>
@@ -1213,23 +1224,43 @@ document.querySelectorAll('table.pnode-table').forEach(function(table) {{
 
 
 def main():
-    print("Loading classification summary...")
-    data = load_json()
+    parser = argparse.ArgumentParser(description="Generate HTML dashboard for an ISO")
+    parser.add_argument(
+        "--iso", type=str, default="pjm",
+        help="ISO identifier (default: pjm). Reads from output/{iso}/",
+    )
+    args = parser.parse_args()
+
+    iso_id = args.iso.lower()
+    output_dir = ROOT / "output" / iso_id
+
+    if not (output_dir / "classification_summary.json").exists():
+        print(f"No classification_summary.json found in {output_dir}")
+        print(f"Run the pipeline first: python -m cli.run_pipeline --iso {iso_id}")
+        return
+
+    print(f"Loading classification summary for {iso_id.upper()}...")
+    data = load_json(output_dir)
+
+    iso_name = data.get("metadata", {}).get("iso_name", iso_id.upper())
 
     print("Encoding charts...")
     charts = {}
     for fname in CHART_FILES:
-        charts[fname] = encode_png(fname)
-        size_kb = len(charts[fname]) * 3 / 4 / 1024  # approximate decoded size
-        print(f"  {fname}: ~{size_kb:.0f} KB")
+        charts[fname] = encode_png(output_dir, fname)
+        if charts[fname]:
+            size_kb = len(charts[fname]) * 3 / 4 / 1024
+            print(f"  {fname}: ~{size_kb:.0f} KB")
+        else:
+            print(f"  {fname}: not found, skipping")
 
     print("Loading interactive map...")
-    map_html = load_map_html()
+    map_html = load_map_html(output_dir)
 
-    print("Generating dashboard HTML...")
-    dashboard = build_html(data, charts, map_html)
+    print(f"Generating {iso_name} dashboard HTML...")
+    dashboard = build_html(data, charts, map_html, iso_name=iso_name)
 
-    out_path = OUTPUT / "dashboard.html"
+    out_path = output_dir / "dashboard.html"
     with open(out_path, "w") as f:
         f.write(dashboard)
 

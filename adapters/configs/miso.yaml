@@ -1,0 +1,86 @@
+# Midcontinent ISO (MISO) configuration
+iso_id: miso
+iso_name: Midcontinent ISO
+timezone: US/Eastern
+gridstatus_class: MISO
+
+peak_hours:
+  start: 7
+  end: 23
+
+map_center: [40.0, -90.0]
+map_zoom: 5
+
+has_lmp_decomposition: true
+has_node_level_pricing: true
+
+rto_aggregates: []
+
+states:
+  - AR
+  - IA
+  - IL
+  - IN
+  - KY
+  - LA
+  - MI
+  - MN
+  - MO
+  - MS
+  - MT
+  - ND
+  - SD
+  - TX
+  - WI
+
+zones:
+  LRZ1:
+    name: Upper Peninsula Michigan
+    centroid_lat: 46.50
+    centroid_lon: -87.50
+    states: [MI]
+  LRZ2:
+    name: East Wisconsin
+    centroid_lat: 44.50
+    centroid_lon: -88.00
+    states: [WI]
+  LRZ3:
+    name: West Wisconsin / Iowa
+    centroid_lat: 43.50
+    centroid_lon: -90.50
+    states: [WI, IA]
+  LRZ4:
+    name: Lower Michigan
+    centroid_lat: 42.75
+    centroid_lon: -84.50
+    states: [MI]
+  LRZ5:
+    name: Missouri / Illinois
+    centroid_lat: 39.00
+    centroid_lon: -90.00
+    states: [MO, IL]
+  LRZ6:
+    name: Indiana
+    centroid_lat: 40.00
+    centroid_lon: -86.25
+    states: [IN]
+  LRZ7:
+    name: Minnesota / Dakotas / Montana
+    centroid_lat: 46.00
+    centroid_lon: -94.00
+    states: [MN, ND, SD, MT]
+  LRZ8:
+    name: Arkansas
+    centroid_lat: 34.75
+    centroid_lon: -92.30
+    states: [AR]
+  LRZ9:
+    name: Louisiana / Texas / Mississippi
+    centroid_lat: 31.00
+    centroid_lon: -92.00
+    states: [LA, TX, MS]
+  LRZ10:
+    name: Mississippi / Kentucky
+    centroid_lat: 33.50
+    centroid_lon: -89.50
+    states: [MS, KY]
