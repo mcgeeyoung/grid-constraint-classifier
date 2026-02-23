@@ -323,3 +323,49 @@ zones:
     centroid_lat: 44.00
     centroid_lon: -99.00
     states: [SD]
+
+hifld_territory_oids:
+  # --- Wisconsin ---
+  ALTE: [1671]    # Wisconsin Power & Light Co
+  MGE: [246]      # Madison Gas & Electric Co
+  WEC: [1669]     # Wisconsin Electric Power Co
+  WPS: [1674]     # Wisconsin Public Service Corp
+  WPPI: [1672]    # WPPI Energy
+  # --- Iowa ---
+  ALTW: [2848]    # Interstate Power and Light Co
+  MEC: [352]      # MidAmerican Energy Co
+  # --- Illinois ---
+  AMIL: [2316]    # Ameren Illinois Company
+  CILC: [2316]    # Ameren Illinois Company (shared)
+  CWLP: [1219]    # City of Springfield - (IL)
+  SIGE: [2316]    # Ameren Illinois Company (shared)
+  SIPC: [1179]    # Southern Illinois Elec Coop
+  # --- Missouri ---
+  AMMO: [1449]    # Union Electric Co - (MO) / Ameren Missouri
+  SWEC: [1835]    # Southwest Electric Coop, Inc
+  # --- Indiana ---
+  CIN: [1180]     # Southern Indiana Gas & Elec Co
+  IPL: [2840]     # Indianapolis Power & Light Co
+  NIPS: [601]     # Northern Indiana Pub Serv Co
+  # --- Michigan ---
+  CONS: [2129]    # Consumers Energy Co
+  DECO: [2237]    # DTE Electric Company
+  MIUP: [1468]    # Upper Peninsula Power Company
+  UPPC: [1468]    # Upper Peninsula Power Company (shared)
+  # --- Minnesota ---
+  EMBA: [2281]    # East Central Energy
+  HE: [394]       # ALLETE, Inc. / Minnesota Power
+  MP: [394]       # ALLETE, Inc. / Minnesota Power (shared)
+  NSP: [606, 607] # Northern States Power Co
+  OTP: [694]      # Otter Tail Power Co
+  # --- Louisiana ---
+  CLEC: [1934]    # Cleco Power LLC
+  EES: [209]      # Entergy Louisiana LLC
+  LAFA: [2819]    # City of Lafayette - (LA)
+  # --- Arkansas ---
+  EAI: [2691]     # Entergy Arkansas LLC
+  SMP: [1599]     # City of West Memphis - (AR)
+  # --- Mississippi ---
+  DEVI: [399]     # Entergy Mississippi LLC
+  # --- North Dakota ---
+  MDU: [328]      # Montana-Dakota Utilities Co

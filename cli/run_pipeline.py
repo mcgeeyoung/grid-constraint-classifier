@@ -114,6 +114,9 @@ def run_single_iso(
 
     log.info(f"Zone LMPs: {len(zone_lmps)} rows, {zone_lmps['pnode_name'].nunique()} zones")
 
+    # Determine zone key for GeoJSON features (used throughout pipeline)
+    zone_key = "pjm_zone" if iso_id == "pjm" else "iso_zone"
+
     # Download transmission lines (HIFLD, works nationwide)
     tx_geojson = {"type": "FeatureCollection", "features": []}
     zone_boundary_geojson = {"type": "FeatureCollection", "features": []}
@@ -130,11 +133,26 @@ def run_single_iso(
             zone_boundary_geojson = download_zone_boundaries(
                 cache_path=boundary_cache,
                 territory_oids=config.hifld_territory_oids,
+                zone_property=zone_key,
                 force=False,
             )
             log.info(f"Zone boundaries: {len(zone_boundary_geojson.get('features', []))} polygons")
     except Exception as e:
         log.warning(f"HIFLD data unavailable: {e}")
+
+    # NYISO-specific zone boundaries (from NYSERDA ArcGIS)
+    if iso_id == "nyiso":
+        try:
+            from scraping.iso_boundaries import download_nyiso_zone_boundaries
+            nyiso_boundaries = download_nyiso_zone_boundaries(
+                cache_path=data_dir / iso_id / "zone_boundaries.json",
+                force=False,
+            )
+            if nyiso_boundaries.get("features"):
+                zone_boundary_geojson = nyiso_boundaries
+                log.info("Using NYISO zone boundaries from NYSERDA")
+        except Exception as e:
+            log.warning(f"NYISO boundary download failed: {e}")
 
     # PJM-specific GIS data (backbone lines, official boundaries)
     backbone_geojson = {"type": "FeatureCollection", "features": []}
@@ -336,9 +354,6 @@ def run_single_iso(
     pnode_map_data = None
     if pnode_results and pnode_coordinates:
         pnode_map_data = {"coordinates": pnode_coordinates, "results": pnode_results}
-
-    # Determine zone key for GeoJSON features
-    zone_key = "pjm_zone" if iso_id == "pjm" else "iso_zone"
 
     map_path = create_interactive_map(
         classification_df,

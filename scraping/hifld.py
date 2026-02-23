@@ -71,6 +71,7 @@ def download_transmission_lines(
 def download_zone_boundaries(
     cache_path: Path,
     territory_oids: dict[str, list[int]],
+    zone_property: str = "iso_zone",
     force: bool = False,
 ) -> dict:
     """
@@ -124,7 +125,7 @@ def download_zone_boundaries(
 
         for feat in geojson.get("features", []):
             oid = feat["properties"].get("OBJECTID")
-            feat["properties"]["pjm_zone"] = oid_to_zone.get(oid, "")
+            feat["properties"][zone_property] = oid_to_zone.get(oid, "")
 
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         with open(cache_path, "w") as f:
