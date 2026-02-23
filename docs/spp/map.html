@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_bb999c6ead2032cdbbecec15fac0fe78 {
+                #map_2a8f582028ba262e51ae1f39b5022fe7 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -90,14 +90,14 @@
     </div>
     
     
-            <div class="folium-map" id="map_bb999c6ead2032cdbbecec15fac0fe78" ></div>
+            <div class="folium-map" id="map_2a8f582028ba262e51ae1f39b5022fe7" ></div>
         
 </body>
 <script>
     
     
-            var map_bb999c6ead2032cdbbecec15fac0fe78 = L.map(
-                "map_bb999c6ead2032cdbbecec15fac0fe78",
+            var map_2a8f582028ba262e51ae1f39b5022fe7 = L.map(
+                "map_2a8f582028ba262e51ae1f39b5022fe7",
                 {
                     center: [37.0, -98.0],
                     crs: L.CRS.EPSG3857,
@@ -114,7 +114,7 @@
 
         
     
-            var tile_layer_08f536aa02976d4989b226d6d972bd5e = L.tileLayer(
+            var tile_layer_2ddeaeabb8b17f8478cd026b619ad26a = L.tileLayer(
                 "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
                 {
   "minZoom": 0,
@@ -131,25 +131,25 @@
             );
         
     
-            tile_layer_08f536aa02976d4989b226d6d972bd5e.addTo(map_bb999c6ead2032cdbbecec15fac0fe78);
+            tile_layer_2ddeaeabb8b17f8478cd026b619ad26a.addTo(map_2a8f582028ba262e51ae1f39b5022fe7);
         
     
-            var feature_group_d64f864e64f8d88304e621e91814e73a = L.featureGroup(
+            var feature_group_70f17fd75bdd8e8df68bdb9920689c18 = L.featureGroup(
                 {
 }
             );
         
     
-            feature_group_d64f864e64f8d88304e621e91814e73a.addTo(map_bb999c6ead2032cdbbecec15fac0fe78);
+            feature_group_70f17fd75bdd8e8df68bdb9920689c18.addTo(map_2a8f582028ba262e51ae1f39b5022fe7);
         
     
-            var feature_group_f1f79f1553e08711fb730d2c0438d978 = L.featureGroup(
+            var feature_group_ae30874cd015131f69d19c84d94794b6 = L.featureGroup(
                 {
 }
             );
         
     
-            var marker_cluster_55f5cbafcb274fb3afed3a8d289bb990 = L.markerClusterGroup(
+            var marker_cluster_66e8db163365e4609140b4c53e11aaca = L.markerClusterGroup(
                 {
   "maxClusterRadius": 50,
   "disableClusteringAtZoom": 10,
@@ -157,13 +157,13 @@
             );
         
     
-            marker_cluster_55f5cbafcb274fb3afed3a8d289bb990.addTo(feature_group_f1f79f1553e08711fb730d2c0438d978);
+            marker_cluster_66e8db163365e4609140b4c53e11aaca.addTo(feature_group_ae30874cd015131f69d19c84d94794b6);
         
     
-            feature_group_f1f79f1553e08711fb730d2c0438d978.addTo(map_bb999c6ead2032cdbbecec15fac0fe78);
+            feature_group_ae30874cd015131f69d19c84d94794b6.addTo(map_2a8f582028ba262e51ae1f39b5022fe7);
         
     
-        var esri_transmission_layer_7f3d7a6888db4e445f5cd56d3d1bef91 = L.esri.featureLayer({
+        var esri_transmission_layer_091ce92ffb28c25e47a8c763f6ac2b31 = L.esri.featureLayer({
             url: 'https://services1.arcgis.com/Hp6G80Pky0om7QvQ/arcgis/rest/services/Electric_Power_Transmission_Lines/FeatureServer/0',
             where: "VOLTAGE >= 230",
             style: function(feature) {
@@ -181,7 +181,7 @@
                     {sticky: true}
                 );
             }
-        }).addTo(map_bb999c6ead2032cdbbecec15fac0fe78);
+        }).addTo(map_2a8f582028ba262e51ae1f39b5022fe7);
 
         setTimeout(function() {
             var overlays = document.querySelectorAll('.leaflet-control-layers-overlays');
@@ -194,9 +194,9 @@
                 input.checked = true;
                 input.addEventListener('change', function() {
                     if (this.checked) {
-                        esri_transmission_layer_7f3d7a6888db4e445f5cd56d3d1bef91.addTo(map_bb999c6ead2032cdbbecec15fac0fe78);
+                        esri_transmission_layer_091ce92ffb28c25e47a8c763f6ac2b31.addTo(map_2a8f582028ba262e51ae1f39b5022fe7);
                     } else {
-                        map_bb999c6ead2032cdbbecec15fac0fe78.removeLayer(esri_transmission_layer_7f3d7a6888db4e445f5cd56d3d1bef91);
+                        map_2a8f582028ba262e51ae1f39b5022fe7.removeLayer(esri_transmission_layer_091ce92ffb28c25e47a8c763f6ac2b31);
                     }
                 });
                 var span = document.createElement('span');
@@ -209,24 +209,24 @@
         }, 200);
         
     
-            var layer_control_7c2909003ffd59247efe90850c18b65c_layers = {
+            var layer_control_c6463d19a1f09805480246b89c028e59_layers = {
                 base_layers : {
-                    "cartodbpositron" : tile_layer_08f536aa02976d4989b226d6d972bd5e,
+                    "cartodbpositron" : tile_layer_2ddeaeabb8b17f8478cd026b619ad26a,
                 },
                 overlays :  {
-                    "Zone Classifications" : feature_group_d64f864e64f8d88304e621e91814e73a,
-                    "Data Center Clusters" : feature_group_f1f79f1553e08711fb730d2c0438d978,
+                    "Zone Classifications" : feature_group_70f17fd75bdd8e8df68bdb9920689c18,
+                    "Data Center Clusters" : feature_group_ae30874cd015131f69d19c84d94794b6,
                 },
             };
-            let layer_control_7c2909003ffd59247efe90850c18b65c = L.control.layers(
-                layer_control_7c2909003ffd59247efe90850c18b65c_layers.base_layers,
-                layer_control_7c2909003ffd59247efe90850c18b65c_layers.overlays,
+            let layer_control_c6463d19a1f09805480246b89c028e59 = L.control.layers(
+                layer_control_c6463d19a1f09805480246b89c028e59_layers.base_layers,
+                layer_control_c6463d19a1f09805480246b89c028e59_layers.overlays,
                 {
   "position": "topright",
   "collapsed": true,
   "autoZIndex": true,
 }
-            ).addTo(map_bb999c6ead2032cdbbecec15fac0fe78);
+            ).addTo(map_2a8f582028ba262e51ae1f39b5022fe7);
 
         
 </script>
