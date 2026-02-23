@@ -33,54 +33,45 @@ states:
   - TX
   - WI
 
+# Zone names match gridstatus hub names from MISO DA LMP reports
 zones:
-  LRZ1:
-    name: Upper Peninsula Michigan
-    centroid_lat: 46.50
-    centroid_lon: -87.50
-    states: [MI]
-  LRZ2:
-    name: East Wisconsin
-    centroid_lat: 44.50
-    centroid_lon: -88.00
-    states: [WI]
-  LRZ3:
-    name: West Wisconsin / Iowa
-    centroid_lat: 43.50
-    centroid_lon: -90.50
-    states: [WI, IA]
-  LRZ4:
-    name: Lower Michigan
-    centroid_lat: 42.75
-    centroid_lon: -84.50
-    states: [MI]
-  LRZ5:
-    name: Missouri / Illinois
-    centroid_lat: 39.00
-    centroid_lon: -90.00
-    states: [MO, IL]
-  LRZ6:
-    name: Indiana
-    centroid_lat: 40.00
-    centroid_lon: -86.25
-    states: [IN]
-  LRZ7:
-    name: Minnesota / Dakotas / Montana
-    centroid_lat: 46.00
-    centroid_lon: -94.00
-    states: [MN, ND, SD, MT]
-  LRZ8:
-    name: Arkansas
+  ARKANSAS.HUB:
+    name: Arkansas Hub
     centroid_lat: 34.75
     centroid_lon: -92.30
     states: [AR]
-  LRZ9:
-    name: Louisiana / Texas / Mississippi
+  ILLINOIS.HUB:
+    name: Illinois Hub
+    centroid_lat: 39.00
+    centroid_lon: -89.50
+    states: [IL]
+  INDIANA.HUB:
+    name: Indiana Hub
+    centroid_lat: 40.00
+    centroid_lon: -86.25
+    states: [IN]
+  LOUISIANA.HUB:
+    name: Louisiana Hub
     centroid_lat: 31.00
     centroid_lon: -92.00
-    states: [LA, TX, MS]
-  LRZ10:
-    name: Mississippi / Kentucky
+    states: [LA]
+  MICHIGAN.HUB:
+    name: Michigan Hub
+    centroid_lat: 43.00
+    centroid_lon: -84.50
+    states: [MI]
+  MINN.HUB:
+    name: Minnesota Hub
+    centroid_lat: 46.00
+    centroid_lon: -94.00
+    states: [MN]
+  MS.HUB:
+    name: Mississippi Hub
     centroid_lat: 33.50
     centroid_lon: -89.50
-    states: [MS, KY]
+    states: [MS]
+  TEXAS.HUB:
+    name: Texas Hub
+    centroid_lat: 31.50
+    centroid_lon: -97.00
+    states: [TX]

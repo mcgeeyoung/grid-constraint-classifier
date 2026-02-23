@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_d6a0da3243a86c59fda56dd4f128f60f {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.1.0/MarkerCluster.Default.css"/>
+    
+        <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
+        
+</head>
+<body>
+    
+    
+    <div style="position: fixed; bottom: 30px; left: 30px; z-index: 1000;
+                background-color: white; border: 2px solid grey; padding: 10px;
+                border-radius: 5px; font-size: 13px; opacity: 0.9; max-height: 80vh;
+                overflow-y: auto;">
+    <b>Midcontinent ISO Constraint Classification</b><br>
+    <i style="background: #e74c3c; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Transmission<br>
+    <i style="background: #3498db; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Generation<br>
+    <i style="background: #9b59b6; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Both<br>
+    <i style="background: #2ecc71; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Unconstrained<br>
+    <hr style="margin: 4px 0;">
+    <b>Data Centers</b><br>
+    <i style="background: #27ae60; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Operational<br>
+    <i style="background: #3498db; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Proposed<br>
+    <i style="background: #e67e22; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Construction<br>
+    <hr style="margin: 4px 0;">
+    <b>Transmission Lines</b><br>
+    <i style="background: #8b0000; width: 16px; height: 4px; display: inline-block;"></i> 765 kV+<br>
+    <i style="background: #cc0000; width: 16px; height: 3px; display: inline-block;"></i> 500 kV<br>
+    <i style="background: #e65c00; width: 16px; height: 3px; display: inline-block;"></i> 345 kV<br>
+    <i style="background: #ff8c00; width: 16px; height: 3px; display: inline-block;"></i> 230 kV<br>
+    <hr style="margin: 4px 0;">
+    <b>Pnode Severity Tier</b><br>
+    <i style="background: #e74c3c; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Critical (&ge;0.75)<br>
+    <i style="background: #e67e22; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Elevated (&ge;0.50)<br>
+    <i style="background: #f1c40f; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Moderate (&ge;0.25)<br>
+    <i style="background: #27ae60; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Low (&lt;0.25)<br>
+    <br><i>Marker size = severity score</i>
+    </div>
+    
+    
+            <div class="folium-map" id="map_d6a0da3243a86c59fda56dd4f128f60f" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_d6a0da3243a86c59fda56dd4f128f60f = L.map(
+                "map_d6a0da3243a86c59fda56dd4f128f60f",
+                {
+                    center: [40.0, -90.0],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 5,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_7f2fa1469ff728e5432a297131a9ce11 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_7f2fa1469ff728e5432a297131a9ce11.addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+        
+    
+            var feature_group_e75a562f753dc6b7e1f542a285a5f7b9 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_852f4c98f90d740cf27e58578a621986 = L.circleMarker(
+                [34.75, -92.3],
+                {"bubblingMouseEvents": true, "color": "#9b59b6", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#9b59b6", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.714057534246574, "stroke": true, "weight": 2}
+            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+        
+    
+        var popup_5a551f5dcea7efd7afae3be3d1ffff98 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_d49baca3d5a17f10a64133ed3249fd1c = $(`<div id="html_d49baca3d5a17f10a64133ed3249fd1c" style="width: 100.0%; height: 100.0%;"><b>ARKANSAS.HUB</b> (Arkansas Hub)<br><b>Classification:</b> BOTH<br><b>T-score:</b> 0.661<br><b>G-score:</b> 0.600<br><b>Avg congestion:</b> $8.10/MWh<br><b>Max congestion:</b> $173.17/MWh<br><b>Constrained hours:</b> 5732/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_5a551f5dcea7efd7afae3be3d1ffff98.setContent(html_d49baca3d5a17f10a64133ed3249fd1c);
+            
+        
+
+        circle_marker_852f4c98f90d740cf27e58578a621986.bindPopup(popup_5a551f5dcea7efd7afae3be3d1ffff98)
+        ;
+
+        
+    
+    
+            circle_marker_852f4c98f90d740cf27e58578a621986.bindTooltip(
+                `<div>
+                     ARKANSAS.HUB: both
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_24fc2bbd80baad4df8880c9162172bdf = L.circleMarker(
+                [39.0, -89.5],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.222483561643834, "stroke": true, "weight": 2}
+            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+        
+    
+        var popup_b26ed8420bdb4443e356db61da461f7b = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_8e144cfe8b6b3e06c3387f7de09efec2 = $(`<div id="html_8e144cfe8b6b3e06c3387f7de09efec2" style="width: 100.0%; height: 100.0%;"><b>ILLINOIS.HUB</b> (Illinois Hub)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.118<br><b>G-score:</b> 0.467<br><b>Avg congestion:</b> $2.69/MWh<br><b>Max congestion:</b> $106.54/MWh<br><b>Constrained hours:</b> 3096/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_b26ed8420bdb4443e356db61da461f7b.setContent(html_8e144cfe8b6b3e06c3387f7de09efec2);
+            
+        
+
+        circle_marker_24fc2bbd80baad4df8880c9162172bdf.bindPopup(popup_b26ed8420bdb4443e356db61da461f7b)
+        ;
+
+        
+    
+    
+            circle_marker_24fc2bbd80baad4df8880c9162172bdf.bindTooltip(
+                `<div>
+                     ILLINOIS.HUB: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_6937510d17000562cf8a16528296e074 = L.circleMarker(
+                [40.0, -86.25],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.343538356164384, "stroke": true, "weight": 2}
+            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+        
+    
+        var popup_1ea211eaf920cd773ac59e0e6ef9410e = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_921a94accab2b5c54badf48d152e9012 = $(`<div id="html_921a94accab2b5c54badf48d152e9012" style="width: 100.0%; height: 100.0%;"><b>INDIANA.HUB</b> (Indiana Hub)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.092<br><b>G-score:</b> 0.430<br><b>Avg congestion:</b> $2.79/MWh<br><b>Max congestion:</b> $106.39/MWh<br><b>Constrained hours:</b> 3398/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_1ea211eaf920cd773ac59e0e6ef9410e.setContent(html_921a94accab2b5c54badf48d152e9012);
+            
+        
+
+        circle_marker_6937510d17000562cf8a16528296e074.bindPopup(popup_1ea211eaf920cd773ac59e0e6ef9410e)
+        ;
+
+        
+    
+    
+            circle_marker_6937510d17000562cf8a16528296e074.bindTooltip(
+                `<div>
+                     INDIANA.HUB: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_c104bfa28f48305a68a913d10e8f3e42 = L.circleMarker(
+                [31.0, -92.0],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 19.39614794520548, "stroke": true, "weight": 2}
+            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+        
+    
+        var popup_ba2e063dafd53d9afbf448e7fc63a7cf = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_15c2f1f67609d3d9613abf55ee8de853 = $(`<div id="html_15c2f1f67609d3d9613abf55ee8de853" style="width: 100.0%; height: 100.0%;"><b>LOUISIANA.HUB</b> (Louisiana Hub)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.999<br><b>G-score:</b> 0.400<br><b>Avg congestion:</b> $9.50/MWh<br><b>Max congestion:</b> $661.19/MWh<br><b>Constrained hours:</b> 6001/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_ba2e063dafd53d9afbf448e7fc63a7cf.setContent(html_15c2f1f67609d3d9613abf55ee8de853);
+            
+        
+
+        circle_marker_c104bfa28f48305a68a913d10e8f3e42.bindPopup(popup_ba2e063dafd53d9afbf448e7fc63a7cf)
+        ;
+
+        
+    
+    
+            circle_marker_c104bfa28f48305a68a913d10e8f3e42.bindTooltip(
+                `<div>
+                     LOUISIANA.HUB: transmission
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_1ed0bc99542506b27b81f46728c78220 = L.circleMarker(
+                [43.0, -84.5],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.659286301369864, "stroke": true, "weight": 2}
+            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+        
+    
+        var popup_4b8b32fd29181ce36d7a0d3f627be1c3 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_83b940a6a9c69f7e96674da01fc0a866 = $(`<div id="html_83b940a6a9c69f7e96674da01fc0a866" style="width: 100.0%; height: 100.0%;"><b>MICHIGAN.HUB</b> (Michigan Hub)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.138<br><b>G-score:</b> 0.453<br><b>Avg congestion:</b> $3.05/MWh<br><b>Max congestion:</b> $106.80/MWh<br><b>Constrained hours:</b> 3553/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_4b8b32fd29181ce36d7a0d3f627be1c3.setContent(html_83b940a6a9c69f7e96674da01fc0a866);
+            
+        
+
+        circle_marker_1ed0bc99542506b27b81f46728c78220.bindPopup(popup_4b8b32fd29181ce36d7a0d3f627be1c3)
+        ;
+
+        
+    
+    
+            circle_marker_1ed0bc99542506b27b81f46728c78220.bindTooltip(
+                `<div>
+                     MICHIGAN.HUB: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b7776fc972eee5490ddf50a9cd990351 = L.circleMarker(
+                [46.0, -94.0],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.215509589041096, "stroke": true, "weight": 2}
+            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+        
+    
+        var popup_23f4e37bbba9d9d4ac7f7075c8717c2e = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_687e87fff1a2f17f21684e46c817ebf8 = $(`<div id="html_687e87fff1a2f17f21684e46c817ebf8" style="width: 100.0%; height: 100.0%;"><b>MINN.HUB</b> (Minnesota Hub)<br><b>Classification:</b> GENERATION<br><b>T-score:</b> 0.397<br><b>G-score:</b> 0.533<br><b>Avg congestion:</b> $6.01/MWh<br><b>Max congestion:</b> $134.15/MWh<br><b>Constrained hours:</b> 5580/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization<br>&nbsp;&nbsp;Combined Heat & Power<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV<br>&nbsp;&nbsp;Wind</div>`)[0];
+                popup_23f4e37bbba9d9d4ac7f7075c8717c2e.setContent(html_687e87fff1a2f17f21684e46c817ebf8);
+            
+        
+
+        circle_marker_b7776fc972eee5490ddf50a9cd990351.bindPopup(popup_23f4e37bbba9d9d4ac7f7075c8717c2e)
+        ;
+
+        
+    
+    
+            circle_marker_b7776fc972eee5490ddf50a9cd990351.bindTooltip(
+                `<div>
+                     MINN.HUB: generation
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_69c93877b13c0d6c3297302657905f66 = L.circleMarker(
+                [33.5, -89.5],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.669772602739727, "stroke": true, "weight": 2}
+            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+        
+    
+        var popup_19779b7946e91e4bdf3b42b93f21a0a6 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_363ee2003d620c2348cda88369eeccf0 = $(`<div id="html_363ee2003d620c2348cda88369eeccf0" style="width: 100.0%; height: 100.0%;"><b>MS.HUB</b> (Mississippi Hub)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.683<br><b>G-score:</b> 0.455<br><b>Avg congestion:</b> $8.06/MWh<br><b>Max congestion:</b> $186.11/MWh<br><b>Constrained hours:</b> 5720/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_19779b7946e91e4bdf3b42b93f21a0a6.setContent(html_363ee2003d620c2348cda88369eeccf0);
+            
+        
+
+        circle_marker_69c93877b13c0d6c3297302657905f66.bindPopup(popup_19779b7946e91e4bdf3b42b93f21a0a6)
+        ;
+
+        
+    
+    
+            circle_marker_69c93877b13c0d6c3297302657905f66.bindTooltip(
+                `<div>
+                     MS.HUB: transmission
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_1f9cd21c34fc2074d0a08fd56aa45544 = L.circleMarker(
+                [31.5, -97.0],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 18.15232191780822, "stroke": true, "weight": 2}
+            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+        
+    
+        var popup_ef53a91f4859e8709a3d95fd40dc344b = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_a4d50175ea2198dd5c2df7b79061de9f = $(`<div id="html_a4d50175ea2198dd5c2df7b79061de9f" style="width: 100.0%; height: 100.0%;"><b>TEXAS.HUB</b> (Texas Hub)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.694<br><b>G-score:</b> 0.427<br><b>Avg congestion:</b> $8.46/MWh<br><b>Max congestion:</b> $175.45/MWh<br><b>Constrained hours:</b> 6010/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_ef53a91f4859e8709a3d95fd40dc344b.setContent(html_a4d50175ea2198dd5c2df7b79061de9f);
+            
+        
+
+        circle_marker_1f9cd21c34fc2074d0a08fd56aa45544.bindPopup(popup_ef53a91f4859e8709a3d95fd40dc344b)
+        ;
+
+        
+    
+    
+            circle_marker_1f9cd21c34fc2074d0a08fd56aa45544.bindTooltip(
+                `<div>
+                     TEXAS.HUB: transmission
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_e75a562f753dc6b7e1f542a285a5f7b9.addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+        
+    
+            var feature_group_f0fbb47f3df98407e32f666fca585247 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var marker_cluster_35d84fe75da0472735f728a086446fa7 = L.markerClusterGroup(
+                {
+  "maxClusterRadius": 50,
+  "disableClusteringAtZoom": 10,
+}
+            );
+        
+    
+            marker_cluster_35d84fe75da0472735f728a086446fa7.addTo(feature_group_f0fbb47f3df98407e32f666fca585247);
+        
+    
+            feature_group_f0fbb47f3df98407e32f666fca585247.addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+        
+    
+        var esri_transmission_layer_a1d8d5ef22939ed39a048faf81c25c6b = L.esri.featureLayer({
+            url: 'https://services1.arcgis.com/Hp6G80Pky0om7QvQ/arcgis/rest/services/Electric_Power_Transmission_Lines/FeatureServer/0',
+            where: "VOLTAGE >= 230",
+            style: function(feature) {
+                var v = (feature.properties || {}).VOLTAGE || 0;
+                if (v >= 500) return {color: '#cc0000', weight: 3, opacity: 0.8};
+                if (v >= 345) return {color: '#e65c00', weight: 2.5, opacity: 0.7};
+                if (v >= 230) return {color: '#ff8c00', weight: 1.5, opacity: 0.6};
+                return {color: '#aaa', weight: 1, opacity: 0.4};
+            },
+            onEachFeature: function(feature, layer) {
+                var p = feature.properties || {};
+                layer.bindTooltip(
+                    (p.VOLTAGE || '?') + ' kV | ' + (p.OWNER || 'Unknown')
+                        + (p.SUB_1 ? '<br>' + p.SUB_1 + ' \u2192 ' + (p.SUB_2 || '?') : ''),
+                    {sticky: true}
+                );
+            }
+        }).addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+
+        setTimeout(function() {
+            var overlays = document.querySelectorAll('.leaflet-control-layers-overlays');
+            if (overlays.length > 0) {
+                var label = document.createElement('label');
+                var div = document.createElement('div');
+                var input = document.createElement('input');
+                input.type = 'checkbox';
+                input.className = 'leaflet-control-layers-selector';
+                input.checked = true;
+                input.addEventListener('change', function() {
+                    if (this.checked) {
+                        esri_transmission_layer_a1d8d5ef22939ed39a048faf81c25c6b.addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+                    } else {
+                        map_d6a0da3243a86c59fda56dd4f128f60f.removeLayer(esri_transmission_layer_a1d8d5ef22939ed39a048faf81c25c6b);
+                    }
+                });
+                var span = document.createElement('span');
+                span.textContent = ' HIFLD Transmission Lines';
+                label.appendChild(div);
+                div.appendChild(input);
+                div.appendChild(span);
+                overlays[0].appendChild(label);
+            }
+        }, 200);
+        
+    
+            var layer_control_332b1afa52cfbcd5e36c159bcbb692f2_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_7f2fa1469ff728e5432a297131a9ce11,
+                },
+                overlays :  {
+                    "Zone Classifications" : feature_group_e75a562f753dc6b7e1f542a285a5f7b9,
+                    "Data Center Clusters" : feature_group_f0fbb47f3df98407e32f666fca585247,
+                },
+            };
+            let layer_control_332b1afa52cfbcd5e36c159bcbb692f2 = L.control.layers(
+                layer_control_332b1afa52cfbcd5e36c159bcbb692f2_layers.base_layers,
+                layer_control_332b1afa52cfbcd5e36c159bcbb692f2_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+
+        
+</script>
+</html>

@@ -182,6 +182,34 @@ class GridstatusAdapter(ISOAdapter):
 
         return df
 
+    def _call_get_lmp_zones(self, iso, start, end) -> pd.DataFrame:
+        """
+        Call the appropriate gridstatus get_lmp method per ISO.
+
+        Each ISO has a different API signature:
+          - CAISO: get_lmp(date=, market=, end=) - returns all locations
+          - NYISO: get_lmp(date=, end=, market=, location_type="Zone")
+          - MISO:  get_lmp(date=, end=, market=) - returns all locations
+          - SPP:   get_lmp_day_ahead_hourly(date=, end=) - no get_lmp
+        """
+        iso_id = self.config.iso_id
+
+        if iso_id == "spp":
+            return iso.get_lmp_day_ahead_hourly(date=start, end=end)
+
+        if iso_id == "nyiso":
+            return iso.get_lmp(
+                date=start, end=end,
+                market="DAY_AHEAD_HOURLY",
+                location_type="Zone",
+            )
+
+        # CAISO, MISO, and others: date/end/market
+        return iso.get_lmp(
+            date=start, end=end,
+            market="DAY_AHEAD_HOURLY",
+        )
+
     def pull_zone_lmps(self, year: int, force: bool = False) -> pd.DataFrame:
         """
         Pull zone-level day-ahead hourly LMPs for a full year via gridstatus.
@@ -205,13 +233,7 @@ class GridstatusAdapter(ISOAdapter):
         )
 
         try:
-            df = iso.get_lmp(
-                start=start,
-                end=end,
-                market="DAY_AHEAD_HOURLY",
-                locations="ALL",
-                location_type="zone",
-            )
+            df = self._call_get_lmp_zones(iso, start, end)
         except Exception as e:
             logger.error(f"gridstatus zone LMP pull failed: {e}")
             return pd.DataFrame()
@@ -221,6 +243,26 @@ class GridstatusAdapter(ISOAdapter):
             return pd.DataFrame()
 
         df = self._normalize_zone_lmps(df)
+
+        # Filter to configured zones (gridstatus may return all locations)
+        if "pnode_name" in df.columns and self.config.zones:
+            zone_codes = set(self.config.zones.keys())
+            zone_names = {z.get("name", "") for z in self.config.zones.values()}
+            rto_agg = self.config.rto_aggregates or set()
+            all_names = zone_codes | zone_names | rto_agg
+            before = len(df)
+            filtered = df[df["pnode_name"].isin(all_names)]
+            if len(filtered) > 0 and len(filtered) < before:
+                df = filtered
+                logger.info(
+                    f"Filtered to {len(df)} zone rows from {before} total "
+                    f"(matched {df['pnode_name'].nunique()} zones)"
+                )
+            elif len(filtered) == 0:
+                logger.info(
+                    f"No zone name matches found, keeping all {before} rows "
+                    f"({df['pnode_name'].nunique()} unique locations)"
+                )
 
         # Handle synthetic congestion for ERCOT
         if self.config.congestion_approximated:
