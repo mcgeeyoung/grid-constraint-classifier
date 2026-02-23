@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_b84e8e16b2f1f73aaeeb9b0b6d8384a3 {
+                #map_a5a5730ad7f6425919cd855ffaf73f9e {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -90,14 +90,14 @@
     </div>
     
     
-            <div class="folium-map" id="map_b84e8e16b2f1f73aaeeb9b0b6d8384a3" ></div>
+            <div class="folium-map" id="map_a5a5730ad7f6425919cd855ffaf73f9e" ></div>
         
 </body>
 <script>
     
     
-            var map_b84e8e16b2f1f73aaeeb9b0b6d8384a3 = L.map(
-                "map_b84e8e16b2f1f73aaeeb9b0b6d8384a3",
+            var map_a5a5730ad7f6425919cd855ffaf73f9e = L.map(
+                "map_a5a5730ad7f6425919cd855ffaf73f9e",
                 {
                     center: [37.0, -98.0],
                     crs: L.CRS.EPSG3857,
@@ -114,7 +114,7 @@
 
         
     
-            var tile_layer_cfc4522f945b2db291505ba531d14f5f = L.tileLayer(
+            var tile_layer_db01f10a91df66ee4c4810c51a61b60d = L.tileLayer(
                 "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
                 {
   "minZoom": 0,
@@ -131,25 +131,25 @@
             );
         
     
-            tile_layer_cfc4522f945b2db291505ba531d14f5f.addTo(map_b84e8e16b2f1f73aaeeb9b0b6d8384a3);
+            tile_layer_db01f10a91df66ee4c4810c51a61b60d.addTo(map_a5a5730ad7f6425919cd855ffaf73f9e);
         
     
-            var feature_group_f1056780271ea8bf5571c0ffa6521aab = L.featureGroup(
+            var feature_group_04b1f1d3c407dda9c4c743e1dda77542 = L.featureGroup(
                 {
 }
             );
         
     
-            feature_group_f1056780271ea8bf5571c0ffa6521aab.addTo(map_b84e8e16b2f1f73aaeeb9b0b6d8384a3);
+            feature_group_04b1f1d3c407dda9c4c743e1dda77542.addTo(map_a5a5730ad7f6425919cd855ffaf73f9e);
         
     
-            var feature_group_19f941afc893d59d3e6544b04487fed4 = L.featureGroup(
+            var feature_group_77f13ac67c895140c68e9ae0dafcb523 = L.featureGroup(
                 {
 }
             );
         
     
-            var marker_cluster_8869432d22a9580e6970a3bf6d07ec89 = L.markerClusterGroup(
+            var marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024 = L.markerClusterGroup(
                 {
   "maxClusterRadius": 50,
   "disableClusteringAtZoom": 10,
@@ -157,13 +157,1003 @@
             );
         
     
-            marker_cluster_8869432d22a9580e6970a3bf6d07ec89.addTo(feature_group_19f941afc893d59d3e6544b04487fed4);
+            var circle_marker_09487ce4cd52e84512cf34b3517973ba = L.circleMarker(
+                [38.0, -97.0],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
         
     
-            feature_group_19f941afc893d59d3e6544b04487fed4.addTo(map_b84e8e16b2f1f73aaeeb9b0b6d8384a3);
+        var popup_10f6f50bb7b9548c61b66b64c22610ab = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_56dac823f023540e6aef5769cab5bda6 = $(`<div id="html_56dac823f023540e6aef5769cab5bda6" style="width: 100.0%; height: 100.0%;"><b>DataBank</b><br><b>Zone:</b> WFEC<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Johnson, KS</div>`)[0];
+                popup_10f6f50bb7b9548c61b66b64c22610ab.setContent(html_56dac823f023540e6aef5769cab5bda6);
+            
+        
+
+        circle_marker_09487ce4cd52e84512cf34b3517973ba.bindPopup(popup_10f6f50bb7b9548c61b66b64c22610ab)
+        ;
+
         
     
-        var esri_transmission_layer_cccb43165c25debdb7b0a41122ba69f4 = L.esri.featureLayer({
+    
+            circle_marker_09487ce4cd52e84512cf34b3517973ba.bindTooltip(
+                `<div>
+                     DataBank
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b52a108fa1b46a3234a63af705e3e06f = L.circleMarker(
+                [38.0, -97.0],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_055b2b4ac2dde276a19c639fa8a5ac43 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_e01b811d1ef6231e80b2859bdd8bfb67 = $(`<div id="html_e01b811d1ef6231e80b2859bdd8bfb67" style="width: 100.0%; height: 100.0%;"><b>DataBank</b><br><b>Zone:</b> WFEC<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Johnson, KS</div>`)[0];
+                popup_055b2b4ac2dde276a19c639fa8a5ac43.setContent(html_e01b811d1ef6231e80b2859bdd8bfb67);
+            
+        
+
+        circle_marker_b52a108fa1b46a3234a63af705e3e06f.bindPopup(popup_055b2b4ac2dde276a19c639fa8a5ac43)
+        ;
+
+        
+    
+    
+            circle_marker_b52a108fa1b46a3234a63af705e3e06f.bindTooltip(
+                `<div>
+                     DataBank
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a5e1af6abb458012a677e3fc4d2a7089 = L.circleMarker(
+                [38.0, -97.0],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_946e0cb7fa0c16e13774e8a467814110 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_6720f326bfefdb31f4b09e5a6015288f = $(`<div id="html_6720f326bfefdb31f4b09e5a6015288f" style="width: 100.0%; height: 100.0%;"><b>QTS</b><br><b>Zone:</b> WFEC<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Johnson, KS</div>`)[0];
+                popup_946e0cb7fa0c16e13774e8a467814110.setContent(html_6720f326bfefdb31f4b09e5a6015288f);
+            
+        
+
+        circle_marker_a5e1af6abb458012a677e3fc4d2a7089.bindPopup(popup_946e0cb7fa0c16e13774e8a467814110)
+        ;
+
+        
+    
+    
+            circle_marker_a5e1af6abb458012a677e3fc4d2a7089.bindTooltip(
+                `<div>
+                     QTS
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a2bd884ad3c1150573b587315a9c63ef = L.circleMarker(
+                [38.0, -97.0],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.68, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_2f5db046c80cfef7482e9ba8f2c2f896 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_6d8394cb9b77a57c0f1168ffe6b04a1c = $(`<div id="html_6d8394cb9b77a57c0f1168ffe6b04a1c" style="width: 100.0%; height: 100.0%;"><b>State Farm</b><br><b>Zone:</b> WFEC<br><b>Status:</b> Operational<br><b>Capacity:</b> 10-25 MW<br><b>Location:</b> Johnson, KS</div>`)[0];
+                popup_2f5db046c80cfef7482e9ba8f2c2f896.setContent(html_6d8394cb9b77a57c0f1168ffe6b04a1c);
+            
+        
+
+        circle_marker_a2bd884ad3c1150573b587315a9c63ef.bindPopup(popup_2f5db046c80cfef7482e9ba8f2c2f896)
+        ;
+
+        
+    
+    
+            circle_marker_a2bd884ad3c1150573b587315a9c63ef.bindTooltip(
+                `<div>
+                     State Farm
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_8042da04d6fdc1fb3ca81e44c3641a39 = L.circleMarker(
+                [38.0, -97.0],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_d704f4dfbb47e90eb7e471800fd0b673 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_1deebe3708daf0ab3d6789ea8f1db477 = $(`<div id="html_1deebe3708daf0ab3d6789ea8f1db477" style="width: 100.0%; height: 100.0%;"><b>CLOP Olathe KS LLC</b><br><b>Zone:</b> WFEC<br><b>Status:</b> Proposed<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Johnson, KS</div>`)[0];
+                popup_d704f4dfbb47e90eb7e471800fd0b673.setContent(html_1deebe3708daf0ab3d6789ea8f1db477);
+            
+        
+
+        circle_marker_8042da04d6fdc1fb3ca81e44c3641a39.bindPopup(popup_d704f4dfbb47e90eb7e471800fd0b673)
+        ;
+
+        
+    
+    
+            circle_marker_8042da04d6fdc1fb3ca81e44c3641a39.bindTooltip(
+                `<div>
+                     CLOP Olathe KS LLC
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_50c49ebb3650d5d47a690e444e18cee2 = L.circleMarker(
+                [38.0, -97.0],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_96c7145c369cb1ccfc7e37460ad33561 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_7b3b77f6ba7434d401e95e617fff5bf0 = $(`<div id="html_7b3b77f6ba7434d401e95e617fff5bf0" style="width: 100.0%; height: 100.0%;"><b>DataBank</b><br><b>Zone:</b> WFEC<br><b>Status:</b> Proposed<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Johnson, KS</div>`)[0];
+                popup_96c7145c369cb1ccfc7e37460ad33561.setContent(html_7b3b77f6ba7434d401e95e617fff5bf0);
+            
+        
+
+        circle_marker_50c49ebb3650d5d47a690e444e18cee2.bindPopup(popup_96c7145c369cb1ccfc7e37460ad33561)
+        ;
+
+        
+    
+    
+            circle_marker_50c49ebb3650d5d47a690e444e18cee2.bindTooltip(
+                `<div>
+                     DataBank
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_50ce0cfe9fd5db65b3fc4e748b148464 = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_1aadb21e2c77af6d885fb1bc68f9b0a4 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_83b8ac87865798680b87159afdb1776c = $(`<div id="html_83b8ac87865798680b87159afdb1776c" style="width: 100.0%; height: 100.0%;"><b>Cabela's Wholesale</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Sarpy, NE</div>`)[0];
+                popup_1aadb21e2c77af6d885fb1bc68f9b0a4.setContent(html_83b8ac87865798680b87159afdb1776c);
+            
+        
+
+        circle_marker_50ce0cfe9fd5db65b3fc4e748b148464.bindPopup(popup_1aadb21e2c77af6d885fb1bc68f9b0a4)
+        ;
+
+        
+    
+    
+            circle_marker_50ce0cfe9fd5db65b3fc4e748b148464.bindTooltip(
+                `<div>
+                     Cabela's Wholesale
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_64f39770b8878a63440e6012ca494a68 = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_0f8eeaeabb666743c9ee0012d4085861 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_4c3cd79245e90294f804de00b072c347 = $(`<div id="html_4c3cd79245e90294f804de00b072c347" style="width: 100.0%; height: 100.0%;"><b>CSG International</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Douglas, NE</div>`)[0];
+                popup_0f8eeaeabb666743c9ee0012d4085861.setContent(html_4c3cd79245e90294f804de00b072c347);
+            
+        
+
+        circle_marker_64f39770b8878a63440e6012ca494a68.bindPopup(popup_0f8eeaeabb666743c9ee0012d4085861)
+        ;
+
+        
+    
+    
+            circle_marker_64f39770b8878a63440e6012ca494a68.bindTooltip(
+                `<div>
+                     CSG International
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_0d0ca10030844d41aa91320763bfb41f = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_bfca686e0a876bcd81b1141ab8fbaa06 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_f1395bb542b37855e0ca04b97a847d8d = $(`<div id="html_f1395bb542b37855e0ca04b97a847d8d" style="width: 100.0%; height: 100.0%;"><b>Doxim</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Sarpy, NE</div>`)[0];
+                popup_bfca686e0a876bcd81b1141ab8fbaa06.setContent(html_f1395bb542b37855e0ca04b97a847d8d);
+            
+        
+
+        circle_marker_0d0ca10030844d41aa91320763bfb41f.bindPopup(popup_bfca686e0a876bcd81b1141ab8fbaa06)
+        ;
+
+        
+    
+    
+            circle_marker_0d0ca10030844d41aa91320763bfb41f.bindTooltip(
+                `<div>
+                     Doxim
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_5b69bc1fa9cb572199433b77101c533f = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_1399e252b902836c8ba3797fc77f20f4 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_5adfb260c387c3372767b76f4acd7997 = $(`<div id="html_5adfb260c387c3372767b76f4acd7997" style="width: 100.0%; height: 100.0%;"><b>Fidelity</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Sarpy, NE</div>`)[0];
+                popup_1399e252b902836c8ba3797fc77f20f4.setContent(html_5adfb260c387c3372767b76f4acd7997);
+            
+        
+
+        circle_marker_5b69bc1fa9cb572199433b77101c533f.bindPopup(popup_1399e252b902836c8ba3797fc77f20f4)
+        ;
+
+        
+    
+    
+            circle_marker_5b69bc1fa9cb572199433b77101c533f.bindTooltip(
+                `<div>
+                     Fidelity
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_db4153451c936eb3fb75e49bc9e06543 = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.68, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_6d579d14b791e65cd12e13de03c94263 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_153a366caf7f47a7e5fbbe03dba22457 = $(`<div id="html_153a366caf7f47a7e5fbbe03dba22457" style="width: 100.0%; height: 100.0%;"><b>Fiserv</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> 10-25 MW<br><b>Location:</b> Douglas, NE</div>`)[0];
+                popup_6d579d14b791e65cd12e13de03c94263.setContent(html_153a366caf7f47a7e5fbbe03dba22457);
+            
+        
+
+        circle_marker_db4153451c936eb3fb75e49bc9e06543.bindPopup(popup_6d579d14b791e65cd12e13de03c94263)
+        ;
+
+        
+    
+    
+            circle_marker_db4153451c936eb3fb75e49bc9e06543.bindTooltip(
+                `<div>
+                     Fiserv
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_55acf8f5dc349e6e0ee77d2c6bda9bae = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_ba636fa6632a027bd48cfd9b584261d9 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_17b310e7172526269fc48351aa9d6668 = $(`<div id="html_17b310e7172526269fc48351aa9d6668" style="width: 100.0%; height: 100.0%;"><b>Google</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> 250+ MW<br><b>Location:</b> Douglas, NE</div>`)[0];
+                popup_ba636fa6632a027bd48cfd9b584261d9.setContent(html_17b310e7172526269fc48351aa9d6668);
+            
+        
+
+        circle_marker_55acf8f5dc349e6e0ee77d2c6bda9bae.bindPopup(popup_ba636fa6632a027bd48cfd9b584261d9)
+        ;
+
+        
+    
+    
+            circle_marker_55acf8f5dc349e6e0ee77d2c6bda9bae.bindTooltip(
+                `<div>
+                     Google
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_cd04bd86a42325877610243ba4d71c6e = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_f757707ee70dd8458016bbd70e5603a6 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_b4326529d3af544b5b674497074b3dbe = $(`<div id="html_b4326529d3af544b5b674497074b3dbe" style="width: 100.0%; height: 100.0%;"><b>Google Omaha</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> 100-250 MW<br><b>Location:</b> Douglas, NE</div>`)[0];
+                popup_f757707ee70dd8458016bbd70e5603a6.setContent(html_b4326529d3af544b5b674497074b3dbe);
+            
+        
+
+        circle_marker_cd04bd86a42325877610243ba4d71c6e.bindPopup(popup_f757707ee70dd8458016bbd70e5603a6)
+        ;
+
+        
+    
+    
+            circle_marker_cd04bd86a42325877610243ba4d71c6e.bindTooltip(
+                `<div>
+                     Google Omaha
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_995315deb3b1532acc222d8bf9d4dcd6 = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_9b0d21b71dce57c67652f13b240dbec3 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_ba074257af8a27e66cc1f680ebfc893c = $(`<div id="html_ba074257af8a27e66cc1f680ebfc893c" style="width: 100.0%; height: 100.0%;"><b>TierPoint</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Sarpy, NE</div>`)[0];
+                popup_9b0d21b71dce57c67652f13b240dbec3.setContent(html_ba074257af8a27e66cc1f680ebfc893c);
+            
+        
+
+        circle_marker_995315deb3b1532acc222d8bf9d4dcd6.bindPopup(popup_9b0d21b71dce57c67652f13b240dbec3)
+        ;
+
+        
+    
+    
+            circle_marker_995315deb3b1532acc222d8bf9d4dcd6.bindTooltip(
+                `<div>
+                     TierPoint
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_c92f03050a5520c7369721e70f8e149a = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_bfd0ed4de5c183635d75a7a87275ddb9 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_07bc053a7aa806fa284df3d6c454c76e = $(`<div id="html_07bc053a7aa806fa284df3d6c454c76e" style="width: 100.0%; height: 100.0%;"><b>TierPoint</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Sarpy, NE</div>`)[0];
+                popup_bfd0ed4de5c183635d75a7a87275ddb9.setContent(html_07bc053a7aa806fa284df3d6c454c76e);
+            
+        
+
+        circle_marker_c92f03050a5520c7369721e70f8e149a.bindPopup(popup_bfd0ed4de5c183635d75a7a87275ddb9)
+        ;
+
+        
+    
+    
+            circle_marker_c92f03050a5520c7369721e70f8e149a.bindTooltip(
+                `<div>
+                     TierPoint
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_4469c2e4591b372ad0e4305ce6d80a75 = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_3e92b1f25e58910b186f8e8ea0d59f6f = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_741601778103b46e6e6e097447cbae3d = $(`<div id="html_741601778103b46e6e6e097447cbae3d" style="width: 100.0%; height: 100.0%;"><b>Travelers Indemnity Company</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Douglas, NE</div>`)[0];
+                popup_3e92b1f25e58910b186f8e8ea0d59f6f.setContent(html_741601778103b46e6e6e097447cbae3d);
+            
+        
+
+        circle_marker_4469c2e4591b372ad0e4305ce6d80a75.bindPopup(popup_3e92b1f25e58910b186f8e8ea0d59f6f)
+        ;
+
+        
+    
+    
+            circle_marker_4469c2e4591b372ad0e4305ce6d80a75.bindTooltip(
+                `<div>
+                     Travelers Indemnity Company
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_f96f3771cf45d1c36f8e650f79c820aa = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_820947b923afcf7907f4861f3a77a4c5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_4eb068e6506264629db19906b8bd949c = $(`<div id="html_4eb068e6506264629db19906b8bd949c" style="width: 100.0%; height: 100.0%;"><b>Verizon</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Douglas, NE</div>`)[0];
+                popup_820947b923afcf7907f4861f3a77a4c5.setContent(html_4eb068e6506264629db19906b8bd949c);
+            
+        
+
+        circle_marker_f96f3771cf45d1c36f8e650f79c820aa.bindPopup(popup_820947b923afcf7907f4861f3a77a4c5)
+        ;
+
+        
+    
+    
+            circle_marker_f96f3771cf45d1c36f8e650f79c820aa.bindTooltip(
+                `<div>
+                     Verizon
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_5d80fe20ff671a8b07afc3b6e03a7750 = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#e67e22", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e67e22", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_3da36c101e8ebd17ee434121b84df5cb = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_b3c492067fc929ed2806dd75b1132ab3 = $(`<div id="html_b3c492067fc929ed2806dd75b1132ab3" style="width: 100.0%; height: 100.0%;"><b>Google</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Construction<br><b>Capacity:</b> 250+ MW<br><b>Location:</b> Sarpy, NE</div>`)[0];
+                popup_3da36c101e8ebd17ee434121b84df5cb.setContent(html_b3c492067fc929ed2806dd75b1132ab3);
+            
+        
+
+        circle_marker_5d80fe20ff671a8b07afc3b6e03a7750.bindPopup(popup_3da36c101e8ebd17ee434121b84df5cb)
+        ;
+
+        
+    
+    
+            circle_marker_5d80fe20ff671a8b07afc3b6e03a7750.bindTooltip(
+                `<div>
+                     Google
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_f3ef209426faa9f8b5e2b7c2a9d38aeb = L.circleMarker(
+                [41.26, -95.94],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_d6190f90d5e97e8ac95e2c6fe7b359df = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_15d6ede9be188d94496fbbee79158cec = $(`<div id="html_15d6ede9be188d94496fbbee79158cec" style="width: 100.0%; height: 100.0%;"><b>Meta</b><br><b>Zone:</b> OPPD<br><b>Status:</b> Proposed<br><b>Capacity:</b> 250+ MW<br><b>Location:</b> Sarpy, NE</div>`)[0];
+                popup_d6190f90d5e97e8ac95e2c6fe7b359df.setContent(html_15d6ede9be188d94496fbbee79158cec);
+            
+        
+
+        circle_marker_f3ef209426faa9f8b5e2b7c2a9d38aeb.bindPopup(popup_d6190f90d5e97e8ac95e2c6fe7b359df)
+        ;
+
+        
+    
+    
+            circle_marker_f3ef209426faa9f8b5e2b7c2a9d38aeb.bindTooltip(
+                `<div>
+                     Meta
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_c15763a9400ba995ac5dd5063f4a5840 = L.circleMarker(
+                [33.58, -101.85],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_dc677008b3116cfc82164b190755d6de = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_e0529eef9bd0e230bef81c03236bfaec = $(`<div id="html_e0529eef9bd0e230bef81c03236bfaec" style="width: 100.0%; height: 100.0%;"><b>ECTOR COUNTY ISD DATA CENTER</b><br><b>Zone:</b> SPS<br><b>Status:</b> Operational<br><b>Capacity:</b> —<br><b>Location:</b> Ector, TX</div>`)[0];
+                popup_dc677008b3116cfc82164b190755d6de.setContent(html_e0529eef9bd0e230bef81c03236bfaec);
+            
+        
+
+        circle_marker_c15763a9400ba995ac5dd5063f4a5840.bindPopup(popup_dc677008b3116cfc82164b190755d6de)
+        ;
+
+        
+    
+    
+            circle_marker_c15763a9400ba995ac5dd5063f4a5840.bindTooltip(
+                `<div>
+                     ECTOR COUNTY ISD DATA CENTER
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_adaf1795a11454759c850baaab61ad18 = L.circleMarker(
+                [33.58, -101.85],
+                {"bubblingMouseEvents": true, "color": "#e67e22", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e67e22", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_0cfe5a93e4f21867e08298ed20085e71 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_051195932c605d5ffa9a1369e472bdfe = $(`<div id="html_051195932c605d5ffa9a1369e472bdfe" style="width: 100.0%; height: 100.0%;"><b>BBT</b><br><b>Zone:</b> SPS<br><b>Status:</b> Construction<br><b>Capacity:</b> —<br><b>Location:</b> Midland, TX</div>`)[0];
+                popup_0cfe5a93e4f21867e08298ed20085e71.setContent(html_051195932c605d5ffa9a1369e472bdfe);
+            
+        
+
+        circle_marker_adaf1795a11454759c850baaab61ad18.bindPopup(popup_0cfe5a93e4f21867e08298ed20085e71)
+        ;
+
+        
+    
+    
+            circle_marker_adaf1795a11454759c850baaab61ad18.bindTooltip(
+                `<div>
+                     BBT
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_de283ef197bcc5746ee867d77266e9a6 = L.circleMarker(
+                [33.58, -101.85],
+                {"bubblingMouseEvents": true, "color": "#34495e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#34495e", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_a56c49737d285caf0a6b39d70d6dc824 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_ec7fb500fe4e743574802289d3c059de = $(`<div id="html_ec7fb500fe4e743574802289d3c059de" style="width: 100.0%; height: 100.0%;"><b>Crusoe Energy System, LLC</b><br><b>Zone:</b> SPS<br><b>Status:</b> Unknown<br><b>Capacity:</b> —<br><b>Location:</b> Wilbarger County, TX</div>`)[0];
+                popup_a56c49737d285caf0a6b39d70d6dc824.setContent(html_ec7fb500fe4e743574802289d3c059de);
+            
+        
+
+        circle_marker_de283ef197bcc5746ee867d77266e9a6.bindPopup(popup_a56c49737d285caf0a6b39d70d6dc824)
+        ;
+
+        
+    
+    
+            circle_marker_de283ef197bcc5746ee867d77266e9a6.bindTooltip(
+                `<div>
+                     Crusoe Energy System, LLC
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_043b44963791a62401e9ea0ce0d33f91 = L.circleMarker(
+                [39.1, -94.58],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_1ff192b512292843216e1148844a7cfd = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_4b302524ef3df18ddc6fae8f992447d4 = $(`<div id="html_4b302524ef3df18ddc6fae8f992447d4" style="width: 100.0%; height: 100.0%;"><b>Cogent</b><br><b>Zone:</b> KCPL<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Jackson, MO</div>`)[0];
+                popup_1ff192b512292843216e1148844a7cfd.setContent(html_4b302524ef3df18ddc6fae8f992447d4);
+            
+        
+
+        circle_marker_043b44963791a62401e9ea0ce0d33f91.bindPopup(popup_1ff192b512292843216e1148844a7cfd)
+        ;
+
+        
+    
+    
+            circle_marker_043b44963791a62401e9ea0ce0d33f91.bindTooltip(
+                `<div>
+                     Cogent
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_6ee197fbe9b75984563505cc7b1be53d = L.circleMarker(
+                [39.1, -94.58],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_8cf9e83fe2098e77539a294ec3a511c6 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_5f3f6602bc5360ad2e7c2cfed5cdc0b6 = $(`<div id="html_5f3f6602bc5360ad2e7c2cfed5cdc0b6" style="width: 100.0%; height: 100.0%;"><b>Iron Mountain</b><br><b>Zone:</b> KCPL<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Nodaway, MO</div>`)[0];
+                popup_8cf9e83fe2098e77539a294ec3a511c6.setContent(html_5f3f6602bc5360ad2e7c2cfed5cdc0b6);
+            
+        
+
+        circle_marker_6ee197fbe9b75984563505cc7b1be53d.bindPopup(popup_8cf9e83fe2098e77539a294ec3a511c6)
+        ;
+
+        
+    
+    
+            circle_marker_6ee197fbe9b75984563505cc7b1be53d.bindTooltip(
+                `<div>
+                     Iron Mountain
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_8b8523d76e45e3e70a18a0a7dd88f4fd = L.circleMarker(
+                [39.1, -94.58],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.68, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_77c50ece5de66e7e09ce76cfcfccf7f0 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_169802fbfd7303e4f28d7a3048a9c484 = $(`<div id="html_169802fbfd7303e4f28d7a3048a9c484" style="width: 100.0%; height: 100.0%;"><b>MasterCard</b><br><b>Zone:</b> KCPL<br><b>Status:</b> Operational<br><b>Capacity:</b> 10-25 MW<br><b>Location:</b> Platte, MO</div>`)[0];
+                popup_77c50ece5de66e7e09ce76cfcfccf7f0.setContent(html_169802fbfd7303e4f28d7a3048a9c484);
+            
+        
+
+        circle_marker_8b8523d76e45e3e70a18a0a7dd88f4fd.bindPopup(popup_77c50ece5de66e7e09ce76cfcfccf7f0)
+        ;
+
+        
+    
+    
+            circle_marker_8b8523d76e45e3e70a18a0a7dd88f4fd.bindTooltip(
+                `<div>
+                     MasterCard
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_910201b0cd4662bd9acefe41ae660644 = L.circleMarker(
+                [39.1, -94.58],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_df6e4a8168f48d86bda3b8028458da36 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_c34fee9844c65e6e64a43f23925a7682 = $(`<div id="html_c34fee9844c65e6e64a43f23925a7682" style="width: 100.0%; height: 100.0%;"><b>Oracle</b><br><b>Zone:</b> KCPL<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Clay, MO</div>`)[0];
+                popup_df6e4a8168f48d86bda3b8028458da36.setContent(html_c34fee9844c65e6e64a43f23925a7682);
+            
+        
+
+        circle_marker_910201b0cd4662bd9acefe41ae660644.bindPopup(popup_df6e4a8168f48d86bda3b8028458da36)
+        ;
+
+        
+    
+    
+            circle_marker_910201b0cd4662bd9acefe41ae660644.bindTooltip(
+                `<div>
+                     Oracle
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_fc0231ea09d2a9a750bfe7e7219607be = L.circleMarker(
+                [39.1, -94.58],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_9acf2e3f0ea742a9d5aa112ca46ab8d5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_9ddccc785caf3f17dfdf95d6092c20f0 = $(`<div id="html_9ddccc785caf3f17dfdf95d6092c20f0" style="width: 100.0%; height: 100.0%;"><b>Oracle</b><br><b>Zone:</b> KCPL<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Clay, MO</div>`)[0];
+                popup_9acf2e3f0ea742a9d5aa112ca46ab8d5.setContent(html_9ddccc785caf3f17dfdf95d6092c20f0);
+            
+        
+
+        circle_marker_fc0231ea09d2a9a750bfe7e7219607be.bindPopup(popup_9acf2e3f0ea742a9d5aa112ca46ab8d5)
+        ;
+
+        
+    
+    
+            circle_marker_fc0231ea09d2a9a750bfe7e7219607be.bindTooltip(
+                `<div>
+                     Oracle
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_4f9a482a6bb48fc36e117df7517c01f5 = L.circleMarker(
+                [39.1, -94.58],
+                {"bubblingMouseEvents": true, "color": "#27ae60", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#27ae60", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_14598e4fa5d3c9d13f59e64fbd1a787c = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_b18b0ee311edfd50741acb7c64c8f704 = $(`<div id="html_b18b0ee311edfd50741acb7c64c8f704" style="width: 100.0%; height: 100.0%;"><b>Oracle</b><br><b>Zone:</b> KCPL<br><b>Status:</b> Operational<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Jackson, MO</div>`)[0];
+                popup_14598e4fa5d3c9d13f59e64fbd1a787c.setContent(html_b18b0ee311edfd50741acb7c64c8f704);
+            
+        
+
+        circle_marker_4f9a482a6bb48fc36e117df7517c01f5.bindPopup(popup_14598e4fa5d3c9d13f59e64fbd1a787c)
+        ;
+
+        
+    
+    
+            circle_marker_4f9a482a6bb48fc36e117df7517c01f5.bindTooltip(
+                `<div>
+                     Oracle
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_20f9a70de9c934fa6e81bcf91e43be8f = L.circleMarker(
+                [39.1, -94.58],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 4.2, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_385847f4c3f31b588f6fcd6551ee37b3 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_3617448e8e2617b237592430d76eb36b = $(`<div id="html_3617448e8e2617b237592430d76eb36b" style="width: 100.0%; height: 100.0%;"><b>Edged Energy</b><br><b>Zone:</b> KCPL<br><b>Status:</b> Proposed<br><b>Capacity:</b> < 10 MW<br><b>Location:</b> Clay, MO</div>`)[0];
+                popup_385847f4c3f31b588f6fcd6551ee37b3.setContent(html_3617448e8e2617b237592430d76eb36b);
+            
+        
+
+        circle_marker_20f9a70de9c934fa6e81bcf91e43be8f.bindPopup(popup_385847f4c3f31b588f6fcd6551ee37b3)
+        ;
+
+        
+    
+    
+            circle_marker_20f9a70de9c934fa6e81bcf91e43be8f.bindTooltip(
+                `<div>
+                     Edged Energy
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_36c45757d05a962bb8d2eb8356006ff9 = L.circleMarker(
+                [39.1, -94.58],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 5, "stroke": true, "weight": 1}
+            ).addTo(marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024);
+        
+    
+        var popup_18bb30f6a06a465e48dbaf8d9940e667 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_5d36d0f98d267c1f50d4c0e80723696b = $(`<div id="html_5d36d0f98d267c1f50d4c0e80723696b" style="width: 100.0%; height: 100.0%;"><b>Meta</b><br><b>Zone:</b> KCPL<br><b>Status:</b> Proposed<br><b>Capacity:</b> —<br><b>Location:</b> Jackson, MO</div>`)[0];
+                popup_18bb30f6a06a465e48dbaf8d9940e667.setContent(html_5d36d0f98d267c1f50d4c0e80723696b);
+            
+        
+
+        circle_marker_36c45757d05a962bb8d2eb8356006ff9.bindPopup(popup_18bb30f6a06a465e48dbaf8d9940e667)
+        ;
+
+        
+    
+    
+            circle_marker_36c45757d05a962bb8d2eb8356006ff9.bindTooltip(
+                `<div>
+                     Meta
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            marker_cluster_b0c26e438ea3ea7f23ddf774a7d0d024.addTo(feature_group_77f13ac67c895140c68e9ae0dafcb523);
+        
+    
+            feature_group_77f13ac67c895140c68e9ae0dafcb523.addTo(map_a5a5730ad7f6425919cd855ffaf73f9e);
+        
+    
+        var esri_transmission_layer_d6f40af5ec30f0f9d7ac1504f29f9516 = L.esri.featureLayer({
             url: 'https://services1.arcgis.com/Hp6G80Pky0om7QvQ/arcgis/rest/services/Electric_Power_Transmission_Lines/FeatureServer/0',
             where: "VOLTAGE >= 230",
             style: function(feature) {
@@ -181,7 +1171,7 @@
                     {sticky: true}
                 );
             }
-        }).addTo(map_b84e8e16b2f1f73aaeeb9b0b6d8384a3);
+        }).addTo(map_a5a5730ad7f6425919cd855ffaf73f9e);
 
         setTimeout(function() {
             var overlays = document.querySelectorAll('.leaflet-control-layers-overlays');
@@ -194,9 +1184,9 @@
                 input.checked = true;
                 input.addEventListener('change', function() {
                     if (this.checked) {
-                        esri_transmission_layer_cccb43165c25debdb7b0a41122ba69f4.addTo(map_b84e8e16b2f1f73aaeeb9b0b6d8384a3);
+                        esri_transmission_layer_d6f40af5ec30f0f9d7ac1504f29f9516.addTo(map_a5a5730ad7f6425919cd855ffaf73f9e);
                     } else {
-                        map_b84e8e16b2f1f73aaeeb9b0b6d8384a3.removeLayer(esri_transmission_layer_cccb43165c25debdb7b0a41122ba69f4);
+                        map_a5a5730ad7f6425919cd855ffaf73f9e.removeLayer(esri_transmission_layer_d6f40af5ec30f0f9d7ac1504f29f9516);
                     }
                 });
                 var span = document.createElement('span');
@@ -209,24 +1199,24 @@
         }, 200);
         
     
-            var layer_control_f3203bce3cebea077669c62e0ff8955a_layers = {
+            var layer_control_c6db5fd977043970ceb432a7dabf77f5_layers = {
                 base_layers : {
-                    "cartodbpositron" : tile_layer_cfc4522f945b2db291505ba531d14f5f,
+                    "cartodbpositron" : tile_layer_db01f10a91df66ee4c4810c51a61b60d,
                 },
                 overlays :  {
-                    "Zone Classifications" : feature_group_f1056780271ea8bf5571c0ffa6521aab,
-                    "Data Center Clusters" : feature_group_19f941afc893d59d3e6544b04487fed4,
+                    "Zone Classifications" : feature_group_04b1f1d3c407dda9c4c743e1dda77542,
+                    "Data Center Clusters" : feature_group_77f13ac67c895140c68e9ae0dafcb523,
                 },
             };
-            let layer_control_f3203bce3cebea077669c62e0ff8955a = L.control.layers(
-                layer_control_f3203bce3cebea077669c62e0ff8955a_layers.base_layers,
-                layer_control_f3203bce3cebea077669c62e0ff8955a_layers.overlays,
+            let layer_control_c6db5fd977043970ceb432a7dabf77f5 = L.control.layers(
+                layer_control_c6db5fd977043970ceb432a7dabf77f5_layers.base_layers,
+                layer_control_c6db5fd977043970ceb432a7dabf77f5_layers.overlays,
                 {
   "position": "topright",
   "collapsed": true,
   "autoZIndex": true,
 }
-            ).addTo(map_b84e8e16b2f1f73aaeeb9b0b6d8384a3);
+            ).addTo(map_a5a5730ad7f6425919cd855ffaf73f9e);
 
         
 </script>

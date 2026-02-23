@@ -243,12 +243,31 @@ def run_single_iso(
                     dc_records = json.load(f)
                 from scraping.dc_scraper import build_dc_summary, load_dc_config
                 dc_summary = build_dc_summary(dc_records, zone_key="iso_zone")
-                # Load zone translation mapping from DC config
+                # Load zone translation mapping and centroids from DC config
                 try:
                     cached_dc_config = load_dc_config(iso_id)
                     cached_zone_mapping = cached_dc_config.get("dc_zone_to_cls_zones", {})
                     if cached_zone_mapping:
                         dc_summary["dc_zone_to_cls_zones"] = cached_zone_mapping
+                    # Convert to map-format locations
+                    zone_centroid_map = cached_dc_config.get("zone_centroids", {})
+                    for rec in dc_records:
+                        zone = rec.get("iso_zone", "")
+                        centroid = zone_centroid_map.get(zone, [39.5, -78.0])
+                        lat = centroid[0] if isinstance(centroid, list) else centroid
+                        lon = centroid[1] if isinstance(centroid, list) else centroid
+                        dc_locations.append({
+                            "name": rec.get("facility_name", ""),
+                            "lat": lat,
+                            "lon": lon,
+                            "zone": zone,
+                            "status": rec.get("status", ""),
+                            "capacity": rec.get("capacity", ""),
+                            "capacity_mw": rec.get("capacity_mw", 0),
+                            "county": rec.get("county", ""),
+                            "state_code": rec.get("state_code", ""),
+                            "operator": rec.get("operator", ""),
+                        })
                 except Exception:
                     pass
                 log.info(f"Loaded {len(dc_records)} cached DC records")
