@@ -250,10 +250,60 @@ def _build_loadshape_heatmaps(hotspots: list) -> str:
     """
 
 
+def _build_zone_heatmap(zone: str, heatmap_data: dict) -> str:
+    """Render a 12x24 CSS heatmap table for zone-level congestion."""
+    if not heatmap_data:
+        return ""
+
+    data_map = heatmap_data["data"]
+    max_val = heatmap_data.get("max_congestion", 1.0) or 1.0
+    zone_esc = html.escape(zone)
+
+    heatmap_rows = []
+    for m in range(1, 13):
+        values = data_map.get(str(m), [0.0] * 24)
+        cells = []
+        for h, val in enumerate(values):
+            frac = val / max_val if max_val > 0 else 0
+            r, g, b = 220, 50, 47
+            alpha = round(frac * 0.85 + 0.05, 3) if frac > 0.01 else 0.0
+            bg = f"rgba({r},{g},{b},{alpha})" if alpha > 0 else "#fff"
+            tooltip = f"Month {m}, Hour {h}: ${val:.2f}/MWh"
+            cells.append(
+                f'<td class="ls-cell" style="background:{bg}" '
+                f'title="{tooltip}">${val:.2f}</td>'
+            )
+        cells_html = "".join(cells)
+        heatmap_rows.append(
+            f"<tr><td class='ls-month'>{MONTH_LABELS[m-1]}</td>{cells_html}</tr>"
+        )
+    rows_html = "\n".join(heatmap_rows)
+    hour_headers = "".join(f"<th>{h}</th>" for h in range(24))
+
+    return f"""
+    <div class="loadshape-section">
+      <h4 class="pnode-heading">Zone Congestion Heatmap (Monthly x Hourly)</h4>
+      <p class="loadshape-desc">Mean |congestion| $/MWh by month and hour. Red intensity scales to zone peak (${max_val:.2f}/MWh).</p>
+      <div class="loadshape-card">
+        <div class="loadshape-title">{zone_esc}
+          <span class="loadshape-max">(peak: ${max_val:.2f}/MWh)</span>
+        </div>
+        <div class="ls-heatmap-wrap">
+          <table class="ls-heatmap">
+            <thead><tr><th></th>{hour_headers}</tr></thead>
+            <tbody>{rows_html}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    """
+
+
 def build_zone_table(data: dict) -> str:
     # Build lookup from recommendations keyed by zone
     rec_map = {r["zone"]: r for r in data["recommendations"]}
     pnode_drilldown = data.get("pnode_drilldown", {})
+    zone_heatmaps = data.get("zone_heatmaps", {})
 
     rows = []
     for zs in data["zone_scores"]:
@@ -289,6 +339,10 @@ def build_zone_table(data: dict) -> str:
         # Build pnode hotspot section (only for constrained zones with data)
         pnode_html = _build_pnode_section(zone, pnode_drilldown.get(zone))
 
+        # Build zone-level 12x24 congestion heatmap
+        zone_hm_data = zone_heatmaps.get(zone)
+        zone_hm_html = _build_zone_heatmap(zone, zone_hm_data) if zone_hm_data else ""
+
         rows.append(
             f'<tr class="zone-row" data-zone="{html.escape(zone)}">'
             f"<td>{html.escape(zone)}</td>"
@@ -305,6 +359,7 @@ def build_zone_table(data: dict) -> str:
             f'<div class="detail-content">'
             f'<div class="detail-rationale">{rationale}</div>'
             f'<div class="der-grid">{der_html}</div>'
+            f'{zone_hm_html}'
             f'{pnode_html}'
             f"</div></td></tr>"
         )

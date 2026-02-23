@@ -415,6 +415,26 @@ def run_single_iso(
     if dc_summary:
         summary["data_centers"] = dc_summary
 
+    # Compute zone-level 12x24 congestion heatmaps
+    zone_heatmaps = {}
+    for zone in classification_df["zone"]:
+        zdf = zone_lmps[zone_lmps["pnode_name"] == zone]
+        if zdf.empty:
+            continue
+        pivot = zdf.pivot_table(
+            values="congestion_price_da",
+            index="month",
+            columns="hour",
+            aggfunc=lambda x: x.abs().mean(),
+        ).reindex(index=range(1, 13), columns=range(24), fill_value=0.0)
+        zone_heatmaps[zone] = {
+            "data": {str(m): pivot.loc[m].round(2).tolist() for m in range(1, 13)},
+            "max_congestion": round(float(pivot.values.max()), 2),
+        }
+    if zone_heatmaps:
+        summary["zone_heatmaps"] = zone_heatmaps
+        log.info(f"Computed 12x24 congestion heatmaps for {len(zone_heatmaps)} zones")
+
     summary_path = output_dir / "classification_summary.json"
     with open(summary_path, "w") as f:
         json.dump(summary, f, indent=2)
