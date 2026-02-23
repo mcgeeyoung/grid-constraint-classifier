@@ -1,0 +1,183 @@
+# PJM data center scraping configuration
+# States to scrape from interconnection.fyi
+states:
+  - VA
+  - OH
+  - IL
+  - NJ
+  - IN
+  - MD
+  - PA
+  - NC
+  - TN
+  - DE
+  - MI
+  - WV
+  - DC
+  - KY
+
+# Exact-match grid operator -> PJM zone code (lowercased keys)
+# Operators mapped to null are explicitly non-PJM and will be filtered out
+operator_to_zone:
+  # Dominion
+  "dominion energy virginia": DOM
+  "dominion energy": DOM
+  "dominion virginia power": DOM
+  # PECO
+  "peco energy": PECO
+  "peco": PECO
+  # PPL
+  "ppl electric": PPL
+  "ppl electric utilities": PPL
+  "ppl": PPL
+  # PSEG
+  "pseg": PSEG
+  "public service electric and gas": PSEG
+  "public service electric & gas": PSEG
+  "pse&g": PSEG
+  # BGE
+  "baltimore gas and electric": BGE
+  "baltimore gas & electric": BGE
+  "bge": BGE
+  # Pepco
+  "pepco": PEPCO
+  "potomac electric power": PEPCO
+  "potomac electric power company": PEPCO
+  # AEP
+  "american electric power": AEP
+  "appalachian power": AEP
+  "aep": AEP
+  "aep ohio": AEP
+  "indiana michigan power": AEP
+  # ComEd
+  "commonwealth edison": COMED
+  "comed": COMED
+  "exelon": COMED
+  # FirstEnergy zones
+  "firstenergy": ATSI
+  "ohio edison": ATSI
+  "the illuminating company": ATSI
+  "toledo edison": ATSI
+  "jersey central power & light": JCPL
+  "jersey central power and light": JCPL
+  "jcpl": JCPL
+  "met-ed": METED
+  "metropolitan edison": METED
+  "penelec": PENELEC
+  "penn power": PENELEC
+  "west penn power": APS
+  "allegheny power": APS
+  "monongahela power": APS
+  "potomac edison": APS
+  # Delmarva
+  "delmarva power": DPL
+  "delmarva power & light": DPL
+  # AECO
+  "atlantic city electric": AECO
+  # Duquesne
+  "duquesne light": DUQ
+  # Dayton
+  "dayton power and light": DAY
+  "dayton power & light": DAY
+  "aes ohio": DAY
+  # Duke (Ohio/KY in PJM)
+  "duke energy ohio": DEOK
+  "duke energy kentucky": DEOK
+  "duke energy indiana": AEP
+  # EKPC
+  "east kentucky power": EKPC
+  "east kentucky power cooperative": EKPC
+  # Rockland
+  "rockland electric": RECO
+  "orange and rockland": RECO
+  # AEP subsidiaries
+  "ohio power co": AEP
+  "ohio power": AEP
+  "i&m": AEP
+  # Dominion-territory cooperatives
+  "rappahannock electric cooperative": DOM
+  "northern virginia electric cooperative": DOM
+  "manassas electric system": DOM
+  # Dayton / AES
+  "aes/dp&l": DAY
+  # Non-PJM operators (explicitly filtered out)
+  "duke energy carolinas": null
+  "duke energy progress": null
+  "duke energy": null
+  "tennessee valley authority": null
+  "tva": null
+  "ameren": null
+  "ameren illinois": null
+  "midamerican energy": null
+  "dte energy": null
+  "consumers energy": null
+  "indiana utility regulatory commission": null
+  "indianapolis power and light": null
+  "indianapolis power & light": null
+  "aes indiana": null
+  "vectren": null
+  "centerpoint energy": null
+  "entergy": null
+  "northern indiana public service": null
+  "nipsco": null
+  "hoosier energy": null
+
+# Substring fallback: keyword -> zone (checked if exact match fails)
+operator_substring_map:
+  "dominion": DOM
+  "peco": PECO
+  "ppl": PPL
+  "pseg": PSEG
+  "pse&g": PSEG
+  "baltimore gas": BGE
+  "bge": BGE
+  "pepco": PEPCO
+  "potomac electric": PEPCO
+  "american electric": AEP
+  "appalachian": AEP
+  "aep": AEP
+  "commonwealth edison": COMED
+  "comed": COMED
+  "exelon": COMED
+  "firstenergy": ATSI
+  "ohio edison": ATSI
+  "illuminating": ATSI
+  "toledo edison": ATSI
+  "jersey central": JCPL
+  "met-ed": METED
+  "metropolitan edison": METED
+  "penelec": PENELEC
+  "delmarva": DPL
+  "atlantic city": AECO
+  "duquesne": DUQ
+  "dayton power": DAY
+  "aes ohio": DAY
+  "duke energy ohio": DEOK
+  "duke energy kentucky": DEOK
+  "east kentucky": EKPC
+  "rockland": RECO
+  "ohio power": AEP
+  "rappahannock": DOM
+
+# Zone centroids for geocoding fallback (lat, lon)
+zone_centroids:
+  AECO: [39.45, -74.75]
+  AEP: [38.80, -82.00]
+  APS: [40.00, -79.50]
+  ATSI: [41.10, -81.50]
+  BGE: [39.30, -76.60]
+  COMED: [41.85, -87.90]
+  DAY: [39.76, -84.19]
+  DEOK: [39.10, -84.50]
+  DOM: [37.55, -78.00]
+  DPL: [39.15, -75.52]
+  DUQ: [40.45, -79.95]
+  EKPC: [38.20, -84.90]
+  JCPL: [40.25, -74.25]
+  METED: [40.33, -76.00]
+  PECO: [40.00, -75.15]
+  PENELEC: [41.00, -78.50]
+  PEPCO: [38.90, -77.00]
+  PPL: [40.60, -76.00]
+  PSEG: [40.73, -74.17]
+  RECO: [41.05, -74.13]

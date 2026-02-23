@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gridclass
+      POSTGRES_PASSWORD: gridclass
+      POSTGRES_DB: gridclass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  web:
+    build: .
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://gridclass:gridclass@db:5432/gridclass
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+      - ./data:/app/data
+
+volumes:
+  pgdata:

@@ -1,0 +1,49 @@
+# CAISO data center scraping configuration
+states:
+  - CA
+  - NV  # VEA territory
+
+operator_to_zone:
+  # PG&E
+  "pacific gas and electric": PGAE
+  "pacific gas & electric": PGAE
+  "pg&e": PGAE
+  "pge": PGAE
+  # SCE
+  "southern california edison": SCE
+  "sce": SCE
+  "edison": SCE
+  # SDG&E
+  "san diego gas and electric": SDGE
+  "san diego gas & electric": SDGE
+  "sdge": SDGE
+  "sdg&e": SDGE
+  # Valley Electric
+  "valley electric association": VEA
+  "valley electric": VEA
+  # LADWP is not in CAISO
+  "los angeles department of water and power": null
+  "ladwp": null
+  # SMUD is not in CAISO
+  "sacramento municipal utility district": null
+  "smud": null
+  # IID is not in CAISO
+  "imperial irrigation district": null
+
+operator_substring_map:
+  "pacific gas": PGAE
+  "pg&e": PGAE
+  "southern california edison": SCE
+  "edison": SCE
+  "san diego gas": SDGE
+  "sdg&e": SDGE
+  "valley electric": VEA
+
+zone_centroids:
+  PGAE: [37.77, -122.42]
+  SCE: [34.05, -118.24]
+  SDGE: [32.72, -117.16]
+  VEA: [36.21, -115.98]
+  NP15: [38.58, -121.49]
+  SP15: [34.05, -118.24]
+  ZP26: [35.37, -119.02]

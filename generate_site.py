@@ -2,25 +2,29 @@
 Generate GitHub Pages site from grid-constraint-classifier outputs.
 
 Reads:
-  output/classification_summary.json
+  output/{iso_id}/classification_summary.json
 
-Produces:
-  docs/index.html        (executive summary)
-  docs/dashboard.html    (copy of full interactive dashboard)
-  docs/map.html          (copy of standalone Folium map)
+Produces (single ISO):
+  docs/{iso_id}/index.html        (executive summary)
+  docs/{iso_id}/dashboard.html    (copy of full interactive dashboard)
+  docs/{iso_id}/map.html          (copy of standalone Folium map)
+
+Produces (--iso all):
+  docs/index.html                 (multi-ISO landing page)
+  docs/{iso_id}/...               (per-ISO pages)
 
 No external dependencies (stdlib only).
 """
 
+import argparse
 import html
 import json
 import shutil
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, Optional
 
 ROOT = Path(__file__).resolve().parent
-OUTPUT = ROOT / "output"
-DOCS = ROOT / "docs"
 
 CLASSIFICATION_COLORS = {
     "transmission": "#e74c3c",
@@ -37,8 +41,8 @@ TIER_COLORS = {
 }
 
 
-def load_json() -> dict:
-    path = OUTPUT / "classification_summary.json"
+def load_json(output_dir: Path) -> dict:
+    path = output_dir / "classification_summary.json"
     with open(path) as f:
         return json.load(f)
 
@@ -209,9 +213,10 @@ def build_pnode_drilldown(data: dict) -> str:
     return "\n".join(zone_cards)
 
 
-def build_executive_summary(data: dict) -> str:
+def build_executive_summary(data: dict, iso_name: str = "PJM") -> str:
     """Generate the full executive summary HTML page."""
     meta = data["metadata"]
+    iso_id = meta.get("iso_id", "pjm")
     dist = data.get("distribution", {})
     dc = data.get("data_centers", {})
     pnode_drilldown = data.get("pnode_drilldown", {})
@@ -230,11 +235,6 @@ def build_executive_summary(data: dict) -> str:
     dc_mw = dc.get("total_estimated_mw", 0)
     dc_proposed = dc.get("status_totals", {}).get("proposed", 0)
 
-    # DOM stats
-    dom_dc = dc.get("by_zone", {}).get("DOM", {})
-    dom_total_dc = dom_dc.get("total", 0)
-    dom_proposed_dc = dom_dc.get("proposed", 0)
-
     # Pnode stats
     total_pnodes = sum(pd.get("total_pnodes", 0) for pd in pnode_drilldown.values())
     total_critical = sum(
@@ -248,6 +248,10 @@ def build_executive_summary(data: dict) -> str:
         "congestion_value_per_mwh", top_zone.get("avg_abs_congestion", 0)
     )
 
+    # GIS metadata (PJM-specific fields, optional for other ISOs)
+    backbone_lines = meta.get("pjm_backbone_lines", 0)
+    zone_boundaries = meta.get("pjm_zone_boundaries", 0)
+
     zone_table_rows = build_zone_table_rows(data)
     growth_pressure = build_growth_pressure(data)
     pnode_section = build_pnode_drilldown(data)
@@ -257,7 +261,7 @@ def build_executive_summary(data: dict) -> str:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PJM Grid Constraint Classifier</title>
+<title>{iso_name} Grid Constraint Classifier</title>
 <style>
 *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 body {{
@@ -654,9 +658,9 @@ table.pnode-table tbody tr:hover {{
 <body>
 
 <div class="header">
-  <h1>PJM Grid Constraint Classifier</h1>
+  <h1>{iso_name} Grid Constraint Classifier</h1>
   <div class="subtitle">Identifying where the grid is congested and where DERs can help</div>
-  <div class="context">Built by WattCarbon | Data: PJM Interconnection {year}</div>
+  <div class="context">Built by WattCarbon | Data: {iso_name} {year}</div>
 </div>
 
 <div class="container">
@@ -667,21 +671,21 @@ table.pnode-table tbody tr:hover {{
     <div class="feature-list">
       <ul>
         <li><span class="bullet"></span>
-          <span>Pulls <b>{meta['total_zone_lmp_rows']:,}</b> hourly LMP data points from the
-          PJM Data Miner 2 API ({year}), decomposing each into congestion, energy, and loss components</span></li>
+          <span>Pulls <b>{meta['total_zone_lmp_rows']:,}</b> hourly LMP data points from
+          {iso_name} ({year}), decomposing each into congestion, energy, and loss components</span></li>
         <li><span class="bullet"></span>
-          <span>Classifies all <b>{meta['zones_analyzed']}</b> PJM pricing zones as
+          <span>Classifies all <b>{meta['zones_analyzed']}</b> {iso_name} pricing zones as
           transmission-constrained, generation-constrained, both, or unconstrained using weighted
           multi-factor scoring</span></li>
-        <li><span class="bullet"></span>
+        {"" if not total_pnodes else f'''<li><span class="bullet"></span>
           <span>Drills down to <b>{total_pnodes}</b> individual pricing nodes (pnodes) with
-          severity scoring and 12x24 constraint loadshapes showing monthly/hourly congestion patterns</span></li>
-        <li><span class="bullet"></span>
+          severity scoring and 12x24 constraint loadshapes showing monthly/hourly congestion patterns</span></li>'''}
+        {"" if not dc_total else f'''<li><span class="bullet"></span>
           <span>Scrapes <b>{dc_total:,}</b> data center records from interconnection queues and
-          maps them to PJM zones, identifying growth pressure areas</span></li>
-        <li><span class="bullet"></span>
-          <span>Overlays PJM GIS backbone transmission lines (<b>{meta['pjm_backbone_lines']}</b>
-          lines, 345-765kV) and official zone boundaries on an interactive map</span></li>
+          maps them to {iso_name} zones, identifying growth pressure areas</span></li>'''}
+        {"" if not backbone_lines else f'''<li><span class="bullet"></span>
+          <span>Overlays GIS backbone transmission lines (<b>{backbone_lines}</b>
+          lines, 345-765kV) and official zone boundaries on an interactive map</span></li>'''}
         <li><span class="bullet"></span>
           <span>Generates DER deployment recommendations per zone, aligned with WattCarbon WEATS
           asset categories (dispatchable, consistent, variable)</span></li>
@@ -705,28 +709,23 @@ table.pnode-table tbody tr:hover {{
         <div class="stat-detail">T-score {top_zone['transmission_score']:.3f},
         ${top_congestion:.2f}/MWh avg congestion</div>
       </div>
-      <div class="stat-card">
+      {"" if not dc_total else f'''<div class="stat-card">
         <div class="stat-value">{dc_total:,}</div>
-        <div class="stat-label">PJM Data Centers</div>
+        <div class="stat-label">{iso_name} Data Centers</div>
         <div class="stat-detail">{dc_mw:,.0f} MW estimated capacity,
         {dc_proposed} proposed</div>
-      </div>
-      <div class="stat-card highlight">
-        <div class="stat-value">{dom_total_dc:,}</div>
-        <div class="stat-label">DOM Data Centers</div>
-        <div class="stat-detail">{dom_proposed_dc} proposed. #1 growth pressure zone</div>
-      </div>
-      <div class="stat-card">
+      </div>'''}
+      {"" if not total_pnodes else f'''<div class="stat-card">
         <div class="stat-value">{total_pnodes}</div>
         <div class="stat-label">Pnodes Analyzed</div>
         <div class="stat-detail">{total_critical} critical hotspots across
         {len(pnode_drilldown)} zones</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{meta['pjm_backbone_lines']}</div>
+      </div>'''}
+      {"" if not backbone_lines else f'''<div class="stat-card">
+        <div class="stat-value">{backbone_lines}</div>
         <div class="stat-label">Transmission Lines Mapped</div>
-        <div class="stat-detail">345-765kV backbone, {meta['pjm_zone_boundaries']} zone boundaries</div>
-      </div>
+        <div class="stat-detail">345-765kV backbone, {zone_boundaries} zone boundaries</div>
+      </div>'''}
     </div>
   </div>
 
@@ -737,12 +736,12 @@ table.pnode-table tbody tr:hover {{
       <div class="pipeline-step">
         <div class="pipeline-phase">Phase 1</div>
         <div class="pipeline-name">Data Acquisition</div>
-        <div class="pipeline-desc">PJM API hourly LMPs + HIFLD transmission + PJM GIS backbone lines and zone boundaries</div>
+        <div class="pipeline-desc">{iso_name} hourly LMPs + HIFLD transmission lines and zone boundaries</div>
       </div>
       <div class="pipeline-step">
         <div class="pipeline-phase">Phase 1.5</div>
         <div class="pipeline-name">Data Center Scrape</div>
-        <div class="pipeline-desc">Interconnection queue scraping, geocoding, and zone mapping for {dc_total:,} facilities</div>
+        <div class="pipeline-desc">Interconnection queue scraping, geocoding, and zone mapping{f" for {dc_total:,} facilities" if dc_total else ""}</div>
       </div>
       <div class="pipeline-step">
         <div class="pipeline-phase">Phase 2</div>
@@ -851,11 +850,11 @@ table.pnode-table tbody tr:hover {{
       <div class="method-card">
         <h4>Data Sources</h4>
         <p>
-          <b>LMP data:</b> PJM Data Miner 2 API, day-ahead hourly LMPs ({year})<br>
-          <b>Transmission:</b> PJM GIS ArcGIS REST services (backbone lines 345-765kV)<br>
-          <b>Zone boundaries:</b> PJM official zone boundary GIS data<br>
-          <b>Data centers:</b> interconnection.fyi PJM queue listings<br>
-          <b>Pnode coordinates:</b> PJM pnode metadata + geocoding
+          <b>LMP data:</b> {iso_name} day-ahead hourly LMPs ({year})<br>
+          <b>Transmission:</b> HIFLD transmission line data{" + PJM GIS backbone (345-765kV)" if iso_id == "pjm" else ""}<br>
+          <b>Zone boundaries:</b> {"PJM official zone boundary GIS data" if iso_id == "pjm" else "HIFLD territory boundaries"}<br>
+          {"<b>Data centers:</b> interconnection queue listings<br>" if dc_total else ""}
+          {"<b>Pnode coordinates:</b> pnode metadata + geocoding" if total_pnodes else ""}
         </p>
       </div>
     </div>
@@ -864,52 +863,286 @@ table.pnode-table tbody tr:hover {{
 </div>
 
 <div class="footer">
-  Generated {now} | PJM Grid Constraint Classifier |
-  Data: PJM Interconnection day-ahead hourly LMPs ({year})
+  Generated {now} | {iso_name} Grid Constraint Classifier |
+  Data: {iso_name} day-ahead hourly LMPs ({year})
 </div>
 
 </body>
 </html>"""
 
 
-def main():
-    print("Loading classification summary...")
-    data = load_json()
+def generate_iso_site(iso_id: str) -> Optional[dict]:
+    """Generate site for a single ISO. Returns summary data or None if no data."""
+    output_dir = ROOT / "output" / iso_id
+    docs_dir = ROOT / "docs" / iso_id
 
-    print("Generating executive summary...")
-    summary_html = build_executive_summary(data)
+    if not (output_dir / "classification_summary.json").exists():
+        print(f"  {iso_id}: no classification_summary.json, skipping")
+        return None
 
-    # Create docs directory
-    DOCS.mkdir(exist_ok=True)
+    print(f"  {iso_id}: loading classification summary...")
+    data = load_json(output_dir)
+    iso_name = data.get("metadata", {}).get("iso_name", iso_id.upper())
+
+    print(f"  {iso_id}: generating executive summary...")
+    summary_html = build_executive_summary(data, iso_name=iso_name)
+
+    docs_dir.mkdir(parents=True, exist_ok=True)
 
     # Write executive summary
-    index_path = DOCS / "index.html"
+    index_path = docs_dir / "index.html"
     with open(index_path, "w") as f:
         f.write(summary_html)
     size_kb = index_path.stat().st_size / 1024
-    print(f"  docs/index.html ({size_kb:.0f} KB)")
+    print(f"  {iso_id}: docs/{iso_id}/index.html ({size_kb:.0f} KB)")
 
     # Copy dashboard
-    dashboard_src = OUTPUT / "dashboard.html"
-    dashboard_dst = DOCS / "dashboard.html"
+    dashboard_src = output_dir / "dashboard.html"
+    dashboard_dst = docs_dir / "dashboard.html"
     if dashboard_src.exists():
         shutil.copy2(dashboard_src, dashboard_dst)
         size_mb = dashboard_dst.stat().st_size / 1024 / 1024
-        print(f"  docs/dashboard.html ({size_mb:.1f} MB)")
-    else:
-        print(f"  WARNING: {dashboard_src} not found, skipping")
+        print(f"  {iso_id}: docs/{iso_id}/dashboard.html ({size_mb:.1f} MB)")
 
     # Copy map
-    map_src = OUTPUT / "grid_constraint_map.html"
-    map_dst = DOCS / "map.html"
+    map_src = output_dir / "grid_constraint_map.html"
+    map_dst = docs_dir / "map.html"
     if map_src.exists():
         shutil.copy2(map_src, map_dst)
         size_mb = map_dst.stat().st_size / 1024 / 1024
-        print(f"  docs/map.html ({size_mb:.1f} MB)")
-    else:
-        print(f"  WARNING: {map_src} not found, skipping")
+        print(f"  {iso_id}: docs/{iso_id}/map.html ({size_mb:.1f} MB)")
 
-    print("Done. Site ready in docs/")
+    return data
+
+
+def build_landing_page(iso_summaries: Dict[str, dict]) -> str:
+    """Build the multi-ISO landing page with cards linking to each ISO."""
+    now = datetime.now().strftime("%Y-%m-%d")
+
+    iso_cards = []
+    for iso_id, data in sorted(iso_summaries.items()):
+        meta = data["metadata"]
+        iso_name = meta.get("iso_name", iso_id.upper())
+        year = meta["year"]
+        dist = data.get("distribution", {})
+        zones = meta.get("zones_analyzed", 0)
+
+        # Classification counts
+        t_count = dist.get("transmission", 0)
+        g_count = dist.get("generation", 0)
+        b_count = dist.get("both", 0)
+        u_count = dist.get("unconstrained", 0)
+        constrained = t_count + g_count + b_count
+
+        # Top constrained zone
+        zone_scores = sorted(data.get("zone_scores", []), key=lambda z: -z["transmission_score"])
+        top_zone = zone_scores[0]["zone"] if zone_scores else "N/A"
+        top_t_score = zone_scores[0]["transmission_score"] if zone_scores else 0
+
+        # Badge HTML
+        badges = []
+        if t_count:
+            badges.append(f'<span class="badge" style="background:#e74c3c">T: {t_count}</span>')
+        if g_count:
+            badges.append(f'<span class="badge" style="background:#3498db">G: {g_count}</span>')
+        if b_count:
+            badges.append(f'<span class="badge" style="background:#9b59b6">B: {b_count}</span>')
+        if u_count:
+            badges.append(f'<span class="badge" style="background:#2ecc71">U: {u_count}</span>')
+        badge_html = " ".join(badges)
+
+        iso_cards.append(f"""
+        <a href="{iso_id}/" class="iso-card">
+          <div class="iso-card-header">
+            <span class="iso-card-name">{html.escape(iso_name)}</span>
+            <span class="iso-card-id">{iso_id.upper()}</span>
+          </div>
+          <div class="iso-card-stats">
+            <div class="iso-stat"><span class="iso-stat-val">{zones}</span> zones</div>
+            <div class="iso-stat"><span class="iso-stat-val">{constrained}</span> constrained</div>
+            <div class="iso-stat"><span class="iso-stat-val">{meta['total_zone_lmp_rows']:,}</span> LMP rows</div>
+          </div>
+          <div class="iso-card-badges">{badge_html}</div>
+          <div class="iso-card-top">Top: <b>{html.escape(top_zone)}</b> (T={top_t_score:.3f})</div>
+        </a>
+        """)
+
+    cards_html = "\n".join(iso_cards)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid Constraint Classifier - Multi-ISO</title>
+<style>
+*, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+body {{
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #f5f6fa;
+  color: #2c3e50;
+  line-height: 1.6;
+}}
+.header {{
+  background: linear-gradient(135deg, #1a252f, #2c3e50);
+  color: #fff;
+  padding: 3rem 2rem 2.5rem;
+  text-align: center;
+}}
+.header h1 {{ font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }}
+.header .subtitle {{ color: #bdc3c7; font-size: 1rem; margin-bottom: 0.25rem; }}
+.header .context {{ color: #7f8c8d; font-size: 0.85rem; }}
+.container {{ max-width: 1200px; margin: 0 auto; padding: 2rem; }}
+.iso-grid {{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}}
+.iso-card {{
+  background: #fff;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: block;
+}}
+.iso-card:hover {{
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}}
+.iso-card-header {{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}}
+.iso-card-name {{ font-size: 1.15rem; font-weight: 700; color: #2c3e50; }}
+.iso-card-id {{
+  background: #34495e;
+  color: #fff;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}}
+.iso-card-stats {{
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}}
+.iso-stat {{
+  font-size: 0.82rem;
+  color: #7f8c8d;
+}}
+.iso-stat-val {{
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 1rem;
+}}
+.iso-card-badges {{
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}}
+.badge {{
+  display: inline-block;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+}}
+.iso-card-top {{
+  font-size: 0.82rem;
+  color: #555;
+}}
+.section-title {{
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #3498db;
+}}
+.footer {{
+  text-align: center;
+  padding: 2rem;
+  color: #95a5a6;
+  font-size: 0.78rem;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 2rem;
+}}
+@media (max-width: 768px) {{
+  .container {{ padding: 1rem; }}
+  .header {{ padding: 2rem 1rem; }}
+  .header h1 {{ font-size: 1.5rem; }}
+  .iso-grid {{ grid-template-columns: 1fr; }}
+}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Grid Constraint Classifier</h1>
+  <div class="subtitle">Multi-ISO grid constraint analysis with DER deployment recommendations</div>
+  <div class="context">Built by WattCarbon | {len(iso_summaries)} ISOs analyzed</div>
+</div>
+<div class="container">
+  <h2 class="section-title">Select an ISO/RTO</h2>
+  <div class="iso-grid">
+    {cards_html}
+  </div>
+</div>
+<div class="footer">
+  Generated {now} | Grid Constraint Classifier |
+  Covering {len(iso_summaries)} ISOs across the US power grid
+</div>
+</body>
+</html>"""
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Generate GitHub Pages site for an ISO")
+    parser.add_argument(
+        "--iso", type=str, default="pjm",
+        help='ISO identifier (default: pjm). Use "all" to generate for all ISOs with data.',
+    )
+    args = parser.parse_args()
+
+    iso_id = args.iso.lower()
+    docs_root = ROOT / "docs"
+    docs_root.mkdir(exist_ok=True)
+
+    if iso_id == "all":
+        # Find all ISOs that have output data
+        output_root = ROOT / "output"
+        iso_summaries = {}
+        for iso_dir in sorted(output_root.iterdir()):
+            if iso_dir.is_dir() and (iso_dir / "classification_summary.json").exists():
+                data = generate_iso_site(iso_dir.name)
+                if data:
+                    iso_summaries[iso_dir.name] = data
+
+        if iso_summaries:
+            # Build landing page
+            print("\nGenerating multi-ISO landing page...")
+            landing_html = build_landing_page(iso_summaries)
+            landing_path = docs_root / "index.html"
+            with open(landing_path, "w") as f:
+                f.write(landing_html)
+            size_kb = landing_path.stat().st_size / 1024
+            print(f"  docs/index.html ({size_kb:.0f} KB)")
+
+        print(f"\nDone. Site ready in docs/ with {len(iso_summaries)} ISOs.")
+    else:
+        data = generate_iso_site(iso_id)
+        if data:
+            print(f"\nDone. Site ready in docs/{iso_id}/")
+        else:
+            print(f"No data found for {iso_id}. Run the pipeline first.")
 
 
 if __name__ == "__main__":

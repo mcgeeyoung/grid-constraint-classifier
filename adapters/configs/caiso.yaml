@@ -1,0 +1,60 @@
+# California ISO (CAISO) configuration
+iso_id: caiso
+iso_name: California ISO
+timezone: US/Pacific
+gridstatus_class: CAISO
+
+peak_hours:
+  start: 7
+  end: 23  # HE 7-22 PPT
+
+map_center: [37.0, -119.5]
+map_zoom: 6
+
+has_lmp_decomposition: true
+has_node_level_pricing: true
+
+rto_aggregates:
+  - TH_SP15_GEN-APND
+  - TH_NP15_GEN-APND
+  - TH_ZP26_GEN-APND
+
+states:
+  - CA
+
+zones:
+  PGAE:
+    name: Pacific Gas & Electric
+    centroid_lat: 38.58
+    centroid_lon: -121.49
+    states: [CA]
+  SCE:
+    name: Southern California Edison
+    centroid_lat: 34.05
+    centroid_lon: -118.25
+    states: [CA]
+  SDGE:
+    name: San Diego Gas & Electric
+    centroid_lat: 32.72
+    centroid_lon: -117.16
+    states: [CA]
+  VEA:
+    name: Valley Electric Association
+    centroid_lat: 36.27
+    centroid_lon: -116.07
+    states: [NV]
+  SP15:
+    name: South of Path 15
+    centroid_lat: 34.50
+    centroid_lon: -118.50
+    states: [CA]
+  NP15:
+    name: North of Path 15
+    centroid_lat: 38.00
+    centroid_lon: -121.50
+    states: [CA]
+  ZP26:
+    name: Zone Path 26
+    centroid_lat: 35.50
+    centroid_lon: -119.00
+    states: [CA]

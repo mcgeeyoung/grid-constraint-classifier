@@ -1,0 +1,60 @@
+# ISO-NE data center scraping configuration
+states:
+  - CT
+  - MA
+  - ME
+  - NH
+  - RI
+  - VT
+
+operator_to_zone:
+  # Connecticut
+  "eversource energy": CT
+  "eversource": CT
+  "united illuminating": CT
+  "avangrid": CT
+  "connecticut light and power": CT
+  "connecticut light & power": CT
+  "cl&p": CT
+  # Maine
+  "central maine power": ME
+  "versant power": ME
+  "emera maine": ME
+  # Massachusetts
+  "national grid": NEMA
+  "eversource massachusetts": WCMA
+  "unitil": NEMA
+  # New Hampshire
+  "eversource new hampshire": NH
+  "liberty utilities": NH
+  "unitil energy systems": NH
+  # Rhode Island
+  "rhode island energy": RI
+  "narragansett electric": RI
+  # Vermont
+  "green mountain power": VT
+  "vermont electric cooperative": VT
+  "burlington electric": VT
+  # Non-ISO-NE
+  "nypa": null
+  "national grid new york": null
+
+operator_substring_map:
+  "eversource": CT
+  "united illuminating": CT
+  "central maine": ME
+  "versant": ME
+  "national grid": NEMA
+  "green mountain": VT
+  "rhode island energy": RI
+  "narragansett": RI
+
+zone_centroids:
+  CT: [41.60, -72.70]
+  ME: [44.31, -69.78]
+  NEMA: [42.36, -71.06]
+  WCMA: [42.27, -72.58]
+  SEMA: [41.70, -70.30]
+  NH: [43.21, -71.54]
+  RI: [41.82, -71.41]
+  VT: [44.26, -72.58]

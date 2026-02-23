@@ -1,0 +1,85 @@
+# SPP data center scraping configuration
+states:
+  - OK
+  - KS
+  - NE
+  - TX
+  - NM
+  - AR
+  - MO
+  - LA
+  - ND
+  - SD
+  - MT
+  - WY
+  - IA
+  - MN
+
+operator_to_zone:
+  # OG&E
+  "oklahoma gas and electric": OKGE
+  "oklahoma gas & electric": OKGE
+  "oge energy": OKGE
+  "oge": OKGE
+  # PSO / AEP
+  "public service company of oklahoma": AEPW
+  "pso": AEPW
+  # Southwestern Electric Power
+  "southwestern electric power": AEPW
+  "swepco": AEPW
+  # Westar / Evergy
+  "westar energy": WFEC
+  "evergy": WFEC
+  "evergy kansas": WFEC
+  # Kansas City P&L / Evergy
+  "kansas city power and light": KCPL
+  "kansas city power & light": KCPL
+  "kcpl": KCPL
+  "evergy metro": KCPL
+  # Empire District
+  "empire district electric": EDE
+  "liberty utilities": EDE
+  # OPPD
+  "omaha public power district": OPPD
+  "oppd": OPPD
+  # Nebraska Public Power
+  "nebraska public power district": NPPD
+  "nppd": NPPD
+  # Lincoln Electric
+  "lincoln electric system": LES
+  # SPS / Xcel
+  "southwestern public service": SPS
+  "sps": SPS
+  "xcel energy": SPS
+  # WFEC
+  "western farmers electric cooperative": WFEC
+  # Non-SPP
+  "entergy": null
+  "ameren": null
+  "midamerican energy": null
+
+operator_substring_map:
+  "oklahoma gas": OKGE
+  "oge": OKGE
+  "pso": AEPW
+  "swepco": AEPW
+  "westar": WFEC
+  "evergy": WFEC
+  "kansas city power": KCPL
+  "empire district": EDE
+  "omaha public": OPPD
+  "nebraska public": NPPD
+  "southwestern public": SPS
+  "xcel": SPS
+  "western farmers": WFEC
+
+zone_centroids:
+  OKGE: [35.47, -97.52]
+  AEPW: [35.22, -97.44]
+  WFEC: [38.00, -97.00]
+  KCPL: [39.10, -94.58]
+  EDE: [37.22, -93.29]
+  OPPD: [41.26, -95.94]
+  NPPD: [40.82, -96.70]
+  LES: [40.81, -96.68]
+  SPS: [33.58, -101.85]

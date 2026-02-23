@@ -1,0 +1,78 @@
+# New York ISO (NYISO) configuration
+iso_id: nyiso
+iso_name: New York ISO
+timezone: US/Eastern
+gridstatus_class: NYISO
+
+peak_hours:
+  start: 7
+  end: 23
+
+map_center: [42.5, -75.5]
+map_zoom: 7
+
+has_lmp_decomposition: true
+has_node_level_pricing: false  # Zone/generator only, no bus-level pricing
+congestion_sign_flip: true     # NYISO inverts congestion sign convention
+
+rto_aggregates: []
+
+states:
+  - NY
+
+zones:
+  A:
+    name: West (Buffalo area)
+    centroid_lat: 42.89
+    centroid_lon: -78.88
+    states: [NY]
+  B:
+    name: Genesee (Rochester area)
+    centroid_lat: 43.16
+    centroid_lon: -77.61
+    states: [NY]
+  C:
+    name: Central (Syracuse area)
+    centroid_lat: 43.05
+    centroid_lon: -76.15
+    states: [NY]
+  D:
+    name: North (Adirondacks)
+    centroid_lat: 44.00
+    centroid_lon: -74.50
+    states: [NY]
+  E:
+    name: Mohawk Valley
+    centroid_lat: 42.80
+    centroid_lon: -75.00
+    states: [NY]
+  F:
+    name: Capital (Albany area)
+    centroid_lat: 42.65
+    centroid_lon: -73.75
+    states: [NY]
+  G:
+    name: Hudson Valley
+    centroid_lat: 41.50
+    centroid_lon: -74.00
+    states: [NY]
+  H:
+    name: Millwood
+    centroid_lat: 41.20
+    centroid_lon: -73.80
+    states: [NY]
+  I:
+    name: Dunwoodie
+    centroid_lat: 40.95
+    centroid_lon: -73.87
+    states: [NY]
+  J:
+    name: New York City
+    centroid_lat: 40.71
+    centroid_lon: -74.01
+    states: [NY]
+  K:
+    name: Long Island
+    centroid_lat: 40.75
+    centroid_lon: -73.00
+    states: [NY]

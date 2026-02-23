@@ -1,0 +1,187 @@
+# PJM Interconnection configuration
+iso_id: pjm
+iso_name: PJM Interconnection
+timezone: US/Eastern
+gridstatus_class: PJM
+
+peak_hours:
+  start: 7
+  end: 23  # HE 7-22 EPT
+
+map_center: [39.5, -78.0]
+map_zoom: 6
+
+has_lmp_decomposition: true
+has_node_level_pricing: true
+
+rto_aggregates:
+  - PJM-RTO
+  - MID-ATL/APS
+
+validation_zones:
+  DOM: transmission
+  PEPCO: transmission
+  BGE: transmission
+  PSEG: transmission
+  JCPL: transmission
+
+states:
+  - VA
+  - OH
+  - IL
+  - NJ
+  - IN
+  - MD
+  - PA
+  - NC
+  - TN
+  - DE
+  - MI
+  - WV
+  - DC
+  - KY
+
+zone_state_map:
+  AECO: NJ
+  AEP: OH
+  APS: PA
+  ATSI: OH
+  BGE: MD
+  COMED: IL
+  DAY: OH
+  DEOK: OH
+  DOM: VA
+  DPL: DE
+  DUQ: PA
+  EKPC: KY
+  JCPL: NJ
+  METED: PA
+  PECO: PA
+  PENELEC: PA
+  PEPCO: MD
+  PPL: PA
+  PSEG: NJ
+  RECO: NJ
+
+zones:
+  AECO:
+    name: Atlantic City Electric
+    centroid_lat: 39.45
+    centroid_lon: -74.75
+    states: [NJ]
+  AEP:
+    name: American Electric Power
+    centroid_lat: 38.80
+    centroid_lon: -82.00
+    states: [OH, WV, VA, IN]
+  APS:
+    name: Allegheny Power
+    centroid_lat: 40.00
+    centroid_lon: -79.50
+    states: [PA, WV, MD]
+  ATSI:
+    name: FirstEnergy Ohio
+    centroid_lat: 41.10
+    centroid_lon: -81.50
+    states: [OH]
+  BGE:
+    name: Baltimore Gas & Electric
+    centroid_lat: 39.30
+    centroid_lon: -76.60
+    states: [MD]
+  COMED:
+    name: Commonwealth Edison
+    centroid_lat: 41.85
+    centroid_lon: -87.90
+    states: [IL]
+  DAY:
+    name: Dayton Power & Light
+    centroid_lat: 39.76
+    centroid_lon: -84.19
+    states: [OH]
+  DEOK:
+    name: Duke Energy Ohio/KY
+    centroid_lat: 39.10
+    centroid_lon: -84.50
+    states: [OH, KY]
+  DOM:
+    name: Dominion Virginia
+    centroid_lat: 37.55
+    centroid_lon: -78.00
+    states: [VA]
+  DPL:
+    name: Delmarva Power
+    centroid_lat: 39.15
+    centroid_lon: -75.52
+    states: [DE, MD]
+  DUQ:
+    name: Duquesne Light
+    centroid_lat: 40.45
+    centroid_lon: -79.95
+    states: [PA]
+  EKPC:
+    name: East Kentucky Power
+    centroid_lat: 38.20
+    centroid_lon: -84.90
+    states: [KY]
+  JCPL:
+    name: Jersey Central P&L
+    centroid_lat: 40.25
+    centroid_lon: -74.25
+    states: [NJ]
+  METED:
+    name: Met-Ed
+    centroid_lat: 40.33
+    centroid_lon: -76.00
+    states: [PA]
+  PECO:
+    name: PECO Energy
+    centroid_lat: 40.00
+    centroid_lon: -75.15
+    states: [PA]
+  PENELEC:
+    name: Penn Electric
+    centroid_lat: 41.00
+    centroid_lon: -78.50
+    states: [PA]
+  PEPCO:
+    name: Pepco (DC/MD)
+    centroid_lat: 38.90
+    centroid_lon: -77.00
+    states: [DC, MD]
+  PPL:
+    name: PPL Electric
+    centroid_lat: 40.60
+    centroid_lon: -76.00
+    states: [PA]
+  PSEG:
+    name: PSE&G
+    centroid_lat: 40.73
+    centroid_lon: -74.17
+    states: [NJ]
+  RECO:
+    name: Rockland Electric
+    centroid_lat: 41.05
+    centroid_lon: -74.13
+    states: [NJ]
+
+hifld_territory_oids:
+  AECO: [2876]
+  AEP: [2585, 649, 2844]
+  APS: [1601]
+  ATSI: [648, 2015, 1388]
+  BGE: [277]
+  COMED: [2117]
+  DAY: [2211]
+  DEOK: [1989]
+  DOM: [1504]
+  DPL: [2226]
+  DUQ: [2270]
+  JCPL: [2892]
+  METED: [357]
+  PECO: [793]
+  PENELEC: [772]
+  PEPCO: [845]
+  PPL: [774]
+  PSEG: [885]
+  RECO: [973]

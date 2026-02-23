@@ -1,0 +1,94 @@
+# MISO data center scraping configuration
+states:
+  - IL
+  - IN
+  - IA
+  - MI
+  - MN
+  - MO
+  - WI
+  - AR
+  - LA
+  - MS
+  - TX
+  - MT
+  - ND
+  - SD
+  - KY
+
+operator_to_zone:
+  # Ameren
+  "ameren": LRZ6
+  "ameren illinois": LRZ6
+  "ameren missouri": LRZ5
+  # Consumers Energy
+  "consumers energy": LRZ7
+  # DTE
+  "dte energy": LRZ7
+  "dte electric": LRZ7
+  "detroit edison": LRZ7
+  # Xcel / NSP
+  "xcel energy": LRZ1
+  "northern states power": LRZ1
+  "nsp": LRZ1
+  # NIPSCO
+  "northern indiana public service": LRZ6
+  "nipsco": LRZ6
+  # Indianapolis P&L / AES Indiana
+  "indianapolis power and light": LRZ6
+  "indianapolis power & light": LRZ6
+  "aes indiana": LRZ6
+  # Vectren
+  "vectren": LRZ6
+  # MidAmerican
+  "midamerican energy": LRZ3
+  # Alliant / IPL
+  "alliant energy": LRZ3
+  "interstate power and light": LRZ3
+  # Entergy
+  "entergy": LRZ9
+  "entergy louisiana": LRZ9
+  "entergy arkansas": LRZ8
+  "entergy mississippi": LRZ10
+  "entergy texas": LRZ8
+  # WEC Energy
+  "wisconsin electric": LRZ2
+  "we energies": LRZ2
+  "wec energy": LRZ2
+  "wisconsin energy": LRZ2
+  # Great Plains / OTP
+  "otter tail power": LRZ1
+  "great plains energy": LRZ1
+  # Montana-Dakota
+  "montana-dakota utilities": LRZ1
+  # Non-MISO
+  "dominion energy": null
+  "duke energy": null
+  "aep": null
+  "pjm": null
+
+operator_substring_map:
+  "ameren": LRZ6
+  "consumers energy": LRZ7
+  "dte": LRZ7
+  "xcel": LRZ1
+  "northern states": LRZ1
+  "nipsco": LRZ6
+  "midamerican": LRZ3
+  "alliant": LRZ3
+  "entergy": LRZ9
+  "wisconsin electric": LRZ2
+  "we energies": LRZ2
+  "otter tail": LRZ1
+
+zone_centroids:
+  LRZ1: [45.00, -93.27]
+  LRZ2: [43.04, -87.91]
+  LRZ3: [41.59, -93.62]
+  LRZ4: [42.73, -84.56]
+  LRZ5: [38.63, -90.20]
+  LRZ6: [39.77, -86.16]
+  LRZ7: [42.33, -83.05]
+  LRZ8: [34.75, -92.29]
+  LRZ9: [30.45, -91.19]
+  LRZ10: [32.30, -90.18]

@@ -49,14 +49,14 @@ from src.pjm_gis import (
     fetch_zone_boundaries as fetch_pjm_zone_boundaries,
     load_pjm_gis_data,
 )
-from src.constraint_classifier import (
+from core.constraint_classifier import (
     compute_zone_metrics,
     classify_zones,
     get_constrained_hours,
     get_congestion_value,
 )
-from src.der_recommender import recommend_ders, format_recommendation_text
-from src.pnode_analyzer import analyze_all_constrained_zones, load_pnode_results
+from core.der_recommender import recommend_ders, format_recommendation_text
+from core.pnode_analyzer import analyze_all_constrained_zones, load_pnode_results
 from src.visualization import (
     create_interactive_map,
     create_score_bar_chart,
@@ -202,10 +202,17 @@ def run_pipeline(
     logger.info("")
     logger.info("Phase 2: Constraint Classification")
 
-    metrics_df = compute_zone_metrics(zone_lmps)
+    # PJM-specific parameters for core classifier
+    pjm_rto_aggregates = {"PJM-RTO", "MID-ATL/APS"}
+    pjm_validation_zones = {
+        "DOM": "transmission", "PEPCO": "transmission", "BGE": "transmission",
+        "PSEG": "transmission", "JCPL": "transmission",
+    }
+
+    metrics_df = compute_zone_metrics(zone_lmps, rto_aggregates=pjm_rto_aggregates)
     logger.info(f"Computed metrics for {len(metrics_df)} zones")
 
-    classification_df = classify_zones(metrics_df)
+    classification_df = classify_zones(metrics_df, validation_zones=pjm_validation_zones)
 
     # Print classification summary
     logger.info("")
@@ -238,7 +245,8 @@ def run_pipeline(
         zone_data = pull_constrained_zone_pnodes(
             interim_summary, year=year, force=False,
         )
-        pnode_results = analyze_all_constrained_zones(zone_data)
+        pnode_cache = Path(__file__).parent / "data" / "pnodes" / "pnode_drilldown_results.json"
+        pnode_results = analyze_all_constrained_zones(zone_data, cache_path=pnode_cache)
         logger.info(f"Pnode drill-down: {len(pnode_results)} zones analyzed")
 
         # Geocode pnode names for map display
@@ -247,7 +255,8 @@ def run_pipeline(
         logger.info(f"Pnode coordinates: {len(pnode_coordinates)} names resolved")
     else:
         # Load cached pnode results if available
-        pnode_results = load_pnode_results()
+        pnode_cache = Path(__file__).parent / "data" / "pnodes" / "pnode_drilldown_results.json"
+        pnode_results = load_pnode_results(pnode_cache)
         if pnode_results:
             pnode_coordinates = geocode_pnodes(pnode_results)
             logger.info(f"Loaded cached pnode data: {len(pnode_results)} zones, {len(pnode_coordinates)} coordinates")
