@@ -1,4 +1,5 @@
 # Midcontinent ISO (MISO) configuration
+# ~43 utility-area zones aggregated from 432 loadzones
 iso_id: miso
 iso_name: Midcontinent ISO
 timezone: US/Eastern
@@ -29,49 +30,296 @@ states:
   - MS
   - MT
   - ND
+  - NE
   - SD
   - TX
   - WI
 
-# Zone names match gridstatus hub names from MISO DA LMP reports
+zone_state_map:
+  ALTE: WI
+  ALTW: IA
+  AMIL: IL
+  AMMO: MO
+  BLEC: IL
+  BREC: KY
+  CIN: IN
+  CILC: IL
+  CLEC: LA
+  CONS: MI
+  CWLP: IL
+  DECO: MI
+  DEVI: MS
+  DPC: WI
+  EAI: AR
+  EES: LA
+  EMBA: MN
+  GRE: MN
+  HE: MN
+  IPL: IN
+  LAFA: LA
+  LEPA: LA
+  MGE: WI
+  MEC: IA
+  MHEB: MT
+  MIUP: MI
+  MP: MN
+  MPW: IA
+  NIPS: IN
+  NSP: MN
+  OTP: MN
+  SCEG: SD
+  SIGE: IL
+  SIPC: IL
+  SMP: AR
+  SWEC: MO
+  UPPC: MI
+  WEC: WI
+  WPS: WI
+  WPPI: WI
+  MDU: ND
+  OVEC: IN
+  SME: MS
+
 zones:
-  ARKANSAS.HUB:
-    name: Arkansas Hub
+  # --- Wisconsin ---
+  ALTE:
+    name: Alliant Energy (WI)
+    centroid_lat: 43.10
+    centroid_lon: -89.40
+    states: [WI]
+  DPC:
+    name: Dairyland Power
+    centroid_lat: 43.80
+    centroid_lon: -91.25
+    states: [WI]
+  MGE:
+    name: Madison Gas & Electric
+    centroid_lat: 43.07
+    centroid_lon: -89.40
+    states: [WI]
+  WEC:
+    name: WEC Energy Group
+    centroid_lat: 43.05
+    centroid_lon: -87.95
+    states: [WI]
+  WPS:
+    name: Wisconsin Public Service
+    centroid_lat: 44.50
+    centroid_lon: -88.00
+    states: [WI]
+  WPPI:
+    name: WPPI Energy
+    centroid_lat: 43.35
+    centroid_lon: -89.00
+    states: [WI]
+
+  # --- Iowa ---
+  ALTW:
+    name: Alliant Energy (IA)
+    centroid_lat: 42.00
+    centroid_lon: -93.50
+    states: [IA]
+  MEC:
+    name: MidAmerican Energy
+    centroid_lat: 41.60
+    centroid_lon: -93.60
+    states: [IA]
+  MPW:
+    name: Muscatine Power & Water
+    centroid_lat: 41.42
+    centroid_lon: -91.04
+    states: [IA]
+
+  # --- Illinois ---
+  AMIL:
+    name: Ameren Illinois
+    centroid_lat: 39.80
+    centroid_lon: -89.65
+    states: [IL]
+  BLEC:
+    name: Blue Star Energy
+    centroid_lat: 40.50
+    centroid_lon: -89.00
+    states: [IL]
+  CILC:
+    name: Central IL Light Co
+    centroid_lat: 40.70
+    centroid_lon: -89.60
+    states: [IL]
+  CWLP:
+    name: City Water Light & Power
+    centroid_lat: 39.80
+    centroid_lon: -89.65
+    states: [IL]
+  SIGE:
+    name: Ameren Southern Illinois
+    centroid_lat: 38.00
+    centroid_lon: -89.20
+    states: [IL]
+  SIPC:
+    name: Southern IL Power Coop
+    centroid_lat: 37.80
+    centroid_lon: -89.00
+    states: [IL]
+
+  # --- Missouri ---
+  AMMO:
+    name: Ameren Missouri
+    centroid_lat: 38.65
+    centroid_lon: -90.30
+    states: [MO]
+  SWEC:
+    name: SW Electric Coop
+    centroid_lat: 37.20
+    centroid_lon: -93.30
+    states: [MO]
+
+  # --- Indiana ---
+  CIN:
+    name: CenterPoint Energy IN
+    centroid_lat: 39.00
+    centroid_lon: -87.50
+    states: [IN]
+  IPL:
+    name: Indianapolis Power & Light
+    centroid_lat: 39.77
+    centroid_lon: -86.16
+    states: [IN]
+  NIPS:
+    name: Northern Indiana Public Service
+    centroid_lat: 41.50
+    centroid_lon: -87.00
+    states: [IN]
+  OVEC:
+    name: Ohio Valley Electric
+    centroid_lat: 38.75
+    centroid_lon: -85.00
+    states: [IN]
+
+  # --- Kentucky ---
+  BREC:
+    name: Big Rivers Electric
+    centroid_lat: 37.77
+    centroid_lon: -87.11
+    states: [KY]
+
+  # --- Michigan ---
+  CONS:
+    name: Consumers Energy
+    centroid_lat: 42.75
+    centroid_lon: -84.55
+    states: [MI]
+  DECO:
+    name: DTE Energy
+    centroid_lat: 42.33
+    centroid_lon: -83.05
+    states: [MI]
+  MIUP:
+    name: Michigan Upper Peninsula
+    centroid_lat: 46.50
+    centroid_lon: -87.40
+    states: [MI]
+  UPPC:
+    name: Upper Peninsula Power
+    centroid_lat: 46.30
+    centroid_lon: -86.60
+    states: [MI]
+
+  # --- Minnesota ---
+  EMBA:
+    name: East-Central MN
+    centroid_lat: 45.50
+    centroid_lon: -93.50
+    states: [MN]
+  GRE:
+    name: Great River Energy
+    centroid_lat: 45.20
+    centroid_lon: -93.30
+    states: [MN]
+  HE:
+    name: Minnesota Power (ALLETE)
+    centroid_lat: 46.78
+    centroid_lon: -92.10
+    states: [MN]
+  MP:
+    name: Minnesota Power
+    centroid_lat: 47.00
+    centroid_lon: -93.00
+    states: [MN]
+  NSP:
+    name: Northern States Power (Xcel)
+    centroid_lat: 44.95
+    centroid_lon: -93.27
+    states: [MN]
+  OTP:
+    name: Otter Tail Power
+    centroid_lat: 46.30
+    centroid_lon: -96.00
+    states: [MN, ND, SD]
+
+  # --- Louisiana ---
+  CLEC:
+    name: Cleco Power
+    centroid_lat: 31.30
+    centroid_lon: -92.45
+    states: [LA]
+  EES:
+    name: Entergy (South)
+    centroid_lat: 30.45
+    centroid_lon: -91.19
+    states: [LA]
+  LAFA:
+    name: Lafayette Utilities System
+    centroid_lat: 30.22
+    centroid_lon: -92.02
+    states: [LA]
+  LEPA:
+    name: Louisiana Energy & Power Auth
+    centroid_lat: 30.60
+    centroid_lon: -91.50
+    states: [LA]
+
+  # --- Arkansas ---
+  EAI:
+    name: Entergy Arkansas
     centroid_lat: 34.75
     centroid_lon: -92.30
     states: [AR]
-  ILLINOIS.HUB:
-    name: Illinois Hub
-    centroid_lat: 39.00
-    centroid_lon: -89.50
-    states: [IL]
-  INDIANA.HUB:
-    name: Indiana Hub
-    centroid_lat: 40.00
-    centroid_lon: -86.25
-    states: [IN]
-  LOUISIANA.HUB:
-    name: Louisiana Hub
-    centroid_lat: 31.00
-    centroid_lon: -92.00
-    states: [LA]
-  MICHIGAN.HUB:
-    name: Michigan Hub
-    centroid_lat: 43.00
-    centroid_lon: -84.50
-    states: [MI]
-  MINN.HUB:
-    name: Minnesota Hub
-    centroid_lat: 46.00
-    centroid_lon: -94.00
-    states: [MN]
-  MS.HUB:
-    name: Mississippi Hub
-    centroid_lat: 33.50
-    centroid_lon: -89.50
+  SMP:
+    name: SW Memphis Power
+    centroid_lat: 35.10
+    centroid_lon: -90.05
+    states: [AR]
+
+  # --- Mississippi ---
+  DEVI:
+    name: Entergy Mississippi
+    centroid_lat: 32.30
+    centroid_lon: -90.18
     states: [MS]
-  TEXAS.HUB:
-    name: Texas Hub
-    centroid_lat: 31.50
-    centroid_lon: -97.00
-    states: [TX]
+  SME:
+    name: South Mississippi Electric
+    centroid_lat: 31.33
+    centroid_lon: -89.33
+    states: [MS]
+
+  # --- Montana ---
+  MHEB:
+    name: Montana-Dakota Utilities
+    centroid_lat: 47.50
+    centroid_lon: -108.00
+    states: [MT]
+
+  # --- North Dakota ---
+  MDU:
+    name: Montana-Dakota (ND)
+    centroid_lat: 46.88
+    centroid_lon: -96.79
+    states: [ND]
+
+  # --- South Dakota ---
+  SCEG:
+    name: South Central Electric
+    centroid_lat: 44.00
+    centroid_lon: -99.00
+    states: [SD]

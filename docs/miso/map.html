@@ -17,7 +17,7 @@
             <meta name="viewport" content="width=device-width,
                 initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <style>
-                #map_d6a0da3243a86c59fda56dd4f128f60f {
+                #map_ced54ee7d67cd235a1d60811f11c5198 {
                     position: relative;
                     width: 100.0%;
                     height: 100.0%;
@@ -90,14 +90,14 @@
     </div>
     
     
-            <div class="folium-map" id="map_d6a0da3243a86c59fda56dd4f128f60f" ></div>
+            <div class="folium-map" id="map_ced54ee7d67cd235a1d60811f11c5198" ></div>
         
 </body>
 <script>
     
     
-            var map_d6a0da3243a86c59fda56dd4f128f60f = L.map(
-                "map_d6a0da3243a86c59fda56dd4f128f60f",
+            var map_ced54ee7d67cd235a1d60811f11c5198 = L.map(
+                "map_ced54ee7d67cd235a1d60811f11c5198",
                 {
                     center: [40.0, -90.0],
                     crs: L.CRS.EPSG3857,
@@ -114,7 +114,7 @@
 
         
     
-            var tile_layer_7f2fa1469ff728e5432a297131a9ce11 = L.tileLayer(
+            var tile_layer_bbd8e292edd6430e3e52a8db29a04998 = L.tileLayer(
                 "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
                 {
   "minZoom": 0,
@@ -131,41 +131,404 @@
             );
         
     
-            tile_layer_7f2fa1469ff728e5432a297131a9ce11.addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+            tile_layer_bbd8e292edd6430e3e52a8db29a04998.addTo(map_ced54ee7d67cd235a1d60811f11c5198);
         
     
-            var feature_group_e75a562f753dc6b7e1f542a285a5f7b9 = L.featureGroup(
+            var feature_group_81cd849bf52e0c33ee14e9928bc6cbb9 = L.featureGroup(
                 {
 }
             );
         
     
-            var circle_marker_852f4c98f90d740cf27e58578a621986 = L.circleMarker(
+            var circle_marker_b3a9a8e58e181c56505312d0a874389d = L.circleMarker(
+                [43.1, -89.4],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12.250898630136987, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_55182a1616b1b6121ade1595b8b0bdd2 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_58fb1f59687559151fb60999478f27f5 = $(`<div id="html_58fb1f59687559151fb60999478f27f5" style="width: 100.0%; height: 100.0%;"><b>ALTE</b> (Alliant Energy (WI))<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.246<br><b>G-score:</b> 0.400<br><b>Avg congestion:</b> $3.54/MWh<br><b>Max congestion:</b> $106.03/MWh<br><b>Constrained hours:</b> 4384/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_55182a1616b1b6121ade1595b8b0bdd2.setContent(html_58fb1f59687559151fb60999478f27f5);
+            
+        
+
+        circle_marker_b3a9a8e58e181c56505312d0a874389d.bindPopup(popup_55182a1616b1b6121ade1595b8b0bdd2)
+        ;
+
+        
+    
+    
+            circle_marker_b3a9a8e58e181c56505312d0a874389d.bindTooltip(
+                `<div>
+                     ALTE: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_13534aea6d83f33e102bd61fe5e08809 = L.circleMarker(
+                [42.0, -93.5],
+                {"bubblingMouseEvents": true, "color": "#9b59b6", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#9b59b6", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 20.880335029354207, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_d4b8f24832e3b4036296549ae971e93d = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_98132e79f225caeba808a7d1ee18dcc1 = $(`<div id="html_98132e79f225caeba808a7d1ee18dcc1" style="width: 100.0%; height: 100.0%;"><b>ALTW</b> (Alliant Energy (IA))<br><b>Classification:</b> BOTH<br><b>T-score:</b> 0.525<br><b>G-score:</b> 0.600<br><b>Avg congestion:</b> $10.73/MWh<br><b>Max congestion:</b> $140.18/MWh<br><b>Constrained hours:</b> 6348/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_d4b8f24832e3b4036296549ae971e93d.setContent(html_98132e79f225caeba808a7d1ee18dcc1);
+            
+        
+
+        circle_marker_13534aea6d83f33e102bd61fe5e08809.bindPopup(popup_d4b8f24832e3b4036296549ae971e93d)
+        ;
+
+        
+    
+    
+            circle_marker_13534aea6d83f33e102bd61fe5e08809.bindTooltip(
+                `<div>
+                     ALTW: both
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a572b33f0e5687d04dce2aad58d115bb = L.circleMarker(
+                [39.8, -89.65],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10.72066942637383, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_70d193ad7436d896d909420e17048077 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_beada3e02e66c53bd3b3fb6e1c2f31b5 = $(`<div id="html_beada3e02e66c53bd3b3fb6e1c2f31b5" style="width: 100.0%; height: 100.0%;"><b>AMIL</b> (Ameren Illinois)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.227<br><b>G-score:</b> 0.416<br><b>Avg congestion:</b> $2.27/MWh<br><b>Max congestion:</b> $106.54/MWh<br><b>Constrained hours:</b> 2939/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_70d193ad7436d896d909420e17048077.setContent(html_beada3e02e66c53bd3b3fb6e1c2f31b5);
+            
+        
+
+        circle_marker_a572b33f0e5687d04dce2aad58d115bb.bindPopup(popup_70d193ad7436d896d909420e17048077)
+        ;
+
+        
+    
+    
+            circle_marker_a572b33f0e5687d04dce2aad58d115bb.bindTooltip(
+                `<div>
+                     AMIL: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_adc43b7d62c4e652da1e0bdccbf89cea = L.circleMarker(
+                [38.65, -90.3],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.669212237442922, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_03ab2c4b410ab4f79f33e7e7ec4d041c = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_7380202f198142cb8df3db6ce7457297 = $(`<div id="html_7380202f198142cb8df3db6ce7457297" style="width: 100.0%; height: 100.0%;"><b>AMMO</b> (Ameren Missouri)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.255<br><b>G-score:</b> 0.419<br><b>Avg congestion:</b> $3.06/MWh<br><b>Max congestion:</b> $106.65/MWh<br><b>Constrained hours:</b> 3598/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_03ab2c4b410ab4f79f33e7e7ec4d041c.setContent(html_7380202f198142cb8df3db6ce7457297);
+            
+        
+
+        circle_marker_adc43b7d62c4e652da1e0bdccbf89cea.bindPopup(popup_03ab2c4b410ab4f79f33e7e7ec4d041c)
+        ;
+
+        
+    
+    
+            circle_marker_adc43b7d62c4e652da1e0bdccbf89cea.bindTooltip(
+                `<div>
+                     AMMO: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_f25f97d8604d570f0e482de7f36fc13c = L.circleMarker(
+                [37.77, -87.11],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12.060052876712328, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_b490626a251edb90778793cd0f517e9c = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_bd7afa282989f97436c5b73e17219950 = $(`<div id="html_bd7afa282989f97436c5b73e17219950" style="width: 100.0%; height: 100.0%;"><b>BREC</b> (Big Rivers Electric)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.206<br><b>G-score:</b> 0.416<br><b>Avg congestion:</b> $3.38/MWh<br><b>Max congestion:</b> $105.80/MWh<br><b>Constrained hours:</b> 3825/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_b490626a251edb90778793cd0f517e9c.setContent(html_bd7afa282989f97436c5b73e17219950);
+            
+        
+
+        circle_marker_f25f97d8604d570f0e482de7f36fc13c.bindPopup(popup_b490626a251edb90778793cd0f517e9c)
+        ;
+
+        
+    
+    
+            circle_marker_f25f97d8604d570f0e482de7f36fc13c.bindTooltip(
+                `<div>
+                     BREC: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_ec85d11e48214a4842ee582b2548d1f7 = L.circleMarker(
+                [39.0, -87.5],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.564983424657534, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_92567fed641afe0f165928e3ffb427c0 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_895eb4f64f19cff14b4cc3e68ce4967c = $(`<div id="html_895eb4f64f19cff14b4cc3e68ce4967c" style="width: 100.0%; height: 100.0%;"><b>CIN</b> (CenterPoint Energy IN)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.194<br><b>G-score:</b> 0.431<br><b>Avg congestion:</b> $2.97/MWh<br><b>Max congestion:</b> $100.34/MWh<br><b>Constrained hours:</b> 3527/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_92567fed641afe0f165928e3ffb427c0.setContent(html_895eb4f64f19cff14b4cc3e68ce4967c);
+            
+        
+
+        circle_marker_ec85d11e48214a4842ee582b2548d1f7.bindPopup(popup_92567fed641afe0f165928e3ffb427c0)
+        ;
+
+        
+    
+    
+            circle_marker_ec85d11e48214a4842ee582b2548d1f7.bindTooltip(
+                `<div>
+                     CIN: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_26d548a1b0c9d28ce62ad3583e6f5c29 = L.circleMarker(
+                [31.3, -92.45],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 18.696997031963473, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_d593dd24667ae4a3939142113b80e0a1 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_b34dd5d1fa7c4506144eabe25482d3d3 = $(`<div id="html_b34dd5d1fa7c4506144eabe25482d3d3" style="width: 100.0%; height: 100.0%;"><b>CLEC</b> (Cleco Power)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.703<br><b>G-score:</b> 0.413<br><b>Avg congestion:</b> $8.91/MWh<br><b>Max congestion:</b> $346.34/MWh<br><b>Constrained hours:</b> 6071/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_d593dd24667ae4a3939142113b80e0a1.setContent(html_b34dd5d1fa7c4506144eabe25482d3d3);
+            
+        
+
+        circle_marker_26d548a1b0c9d28ce62ad3583e6f5c29.bindPopup(popup_d593dd24667ae4a3939142113b80e0a1)
+        ;
+
+        
+    
+    
+            circle_marker_26d548a1b0c9d28ce62ad3583e6f5c29.bindTooltip(
+                `<div>
+                     CLEC: transmission
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_0711d949ab94cc8b4a64b36fabb6a6dd = L.circleMarker(
+                [42.75, -84.55],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.537461131939438, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_310e50e0b1af25a5797287c5018bf18c = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_ce43fbdb68155f50e71c977b81886aeb = $(`<div id="html_ce43fbdb68155f50e71c977b81886aeb" style="width: 100.0%; height: 100.0%;"><b>CONS</b> (Consumers Energy)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.199<br><b>G-score:</b> 0.469<br><b>Avg congestion:</b> $2.95/MWh<br><b>Max congestion:</b> $107.11/MWh<br><b>Constrained hours:</b> 3568/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_310e50e0b1af25a5797287c5018bf18c.setContent(html_ce43fbdb68155f50e71c977b81886aeb);
+            
+        
+
+        circle_marker_0711d949ab94cc8b4a64b36fabb6a6dd.bindPopup(popup_310e50e0b1af25a5797287c5018bf18c)
+        ;
+
+        
+    
+    
+            circle_marker_0711d949ab94cc8b4a64b36fabb6a6dd.bindTooltip(
+                `<div>
+                     CONS: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_5759d7c55b483cd43ed28b25d0c83df3 = L.circleMarker(
+                [39.8, -89.65],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.878527397260275, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_15316a9ec62ae87c99a5827c087deb4a = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_93e498e4c74b315cd8b66917d6db2cce = $(`<div id="html_93e498e4c74b315cd8b66917d6db2cce" style="width: 100.0%; height: 100.0%;"><b>CWLP</b> (City Water Light & Power)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.234<br><b>G-score:</b> 0.443<br><b>Avg congestion:</b> $3.23/MWh<br><b>Max congestion:</b> $106.46/MWh<br><b>Constrained hours:</b> 3143/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_15316a9ec62ae87c99a5827c087deb4a.setContent(html_93e498e4c74b315cd8b66917d6db2cce);
+            
+        
+
+        circle_marker_5759d7c55b483cd43ed28b25d0c83df3.bindPopup(popup_15316a9ec62ae87c99a5827c087deb4a)
+        ;
+
+        
+    
+    
+            circle_marker_5759d7c55b483cd43ed28b25d0c83df3.bindTooltip(
+                `<div>
+                     CWLP: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_072f53911bbf0974dffdd435f68f93e3 = L.circleMarker(
+                [42.33, -83.05],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.688304920091324, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_0889958dfb80984067fd1250c91633f9 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_ddb4aa5c20afe0ca3cc5fdc25ae47dd1 = $(`<div id="html_ddb4aa5c20afe0ca3cc5fdc25ae47dd1" style="width: 100.0%; height: 100.0%;"><b>DECO</b> (DTE Energy)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.230<br><b>G-score:</b> 0.466<br><b>Avg congestion:</b> $3.07/MWh<br><b>Max congestion:</b> $106.73/MWh<br><b>Constrained hours:</b> 3534/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_0889958dfb80984067fd1250c91633f9.setContent(html_ddb4aa5c20afe0ca3cc5fdc25ae47dd1);
+            
+        
+
+        circle_marker_072f53911bbf0974dffdd435f68f93e3.bindPopup(popup_0889958dfb80984067fd1250c91633f9)
+        ;
+
+        
+    
+    
+            circle_marker_072f53911bbf0974dffdd435f68f93e3.bindTooltip(
+                `<div>
+                     DECO: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_0e0360c61ad572c0bbb62d6d3b1d4b73 = L.circleMarker(
+                [43.8, -91.25],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 14.008204748858446, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_d587604f6592a25845e60bb8b4c01ec5 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_e4814f2bce55b2380f1eb9e8b0f5f7e6 = $(`<div id="html_e4814f2bce55b2380f1eb9e8b0f5f7e6" style="width: 100.0%; height: 100.0%;"><b>DPC</b> (Dairyland Power)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.360<br><b>G-score:</b> 0.465<br><b>Avg congestion:</b> $5.01/MWh<br><b>Max congestion:</b> $126.14/MWh<br><b>Constrained hours:</b> 5326/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_d587604f6592a25845e60bb8b4c01ec5.setContent(html_e4814f2bce55b2380f1eb9e8b0f5f7e6);
+            
+        
+
+        circle_marker_0e0360c61ad572c0bbb62d6d3b1d4b73.bindPopup(popup_d587604f6592a25845e60bb8b4c01ec5)
+        ;
+
+        
+    
+    
+            circle_marker_0e0360c61ad572c0bbb62d6d3b1d4b73.bindTooltip(
+                `<div>
+                     DPC: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_bb66461164fcd28c4856292938272ad7 = L.circleMarker(
                 [34.75, -92.3],
-                {"bubblingMouseEvents": true, "color": "#9b59b6", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#9b59b6", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.714057534246574, "stroke": true, "weight": 2}
-            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.508897089041096, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
         
     
-        var popup_5a551f5dcea7efd7afae3be3d1ffff98 = L.popup({
+        var popup_f7beb68ad3fbc4e102df4861c7c46335 = L.popup({
   "maxWidth": 350,
 });
 
         
             
-                var html_d49baca3d5a17f10a64133ed3249fd1c = $(`<div id="html_d49baca3d5a17f10a64133ed3249fd1c" style="width: 100.0%; height: 100.0%;"><b>ARKANSAS.HUB</b> (Arkansas Hub)<br><b>Classification:</b> BOTH<br><b>T-score:</b> 0.661<br><b>G-score:</b> 0.600<br><b>Avg congestion:</b> $8.10/MWh<br><b>Max congestion:</b> $173.17/MWh<br><b>Constrained hours:</b> 5732/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
-                popup_5a551f5dcea7efd7afae3be3d1ffff98.setContent(html_d49baca3d5a17f10a64133ed3249fd1c);
+                var html_1f9376c0a3313cf2fee89e0632753776 = $(`<div id="html_1f9376c0a3313cf2fee89e0632753776" style="width: 100.0%; height: 100.0%;"><b>EAI</b> (Entergy Arkansas)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.574<br><b>G-score:</b> 0.444<br><b>Avg congestion:</b> $7.92/MWh<br><b>Max congestion:</b> $168.04/MWh<br><b>Constrained hours:</b> 5784/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_f7beb68ad3fbc4e102df4861c7c46335.setContent(html_1f9376c0a3313cf2fee89e0632753776);
             
         
 
-        circle_marker_852f4c98f90d740cf27e58578a621986.bindPopup(popup_5a551f5dcea7efd7afae3be3d1ffff98)
+        circle_marker_bb66461164fcd28c4856292938272ad7.bindPopup(popup_f7beb68ad3fbc4e102df4861c7c46335)
         ;
 
         
     
     
-            circle_marker_852f4c98f90d740cf27e58578a621986.bindTooltip(
+            circle_marker_bb66461164fcd28c4856292938272ad7.bindTooltip(
                 `<div>
-                     ARKANSAS.HUB: both
+                     EAI: transmission
                  </div>`,
                 {
   "sticky": true,
@@ -173,32 +536,32 @@
             );
         
     
-            var circle_marker_24fc2bbd80baad4df8880c9162172bdf = L.circleMarker(
-                [39.0, -89.5],
-                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.222483561643834, "stroke": true, "weight": 2}
-            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+            var circle_marker_feeec9ca26086c145734f0022a8434a3 = L.circleMarker(
+                [30.45, -91.19],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 18.139623510051592, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
         
     
-        var popup_b26ed8420bdb4443e356db61da461f7b = L.popup({
+        var popup_db4c693ff2e7727326338346f036c6c5 = L.popup({
   "maxWidth": 350,
 });
 
         
             
-                var html_8e144cfe8b6b3e06c3387f7de09efec2 = $(`<div id="html_8e144cfe8b6b3e06c3387f7de09efec2" style="width: 100.0%; height: 100.0%;"><b>ILLINOIS.HUB</b> (Illinois Hub)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.118<br><b>G-score:</b> 0.467<br><b>Avg congestion:</b> $2.69/MWh<br><b>Max congestion:</b> $106.54/MWh<br><b>Constrained hours:</b> 3096/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
-                popup_b26ed8420bdb4443e356db61da461f7b.setContent(html_8e144cfe8b6b3e06c3387f7de09efec2);
+                var html_a129b2121ebbc0fdb9ee25c5d9bc3023 = $(`<div id="html_a129b2121ebbc0fdb9ee25c5d9bc3023" style="width: 100.0%; height: 100.0%;"><b>EES</b> (Entergy (South))<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.626<br><b>G-score:</b> 0.410<br><b>Avg congestion:</b> $8.45/MWh<br><b>Max congestion:</b> $173.91/MWh<br><b>Constrained hours:</b> 5941/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_db4c693ff2e7727326338346f036c6c5.setContent(html_a129b2121ebbc0fdb9ee25c5d9bc3023);
             
         
 
-        circle_marker_24fc2bbd80baad4df8880c9162172bdf.bindPopup(popup_b26ed8420bdb4443e356db61da461f7b)
+        circle_marker_feeec9ca26086c145734f0022a8434a3.bindPopup(popup_db4c693ff2e7727326338346f036c6c5)
         ;
 
         
     
     
-            circle_marker_24fc2bbd80baad4df8880c9162172bdf.bindTooltip(
+            circle_marker_feeec9ca26086c145734f0022a8434a3.bindTooltip(
                 `<div>
-                     ILLINOIS.HUB: unconstrained
+                     EES: transmission
                  </div>`,
                 {
   "sticky": true,
@@ -206,32 +569,32 @@
             );
         
     
-            var circle_marker_6937510d17000562cf8a16528296e074 = L.circleMarker(
-                [40.0, -86.25],
-                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.343538356164384, "stroke": true, "weight": 2}
-            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+            var circle_marker_f579a3d80015f598833b0163cee36efa = L.circleMarker(
+                [45.5, -93.5],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.635472602739725, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
         
     
-        var popup_1ea211eaf920cd773ac59e0e6ef9410e = L.popup({
+        var popup_2a1a93958e4b70931cc96c8429dbcf72 = L.popup({
   "maxWidth": 350,
 });
 
         
             
-                var html_921a94accab2b5c54badf48d152e9012 = $(`<div id="html_921a94accab2b5c54badf48d152e9012" style="width: 100.0%; height: 100.0%;"><b>INDIANA.HUB</b> (Indiana Hub)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.092<br><b>G-score:</b> 0.430<br><b>Avg congestion:</b> $2.79/MWh<br><b>Max congestion:</b> $106.39/MWh<br><b>Constrained hours:</b> 3398/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
-                popup_1ea211eaf920cd773ac59e0e6ef9410e.setContent(html_921a94accab2b5c54badf48d152e9012);
+                var html_b14847ca00d0f0a4249fc17ee4c16663 = $(`<div id="html_b14847ca00d0f0a4249fc17ee4c16663" style="width: 100.0%; height: 100.0%;"><b>EMBA</b> (East-Central MN)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.591<br><b>G-score:</b> 0.415<br><b>Avg congestion:</b> $8.03/MWh<br><b>Max congestion:</b> $169.02/MWh<br><b>Constrained hours:</b> 5741/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_2a1a93958e4b70931cc96c8429dbcf72.setContent(html_b14847ca00d0f0a4249fc17ee4c16663);
             
         
 
-        circle_marker_6937510d17000562cf8a16528296e074.bindPopup(popup_1ea211eaf920cd773ac59e0e6ef9410e)
+        circle_marker_f579a3d80015f598833b0163cee36efa.bindPopup(popup_2a1a93958e4b70931cc96c8429dbcf72)
         ;
 
         
     
     
-            circle_marker_6937510d17000562cf8a16528296e074.bindTooltip(
+            circle_marker_f579a3d80015f598833b0163cee36efa.bindTooltip(
                 `<div>
-                     INDIANA.HUB: unconstrained
+                     EMBA: transmission
                  </div>`,
                 {
   "sticky": true,
@@ -239,32 +602,32 @@
             );
         
     
-            var circle_marker_c104bfa28f48305a68a913d10e8f3e42 = L.circleMarker(
-                [31.0, -92.0],
-                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 19.39614794520548, "stroke": true, "weight": 2}
-            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+            var circle_marker_a45f11cc85cd0561b2e58d748e478d58 = L.circleMarker(
+                [45.2, -93.3],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 18.469034290635264, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
         
     
-        var popup_ba2e063dafd53d9afbf448e7fc63a7cf = L.popup({
+        var popup_b4da0f8389c53e000b173649e63c0608 = L.popup({
   "maxWidth": 350,
 });
 
         
             
-                var html_15c2f1f67609d3d9613abf55ee8de853 = $(`<div id="html_15c2f1f67609d3d9613abf55ee8de853" style="width: 100.0%; height: 100.0%;"><b>LOUISIANA.HUB</b> (Louisiana Hub)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.999<br><b>G-score:</b> 0.400<br><b>Avg congestion:</b> $9.50/MWh<br><b>Max congestion:</b> $661.19/MWh<br><b>Constrained hours:</b> 6001/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
-                popup_ba2e063dafd53d9afbf448e7fc63a7cf.setContent(html_15c2f1f67609d3d9613abf55ee8de853);
+                var html_b8f07e5647a23cae18cf4237e33fb793 = $(`<div id="html_b8f07e5647a23cae18cf4237e33fb793" style="width: 100.0%; height: 100.0%;"><b>GRE</b> (Great River Energy)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.446<br><b>G-score:</b> 0.469<br><b>Avg congestion:</b> $8.72/MWh<br><b>Max congestion:</b> $138.78/MWh<br><b>Constrained hours:</b> 6248/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_b4da0f8389c53e000b173649e63c0608.setContent(html_b8f07e5647a23cae18cf4237e33fb793);
             
         
 
-        circle_marker_c104bfa28f48305a68a913d10e8f3e42.bindPopup(popup_ba2e063dafd53d9afbf448e7fc63a7cf)
+        circle_marker_a45f11cc85cd0561b2e58d748e478d58.bindPopup(popup_b4da0f8389c53e000b173649e63c0608)
         ;
 
         
     
     
-            circle_marker_c104bfa28f48305a68a913d10e8f3e42.bindTooltip(
+            circle_marker_a45f11cc85cd0561b2e58d748e478d58.bindTooltip(
                 `<div>
-                     LOUISIANA.HUB: transmission
+                     GRE: unconstrained
                  </div>`,
                 {
   "sticky": true,
@@ -272,32 +635,32 @@
             );
         
     
-            var circle_marker_1ed0bc99542506b27b81f46728c78220 = L.circleMarker(
-                [43.0, -84.5],
-                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.659286301369864, "stroke": true, "weight": 2}
-            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+            var circle_marker_838fb17aa149ebd4e5d0e80abfc16a75 = L.circleMarker(
+                [46.78, -92.1],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.372328571428572, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
         
     
-        var popup_4b8b32fd29181ce36d7a0d3f627be1c3 = L.popup({
+        var popup_d1632aa5841e16666afcd5d391ca5bb5 = L.popup({
   "maxWidth": 350,
 });
 
         
             
-                var html_83b940a6a9c69f7e96674da01fc0a866 = $(`<div id="html_83b940a6a9c69f7e96674da01fc0a866" style="width: 100.0%; height: 100.0%;"><b>MICHIGAN.HUB</b> (Michigan Hub)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.138<br><b>G-score:</b> 0.453<br><b>Avg congestion:</b> $3.05/MWh<br><b>Max congestion:</b> $106.80/MWh<br><b>Constrained hours:</b> 3553/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
-                popup_4b8b32fd29181ce36d7a0d3f627be1c3.setContent(html_83b940a6a9c69f7e96674da01fc0a866);
+                var html_38a7892d53d91fe454fd824bb7e8f37f = $(`<div id="html_38a7892d53d91fe454fd824bb7e8f37f" style="width: 100.0%; height: 100.0%;"><b>HE</b> (Minnesota Power (ALLETE))<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.196<br><b>G-score:</b> 0.405<br><b>Avg congestion:</b> $2.81/MWh<br><b>Max congestion:</b> $104.41/MWh<br><b>Constrained hours:</b> 3298/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_d1632aa5841e16666afcd5d391ca5bb5.setContent(html_38a7892d53d91fe454fd824bb7e8f37f);
             
         
 
-        circle_marker_1ed0bc99542506b27b81f46728c78220.bindPopup(popup_4b8b32fd29181ce36d7a0d3f627be1c3)
+        circle_marker_838fb17aa149ebd4e5d0e80abfc16a75.bindPopup(popup_d1632aa5841e16666afcd5d391ca5bb5)
         ;
 
         
     
     
-            circle_marker_1ed0bc99542506b27b81f46728c78220.bindTooltip(
+            circle_marker_838fb17aa149ebd4e5d0e80abfc16a75.bindTooltip(
                 `<div>
-                     MICHIGAN.HUB: unconstrained
+                     HE: unconstrained
                  </div>`,
                 {
   "sticky": true,
@@ -305,32 +668,32 @@
             );
         
     
-            var circle_marker_b7776fc972eee5490ddf50a9cd990351 = L.circleMarker(
-                [46.0, -94.0],
-                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.215509589041096, "stroke": true, "weight": 2}
-            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+            var circle_marker_d03482335e622b2ddf52161f38faa944 = L.circleMarker(
+                [39.77, -86.16],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.854417808219178, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
         
     
-        var popup_23f4e37bbba9d9d4ac7f7075c8717c2e = L.popup({
+        var popup_a2ee92eaebb53941187bed085af566a7 = L.popup({
   "maxWidth": 350,
 });
 
         
             
-                var html_687e87fff1a2f17f21684e46c817ebf8 = $(`<div id="html_687e87fff1a2f17f21684e46c817ebf8" style="width: 100.0%; height: 100.0%;"><b>MINN.HUB</b> (Minnesota Hub)<br><b>Classification:</b> GENERATION<br><b>T-score:</b> 0.397<br><b>G-score:</b> 0.533<br><b>Avg congestion:</b> $6.01/MWh<br><b>Max congestion:</b> $134.15/MWh<br><b>Constrained hours:</b> 5580/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization<br>&nbsp;&nbsp;Combined Heat & Power<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV<br>&nbsp;&nbsp;Wind</div>`)[0];
-                popup_23f4e37bbba9d9d4ac7f7075c8717c2e.setContent(html_687e87fff1a2f17f21684e46c817ebf8);
+                var html_1f855ecb9f44e0ab6661036ef2864546 = $(`<div id="html_1f855ecb9f44e0ab6661036ef2864546" style="width: 100.0%; height: 100.0%;"><b>IPL</b> (Indianapolis Power & Light)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.203<br><b>G-score:</b> 0.419<br><b>Avg congestion:</b> $3.21/MWh<br><b>Max congestion:</b> $92.35/MWh<br><b>Constrained hours:</b> 3621/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_a2ee92eaebb53941187bed085af566a7.setContent(html_1f855ecb9f44e0ab6661036ef2864546);
             
         
 
-        circle_marker_b7776fc972eee5490ddf50a9cd990351.bindPopup(popup_23f4e37bbba9d9d4ac7f7075c8717c2e)
+        circle_marker_d03482335e622b2ddf52161f38faa944.bindPopup(popup_a2ee92eaebb53941187bed085af566a7)
         ;
 
         
     
     
-            circle_marker_b7776fc972eee5490ddf50a9cd990351.bindTooltip(
+            circle_marker_d03482335e622b2ddf52161f38faa944.bindTooltip(
                 `<div>
-                     MINN.HUB: generation
+                     IPL: unconstrained
                  </div>`,
                 {
   "sticky": true,
@@ -338,32 +701,32 @@
             );
         
     
-            var circle_marker_69c93877b13c0d6c3297302657905f66 = L.circleMarker(
-                [33.5, -89.5],
-                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.669772602739727, "stroke": true, "weight": 2}
-            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+            var circle_marker_685cd88cff22b0b7b0757a9885e597fc = L.circleMarker(
+                [30.22, -92.02],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 19.112813698630138, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
         
     
-        var popup_19779b7946e91e4bdf3b42b93f21a0a6 = L.popup({
+        var popup_832f0ca246a914413de9a02c5487193e = L.popup({
   "maxWidth": 350,
 });
 
         
             
-                var html_363ee2003d620c2348cda88369eeccf0 = $(`<div id="html_363ee2003d620c2348cda88369eeccf0" style="width: 100.0%; height: 100.0%;"><b>MS.HUB</b> (Mississippi Hub)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.683<br><b>G-score:</b> 0.455<br><b>Avg congestion:</b> $8.06/MWh<br><b>Max congestion:</b> $186.11/MWh<br><b>Constrained hours:</b> 5720/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
-                popup_19779b7946e91e4bdf3b42b93f21a0a6.setContent(html_363ee2003d620c2348cda88369eeccf0);
+                var html_0365c674032fda2ae1755e82f6069747 = $(`<div id="html_0365c674032fda2ae1755e82f6069747" style="width: 100.0%; height: 100.0%;"><b>LAFA</b> (Lafayette Utilities System)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.828<br><b>G-score:</b> 0.418<br><b>Avg congestion:</b> $9.26/MWh<br><b>Max congestion:</b> $601.02/MWh<br><b>Constrained hours:</b> 6022/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_832f0ca246a914413de9a02c5487193e.setContent(html_0365c674032fda2ae1755e82f6069747);
             
         
 
-        circle_marker_69c93877b13c0d6c3297302657905f66.bindPopup(popup_19779b7946e91e4bdf3b42b93f21a0a6)
+        circle_marker_685cd88cff22b0b7b0757a9885e597fc.bindPopup(popup_832f0ca246a914413de9a02c5487193e)
         ;
 
         
     
     
-            circle_marker_69c93877b13c0d6c3297302657905f66.bindTooltip(
+            circle_marker_685cd88cff22b0b7b0757a9885e597fc.bindTooltip(
                 `<div>
-                     MS.HUB: transmission
+                     LAFA: transmission
                  </div>`,
                 {
   "sticky": true,
@@ -371,32 +734,32 @@
             );
         
     
-            var circle_marker_1f9cd21c34fc2074d0a08fd56aa45544 = L.circleMarker(
-                [31.5, -97.0],
-                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 18.15232191780822, "stroke": true, "weight": 2}
-            ).addTo(feature_group_e75a562f753dc6b7e1f542a285a5f7b9);
+            var circle_marker_e54f9edfd0c06e06e922f6ba6239efe9 = L.circleMarker(
+                [30.6, -91.5],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 19.164757534246576, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
         
     
-        var popup_ef53a91f4859e8709a3d95fd40dc344b = L.popup({
+        var popup_1b39b4fed8e58f38e6c978cbb87b4714 = L.popup({
   "maxWidth": 350,
 });
 
         
             
-                var html_a4d50175ea2198dd5c2df7b79061de9f = $(`<div id="html_a4d50175ea2198dd5c2df7b79061de9f" style="width: 100.0%; height: 100.0%;"><b>TEXAS.HUB</b> (Texas Hub)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.694<br><b>G-score:</b> 0.427<br><b>Avg congestion:</b> $8.46/MWh<br><b>Max congestion:</b> $175.45/MWh<br><b>Constrained hours:</b> 6010/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
-                popup_ef53a91f4859e8709a3d95fd40dc344b.setContent(html_a4d50175ea2198dd5c2df7b79061de9f);
+                var html_f4687e670dd8867d8a11a751a8acdf26 = $(`<div id="html_f4687e670dd8867d8a11a751a8acdf26" style="width: 100.0%; height: 100.0%;"><b>LEPA</b> (Louisiana Energy & Power Auth)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.786<br><b>G-score:</b> 0.417<br><b>Avg congestion:</b> $9.30/MWh<br><b>Max congestion:</b> $523.62/MWh<br><b>Constrained hours:</b> 6013/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_1b39b4fed8e58f38e6c978cbb87b4714.setContent(html_f4687e670dd8867d8a11a751a8acdf26);
             
         
 
-        circle_marker_1f9cd21c34fc2074d0a08fd56aa45544.bindPopup(popup_ef53a91f4859e8709a3d95fd40dc344b)
+        circle_marker_e54f9edfd0c06e06e922f6ba6239efe9.bindPopup(popup_1b39b4fed8e58f38e6c978cbb87b4714)
         ;
 
         
     
     
-            circle_marker_1f9cd21c34fc2074d0a08fd56aa45544.bindTooltip(
+            circle_marker_e54f9edfd0c06e06e922f6ba6239efe9.bindTooltip(
                 `<div>
-                     TEXAS.HUB: transmission
+                     LEPA: transmission
                  </div>`,
                 {
   "sticky": true,
@@ -404,16 +767,544 @@
             );
         
     
-            feature_group_e75a562f753dc6b7e1f542a285a5f7b9.addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+            var circle_marker_df63875c9f7fbb7d3b8792e5eb89a023 = L.circleMarker(
+                [46.88, -96.79],
+                {"bubblingMouseEvents": true, "color": "#9b59b6", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#9b59b6", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 22.264701956947164, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
         
     
-            var feature_group_f0fbb47f3df98407e32f666fca585247 = L.featureGroup(
+        var popup_e8dfe60845d85056bd4d21634151551b = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_4c20f9d0d24a57a118a56267eb7a66e2 = $(`<div id="html_4c20f9d0d24a57a118a56267eb7a66e2" style="width: 100.0%; height: 100.0%;"><b>MDU</b> (Montana-Dakota (ND))<br><b>Classification:</b> BOTH<br><b>T-score:</b> 0.587<br><b>G-score:</b> 0.577<br><b>Avg congestion:</b> $11.89/MWh<br><b>Max congestion:</b> $147.04/MWh<br><b>Constrained hours:</b> 7092/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_e8dfe60845d85056bd4d21634151551b.setContent(html_4c20f9d0d24a57a118a56267eb7a66e2);
+            
+        
+
+        circle_marker_df63875c9f7fbb7d3b8792e5eb89a023.bindPopup(popup_e8dfe60845d85056bd4d21634151551b)
+        ;
+
+        
+    
+    
+            circle_marker_df63875c9f7fbb7d3b8792e5eb89a023.bindTooltip(
+                `<div>
+                     MDU: both
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b3705793d22e576abba6cee9ba0e7269 = L.circleMarker(
+                [41.6, -93.6],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 17.454301159114856, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_f18fc009c9d451aa798907f86bb1fa80 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_bbf9cf9cc0d71070eeaec5b31ad65f6d = $(`<div id="html_bbf9cf9cc0d71070eeaec5b31ad65f6d" style="width: 100.0%; height: 100.0%;"><b>MEC</b> (MidAmerican Energy)<br><b>Classification:</b> GENERATION<br><b>T-score:</b> 0.394<br><b>G-score:</b> 0.554<br><b>Avg congestion:</b> $7.88/MWh<br><b>Max congestion:</b> $104.30/MWh<br><b>Constrained hours:</b> 5818/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization<br>&nbsp;&nbsp;Combined Heat & Power<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV<br>&nbsp;&nbsp;Wind</div>`)[0];
+                popup_f18fc009c9d451aa798907f86bb1fa80.setContent(html_bbf9cf9cc0d71070eeaec5b31ad65f6d);
+            
+        
+
+        circle_marker_b3705793d22e576abba6cee9ba0e7269.bindPopup(popup_f18fc009c9d451aa798907f86bb1fa80)
+        ;
+
+        
+    
+    
+            circle_marker_b3705793d22e576abba6cee9ba0e7269.bindTooltip(
+                `<div>
+                     MEC: generation
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_37bf048a0d67f01fce63c78e9859c294 = L.circleMarker(
+                [43.07, -89.4],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12.539324657534246, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_886780edb76b9eb14e9581bf3b0d10b4 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_f848a1861bd95bebd33077bd16065a2d = $(`<div id="html_f848a1861bd95bebd33077bd16065a2d" style="width: 100.0%; height: 100.0%;"><b>MGE</b> (Madison Gas & Electric)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.268<br><b>G-score:</b> 0.406<br><b>Avg congestion:</b> $3.78/MWh<br><b>Max congestion:</b> $106.21/MWh<br><b>Constrained hours:</b> 4523/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_886780edb76b9eb14e9581bf3b0d10b4.setContent(html_f848a1861bd95bebd33077bd16065a2d);
+            
+        
+
+        circle_marker_37bf048a0d67f01fce63c78e9859c294.bindPopup(popup_886780edb76b9eb14e9581bf3b0d10b4)
+        ;
+
+        
+    
+    
+            circle_marker_37bf048a0d67f01fce63c78e9859c294.bindTooltip(
+                `<div>
+                     MGE: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_d3a9c52e0664705578e4a65f19daa26f = L.circleMarker(
+                [46.5, -87.4],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.101122602739727, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_7a2092fd011276f983995d0ca0197122 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_d1765a152ae4e113122eaacde20fd9ad = $(`<div id="html_d1765a152ae4e113122eaacde20fd9ad" style="width: 100.0%; height: 100.0%;"><b>MIUP</b> (Michigan Upper Peninsula)<br><b>Classification:</b> GENERATION<br><b>T-score:</b> 0.328<br><b>G-score:</b> 0.560<br><b>Avg congestion:</b> $4.25/MWh<br><b>Max congestion:</b> $105.58/MWh<br><b>Constrained hours:</b> 4856/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization<br>&nbsp;&nbsp;Combined Heat & Power<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV<br>&nbsp;&nbsp;Wind</div>`)[0];
+                popup_7a2092fd011276f983995d0ca0197122.setContent(html_d1765a152ae4e113122eaacde20fd9ad);
+            
+        
+
+        circle_marker_d3a9c52e0664705578e4a65f19daa26f.bindPopup(popup_7a2092fd011276f983995d0ca0197122)
+        ;
+
+        
+    
+    
+            circle_marker_d3a9c52e0664705578e4a65f19daa26f.bindTooltip(
+                `<div>
+                     MIUP: generation
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a1a12069f00f7190968456d3638927f2 = L.circleMarker(
+                [47.0, -93.0],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 23.733864897260272, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_9ad59df563af773937a1fee5374da134 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_f9e5575b64a46213763c4b45ebb3cb6b = $(`<div id="html_f9e5575b64a46213763c4b45ebb3cb6b" style="width: 100.0%; height: 100.0%;"><b>MP</b> (Minnesota Power)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.524<br><b>G-score:</b> 0.468<br><b>Avg congestion:</b> $13.11/MWh<br><b>Max congestion:</b> $141.33/MWh<br><b>Constrained hours:</b> 6572/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_9ad59df563af773937a1fee5374da134.setContent(html_f9e5575b64a46213763c4b45ebb3cb6b);
+            
+        
+
+        circle_marker_a1a12069f00f7190968456d3638927f2.bindPopup(popup_9ad59df563af773937a1fee5374da134)
+        ;
+
+        
+    
+    
+            circle_marker_a1a12069f00f7190968456d3638927f2.bindTooltip(
+                `<div>
+                     MP: transmission
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_39f98b444923b8a252b761f36add02cb = L.circleMarker(
+                [41.42, -91.04],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12.030117808219178, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_7209a972b42757167fbe45c973af97b4 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_6b0466241eab53564e70ccc886bd4969 = $(`<div id="html_6b0466241eab53564e70ccc886bd4969" style="width: 100.0%; height: 100.0%;"><b>MPW</b> (Muscatine Power & Water)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.204<br><b>G-score:</b> 0.447<br><b>Avg congestion:</b> $3.36/MWh<br><b>Max congestion:</b> $105.30/MWh<br><b>Constrained hours:</b> 3982/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_7209a972b42757167fbe45c973af97b4.setContent(html_6b0466241eab53564e70ccc886bd4969);
+            
+        
+
+        circle_marker_39f98b444923b8a252b761f36add02cb.bindPopup(popup_7209a972b42757167fbe45c973af97b4)
+        ;
+
+        
+    
+    
+            circle_marker_39f98b444923b8a252b761f36add02cb.bindTooltip(
+                `<div>
+                     MPW: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_8230e0b81d461fa04f4ad60d0064aa62 = L.circleMarker(
+                [41.5, -87.0],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.201987546699876, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_98a8315d57b0bd6ee9bdca18cab931c5 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_193a3c595f713043c2f552610d72e1b8 = $(`<div id="html_193a3c595f713043c2f552610d72e1b8" style="width: 100.0%; height: 100.0%;"><b>NIPS</b> (Northern Indiana Public Service)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.202<br><b>G-score:</b> 0.402<br><b>Avg congestion:</b> $2.67/MWh<br><b>Max congestion:</b> $107.88/MWh<br><b>Constrained hours:</b> 3202/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_98a8315d57b0bd6ee9bdca18cab931c5.setContent(html_193a3c595f713043c2f552610d72e1b8);
+            
+        
+
+        circle_marker_8230e0b81d461fa04f4ad60d0064aa62.bindPopup(popup_98a8315d57b0bd6ee9bdca18cab931c5)
+        ;
+
+        
+    
+    
+            circle_marker_8230e0b81d461fa04f4ad60d0064aa62.bindTooltip(
+                `<div>
+                     NIPS: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_52aff8d4fa4ae78a7d829afe800d90a3 = L.circleMarker(
+                [44.95, -93.27],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 15.57699584824909, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_60aea84280d843cd24c9b67d85a2a620 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_56393f32aa787a58266b57298811ca84 = $(`<div id="html_56393f32aa787a58266b57298811ca84" style="width: 100.0%; height: 100.0%;"><b>NSP</b> (Northern States Power (Xcel))<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.377<br><b>G-score:</b> 0.469<br><b>Avg congestion:</b> $6.31/MWh<br><b>Max congestion:</b> $142.83/MWh<br><b>Constrained hours:</b> 5709/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_60aea84280d843cd24c9b67d85a2a620.setContent(html_56393f32aa787a58266b57298811ca84);
+            
+        
+
+        circle_marker_52aff8d4fa4ae78a7d829afe800d90a3.bindPopup(popup_60aea84280d843cd24c9b67d85a2a620)
+        ;
+
+        
+    
+    
+            circle_marker_52aff8d4fa4ae78a7d829afe800d90a3.bindTooltip(
+                `<div>
+                     NSP: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_f751b073ad5d850a24583ab8e75a673b = L.circleMarker(
+                [46.3, -96.0],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 21.334192926851106, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_bc07a0348eadfc303fdbeff9be3a964c = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_6c34b3083ab05b793f5b8972420bc00b = $(`<div id="html_6c34b3083ab05b793f5b8972420bc00b" style="width: 100.0%; height: 100.0%;"><b>OTP</b> (Otter Tail Power)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.516<br><b>G-score:</b> 0.498<br><b>Avg congestion:</b> $11.11/MWh<br><b>Max congestion:</b> $143.25/MWh<br><b>Constrained hours:</b> 6791/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_bc07a0348eadfc303fdbeff9be3a964c.setContent(html_6c34b3083ab05b793f5b8972420bc00b);
+            
+        
+
+        circle_marker_f751b073ad5d850a24583ab8e75a673b.bindPopup(popup_bc07a0348eadfc303fdbeff9be3a964c)
+        ;
+
+        
+    
+    
+            circle_marker_f751b073ad5d850a24583ab8e75a673b.bindTooltip(
+                `<div>
+                     OTP: transmission
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_7ea36359ed191c7cbdda66e2cf34fb3e = L.circleMarker(
+                [38.0, -89.2],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12.391859882583171, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_23cc52a0ee06d4ca96e9ee229b91c3ad = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_bbf85363e38f7a307466867b9b2a406d = $(`<div id="html_bbf85363e38f7a307466867b9b2a406d" style="width: 100.0%; height: 100.0%;"><b>SIGE</b> (Ameren Southern Illinois)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.233<br><b>G-score:</b> 0.436<br><b>Avg congestion:</b> $3.66/MWh<br><b>Max congestion:</b> $103.86/MWh<br><b>Constrained hours:</b> 3859/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_23cc52a0ee06d4ca96e9ee229b91c3ad.setContent(html_bbf85363e38f7a307466867b9b2a406d);
+            
+        
+
+        circle_marker_7ea36359ed191c7cbdda66e2cf34fb3e.bindPopup(popup_23cc52a0ee06d4ca96e9ee229b91c3ad)
+        ;
+
+        
+    
+    
+            circle_marker_7ea36359ed191c7cbdda66e2cf34fb3e.bindTooltip(
+                `<div>
+                     SIGE: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b188cf79e13e31157dacfd3d9e835024 = L.circleMarker(
+                [37.8, -89.0],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.362535616438356, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_3093896583f3f4c1a724a21f068e2af7 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_ac38f769042093e6c4bdf6688d8c0537 = $(`<div id="html_ac38f769042093e6c4bdf6688d8c0537" style="width: 100.0%; height: 100.0%;"><b>SIPC</b> (Southern IL Power Coop)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.213<br><b>G-score:</b> 0.408<br><b>Avg congestion:</b> $4.47/MWh<br><b>Max congestion:</b> $105.27/MWh<br><b>Constrained hours:</b> 4026/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_3093896583f3f4c1a724a21f068e2af7.setContent(html_ac38f769042093e6c4bdf6688d8c0537);
+            
+        
+
+        circle_marker_b188cf79e13e31157dacfd3d9e835024.bindPopup(popup_3093896583f3f4c1a724a21f068e2af7)
+        ;
+
+        
+    
+    
+            circle_marker_b188cf79e13e31157dacfd3d9e835024.bindTooltip(
+                `<div>
+                     SIPC: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_0309446f24a6ed9a3d9991a4d3654ccd = L.circleMarker(
+                [31.33, -89.33],
+                {"bubblingMouseEvents": true, "color": "#e74c3c", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#e74c3c", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 16.932325570776257, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_5103614edd40dd1e85fc920ba30a5580 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_ac99d3190674a6b4d04f04da54e92917 = $(`<div id="html_ac99d3190674a6b4d04f04da54e92917" style="width: 100.0%; height: 100.0%;"><b>SME</b> (South Mississippi Electric)<br><b>Classification:</b> TRANSMISSION<br><b>T-score:</b> 0.558<br><b>G-score:</b> 0.422<br><b>Avg congestion:</b> $7.44/MWh<br><b>Max congestion:</b> $184.70/MWh<br><b>Constrained hours:</b> 5592/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (dispatchable):</i><br>&nbsp;&nbsp;Battery Storage<br>&nbsp;&nbsp;Demand Response<br><i>Secondary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization</div>`)[0];
+                popup_5103614edd40dd1e85fc920ba30a5580.setContent(html_ac99d3190674a6b4d04f04da54e92917);
+            
+        
+
+        circle_marker_0309446f24a6ed9a3d9991a4d3654ccd.bindPopup(popup_5103614edd40dd1e85fc920ba30a5580)
+        ;
+
+        
+    
+    
+            circle_marker_0309446f24a6ed9a3d9991a4d3654ccd.bindTooltip(
+                `<div>
+                     SME: transmission
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_b2f5bd6e791f94ba045b68a446c6dcaa = L.circleMarker(
+                [35.1, -90.05],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 16.15786803652968, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_306b3b6980c0a8e657824f48961affa3 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_5b9360916436c6c229220df481aec703 = $(`<div id="html_5b9360916436c6c229220df481aec703" style="width: 100.0%; height: 100.0%;"><b>SMP</b> (SW Memphis Power)<br><b>Classification:</b> GENERATION<br><b>T-score:</b> 0.398<br><b>G-score:</b> 0.507<br><b>Avg congestion:</b> $6.80/MWh<br><b>Max congestion:</b> $126.11/MWh<br><b>Constrained hours:</b> 5908/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization<br>&nbsp;&nbsp;Combined Heat & Power<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV<br>&nbsp;&nbsp;Wind</div>`)[0];
+                popup_306b3b6980c0a8e657824f48961affa3.setContent(html_5b9360916436c6c229220df481aec703);
+            
+        
+
+        circle_marker_b2f5bd6e791f94ba045b68a446c6dcaa.bindPopup(popup_306b3b6980c0a8e657824f48961affa3)
+        ;
+
+        
+    
+    
+            circle_marker_b2f5bd6e791f94ba045b68a446c6dcaa.bindTooltip(
+                `<div>
+                     SMP: generation
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_252a6ce21dcf999e8fb4b99f7c040fac = L.circleMarker(
+                [46.3, -86.6],
+                {"bubblingMouseEvents": true, "color": "#3498db", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#3498db", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 13.230981678082193, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_37c7c7f27f446f8c1d9e15e32ce2b104 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_dde6e7d5c76b0348be5c3c96858b93aa = $(`<div id="html_dde6e7d5c76b0348be5c3c96858b93aa" style="width: 100.0%; height: 100.0%;"><b>UPPC</b> (Upper Peninsula Power)<br><b>Classification:</b> GENERATION<br><b>T-score:</b> 0.327<br><b>G-score:</b> 0.542<br><b>Avg congestion:</b> $4.36/MWh<br><b>Max congestion:</b> $105.58/MWh<br><b>Constrained hours:</b> 4892/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br>&nbsp;&nbsp;Weatherization<br>&nbsp;&nbsp;Combined Heat & Power<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV<br>&nbsp;&nbsp;Wind</div>`)[0];
+                popup_37c7c7f27f446f8c1d9e15e32ce2b104.setContent(html_dde6e7d5c76b0348be5c3c96858b93aa);
+            
+        
+
+        circle_marker_252a6ce21dcf999e8fb4b99f7c040fac.bindPopup(popup_37c7c7f27f446f8c1d9e15e32ce2b104)
+        ;
+
+        
+    
+    
+            circle_marker_252a6ce21dcf999e8fb4b99f7c040fac.bindTooltip(
+                `<div>
+                     UPPC: generation
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_a5cda3114ae1a4de5184d91d38658b32 = L.circleMarker(
+                [43.05, -87.95],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11.42009109589041, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_e145e7b213897bc3a5c1d9868303639e = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_6941767415a4e145ef3a472a91537f56 = $(`<div id="html_6941767415a4e145ef3a472a91537f56" style="width: 100.0%; height: 100.0%;"><b>WEC</b> (WEC Energy Group)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.182<br><b>G-score:</b> 0.402<br><b>Avg congestion:</b> $2.85/MWh<br><b>Max congestion:</b> $106.09/MWh<br><b>Constrained hours:</b> 3637/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_e145e7b213897bc3a5c1d9868303639e.setContent(html_6941767415a4e145ef3a472a91537f56);
+            
+        
+
+        circle_marker_a5cda3114ae1a4de5184d91d38658b32.bindPopup(popup_e145e7b213897bc3a5c1d9868303639e)
+        ;
+
+        
+    
+    
+            circle_marker_a5cda3114ae1a4de5184d91d38658b32.bindTooltip(
+                `<div>
+                     WEC: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_37484e7776e12c3fac01e771293b4e66 = L.circleMarker(
+                [44.5, -88.0],
+                {"bubblingMouseEvents": true, "color": "#2ecc71", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#2ecc71", "fillOpacity": 0.7, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12.710663698630137, "stroke": true, "weight": 2}
+            ).addTo(feature_group_81cd849bf52e0c33ee14e9928bc6cbb9);
+        
+    
+        var popup_a20f5db6085dd55b9fea1e58d815d757 = L.popup({
+  "maxWidth": 350,
+});
+
+        
+            
+                var html_7f392cc613ca8bf22d111138d4ccc9ef = $(`<div id="html_7f392cc613ca8bf22d111138d4ccc9ef" style="width: 100.0%; height: 100.0%;"><b>WPS</b> (Wisconsin Public Service)<br><b>Classification:</b> UNCONSTRAINED<br><b>T-score:</b> 0.298<br><b>G-score:</b> 0.448<br><b>Avg congestion:</b> $3.93/MWh<br><b>Max congestion:</b> $105.57/MWh<br><b>Constrained hours:</b> 4674/yr<br><hr><b>Recommended DERs:</b><br><i>Primary (consistent):</i><br>&nbsp;&nbsp;Energy Efficiency (Metered)<br><i>Secondary (variable):</i><br>&nbsp;&nbsp;Solar PV</div>`)[0];
+                popup_a20f5db6085dd55b9fea1e58d815d757.setContent(html_7f392cc613ca8bf22d111138d4ccc9ef);
+            
+        
+
+        circle_marker_37484e7776e12c3fac01e771293b4e66.bindPopup(popup_a20f5db6085dd55b9fea1e58d815d757)
+        ;
+
+        
+    
+    
+            circle_marker_37484e7776e12c3fac01e771293b4e66.bindTooltip(
+                `<div>
+                     WPS: unconstrained
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_81cd849bf52e0c33ee14e9928bc6cbb9.addTo(map_ced54ee7d67cd235a1d60811f11c5198);
+        
+    
+            var feature_group_f90d45d3bf11156c082e9fc71a38a932 = L.featureGroup(
                 {
 }
             );
         
     
-            var marker_cluster_35d84fe75da0472735f728a086446fa7 = L.markerClusterGroup(
+            var marker_cluster_1fed5d42c69b26b874d89ba7fdc720a1 = L.markerClusterGroup(
                 {
   "maxClusterRadius": 50,
   "disableClusteringAtZoom": 10,
@@ -421,13 +1312,13 @@
             );
         
     
-            marker_cluster_35d84fe75da0472735f728a086446fa7.addTo(feature_group_f0fbb47f3df98407e32f666fca585247);
+            marker_cluster_1fed5d42c69b26b874d89ba7fdc720a1.addTo(feature_group_f90d45d3bf11156c082e9fc71a38a932);
         
     
-            feature_group_f0fbb47f3df98407e32f666fca585247.addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+            feature_group_f90d45d3bf11156c082e9fc71a38a932.addTo(map_ced54ee7d67cd235a1d60811f11c5198);
         
     
-        var esri_transmission_layer_a1d8d5ef22939ed39a048faf81c25c6b = L.esri.featureLayer({
+        var esri_transmission_layer_bda23c29fbb0226a4f6d9ffc37829d43 = L.esri.featureLayer({
             url: 'https://services1.arcgis.com/Hp6G80Pky0om7QvQ/arcgis/rest/services/Electric_Power_Transmission_Lines/FeatureServer/0',
             where: "VOLTAGE >= 230",
             style: function(feature) {
@@ -445,7 +1336,7 @@
                     {sticky: true}
                 );
             }
-        }).addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+        }).addTo(map_ced54ee7d67cd235a1d60811f11c5198);
 
         setTimeout(function() {
             var overlays = document.querySelectorAll('.leaflet-control-layers-overlays');
@@ -458,9 +1349,9 @@
                 input.checked = true;
                 input.addEventListener('change', function() {
                     if (this.checked) {
-                        esri_transmission_layer_a1d8d5ef22939ed39a048faf81c25c6b.addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+                        esri_transmission_layer_bda23c29fbb0226a4f6d9ffc37829d43.addTo(map_ced54ee7d67cd235a1d60811f11c5198);
                     } else {
-                        map_d6a0da3243a86c59fda56dd4f128f60f.removeLayer(esri_transmission_layer_a1d8d5ef22939ed39a048faf81c25c6b);
+                        map_ced54ee7d67cd235a1d60811f11c5198.removeLayer(esri_transmission_layer_bda23c29fbb0226a4f6d9ffc37829d43);
                     }
                 });
                 var span = document.createElement('span');
@@ -473,24 +1364,24 @@
         }, 200);
         
     
-            var layer_control_332b1afa52cfbcd5e36c159bcbb692f2_layers = {
+            var layer_control_e518fd7423c02ecace74a2ec7278fc4e_layers = {
                 base_layers : {
-                    "cartodbpositron" : tile_layer_7f2fa1469ff728e5432a297131a9ce11,
+                    "cartodbpositron" : tile_layer_bbd8e292edd6430e3e52a8db29a04998,
                 },
                 overlays :  {
-                    "Zone Classifications" : feature_group_e75a562f753dc6b7e1f542a285a5f7b9,
-                    "Data Center Clusters" : feature_group_f0fbb47f3df98407e32f666fca585247,
+                    "Zone Classifications" : feature_group_81cd849bf52e0c33ee14e9928bc6cbb9,
+                    "Data Center Clusters" : feature_group_f90d45d3bf11156c082e9fc71a38a932,
                 },
             };
-            let layer_control_332b1afa52cfbcd5e36c159bcbb692f2 = L.control.layers(
-                layer_control_332b1afa52cfbcd5e36c159bcbb692f2_layers.base_layers,
-                layer_control_332b1afa52cfbcd5e36c159bcbb692f2_layers.overlays,
+            let layer_control_e518fd7423c02ecace74a2ec7278fc4e = L.control.layers(
+                layer_control_e518fd7423c02ecace74a2ec7278fc4e_layers.base_layers,
+                layer_control_e518fd7423c02ecace74a2ec7278fc4e_layers.overlays,
                 {
   "position": "topright",
   "collapsed": true,
   "autoZIndex": true,
 }
-            ).addTo(map_d6a0da3243a86c59fda56dd4f128f60f);
+            ).addTo(map_ced54ee7d67cd235a1d60811f11c5198);
 
         
 </script>

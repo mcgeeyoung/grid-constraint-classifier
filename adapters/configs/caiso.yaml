@@ -1,4 +1,5 @@
 # California ISO (CAISO) configuration
+# 23 Sub-LAPs: 15 PG&E + 6 SCE + 1 SDG&E + 1 VEA
 iso_id: caiso
 iso_name: California ISO
 timezone: US/Pacific
@@ -14,25 +15,157 @@ map_zoom: 6
 has_lmp_decomposition: true
 has_node_level_pricing: true
 
-rto_aggregates: []  # Trading hubs ARE the zones in CAISO gridstatus output
+rto_aggregates: []
 
 states:
   - CA
+  - NV
+
+zone_state_map:
+  SLAP_PGCC-APND: CA
+  SLAP_PGEB-APND: CA
+  SLAP_PGF1-APND: CA
+  SLAP_PGFG-APND: CA
+  SLAP_PGHB-APND: CA
+  SLAP_PGKN-APND: CA
+  SLAP_PGLP-APND: CA
+  SLAP_PGNB-APND: CA
+  SLAP_PGNC-APND: CA
+  SLAP_PGNP-APND: CA
+  SLAP_PGP2-APND: CA
+  SLAP_PGSB-APND: CA
+  SLAP_PGSF-APND: CA
+  SLAP_PGSI-APND: CA
+  SLAP_PGST-APND: CA
+  SLAP_SCEC-APND: CA
+  SLAP_SCEN-APND: CA
+  SLAP_SCEW-APND: CA
+  SLAP_SCHD-APND: CA
+  SLAP_SCLD-APND: CA
+  SLAP_SCNW-APND: CA
+  SLAP_SDG1-APND: CA
+  SLAP_VEA-APND: NV
 
 zones:
-  # gridstatus returns trading hub names; we keep both for mapping
-  TH_NP15_GEN-APND:
-    name: NP15 (North)
-    centroid_lat: 38.00
+  # --- PG&E Sub-LAPs (15) ---
+  SLAP_PGCC-APND:
+    name: "PG&E Central Coast"
+    centroid_lat: 35.65
+    centroid_lon: -120.70
+    states: [CA]
+  SLAP_PGEB-APND:
+    name: "PG&E East Bay"
+    centroid_lat: 37.80
+    centroid_lon: -122.10
+    states: [CA]
+  SLAP_PGF1-APND:
+    name: "PG&E Fresno"
+    centroid_lat: 36.75
+    centroid_lon: -119.77
+    states: [CA]
+  SLAP_PGFG-APND:
+    name: "PG&E Geysers"
+    centroid_lat: 38.80
+    centroid_lon: -122.80
+    states: [CA]
+  SLAP_PGHB-APND:
+    name: "PG&E Humboldt"
+    centroid_lat: 40.80
+    centroid_lon: -124.15
+    states: [CA]
+  SLAP_PGKN-APND:
+    name: "PG&E Kern"
+    centroid_lat: 35.35
+    centroid_lon: -118.90
+    states: [CA]
+  SLAP_PGLP-APND:
+    name: "PG&E Los Padres"
+    centroid_lat: 34.95
+    centroid_lon: -120.40
+    states: [CA]
+  SLAP_PGNB-APND:
+    name: "PG&E North Bay"
+    centroid_lat: 38.25
+    centroid_lon: -122.60
+    states: [CA]
+  SLAP_PGNC-APND:
+    name: "PG&E North Coast"
+    centroid_lat: 39.45
+    centroid_lon: -123.80
+    states: [CA]
+  SLAP_PGNP-APND:
+    name: "PG&E North Path"
+    centroid_lat: 38.60
     centroid_lon: -121.50
     states: [CA]
-  TH_SP15_GEN-APND:
-    name: SP15 (South)
-    centroid_lat: 34.50
-    centroid_lon: -118.50
+  SLAP_PGP2-APND:
+    name: "PG&E Peninsula"
+    centroid_lat: 37.50
+    centroid_lon: -122.25
     states: [CA]
-  TH_ZP26_GEN-APND:
-    name: ZP26 (Central)
-    centroid_lat: 35.50
-    centroid_lon: -119.00
+  SLAP_PGSB-APND:
+    name: "PG&E South Bay"
+    centroid_lat: 37.35
+    centroid_lon: -121.90
     states: [CA]
+  SLAP_PGSF-APND:
+    name: "PG&E San Francisco"
+    centroid_lat: 37.77
+    centroid_lon: -122.42
+    states: [CA]
+  SLAP_PGSI-APND:
+    name: "PG&E Sierra"
+    centroid_lat: 38.90
+    centroid_lon: -120.80
+    states: [CA]
+  SLAP_PGST-APND:
+    name: "PG&E Stockton"
+    centroid_lat: 37.95
+    centroid_lon: -121.30
+    states: [CA]
+
+  # --- SCE Sub-LAPs (6) ---
+  SLAP_SCEC-APND:
+    name: "SCE Core (LA Basin)"
+    centroid_lat: 34.05
+    centroid_lon: -118.25
+    states: [CA]
+  SLAP_SCEN-APND:
+    name: "SCE North (Ventura)"
+    centroid_lat: 34.35
+    centroid_lon: -119.15
+    states: [CA]
+  SLAP_SCEW-APND:
+    name: "SCE West (Coastal LA)"
+    centroid_lat: 33.95
+    centroid_lon: -118.45
+    states: [CA]
+  SLAP_SCHD-APND:
+    name: "SCE High Desert"
+    centroid_lat: 34.80
+    centroid_lon: -117.60
+    states: [CA]
+  SLAP_SCLD-APND:
+    name: "SCE Low Desert"
+    centroid_lat: 33.70
+    centroid_lon: -116.20
+    states: [CA]
+  SLAP_SCNW-APND:
+    name: "SCE Northwest"
+    centroid_lat: 34.45
+    centroid_lon: -118.60
+    states: [CA]
+
+  # --- SDG&E Sub-LAP (1) ---
+  SLAP_SDG1-APND:
+    name: "SDG&E San Diego"
+    centroid_lat: 32.80
+    centroid_lon: -117.15
+    states: [CA]
+
+  # --- VEA Sub-LAP (1) ---
+  SLAP_VEA-APND:
+    name: "Valley Electric"
+    centroid_lat: 36.20
+    centroid_lon: -116.00
+    states: [NV]

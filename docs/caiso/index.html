@@ -413,10 +413,10 @@ table.pnode-table tbody tr:hover {
     <div class="feature-list">
       <ul>
         <li><span class="bullet"></span>
-          <span>Pulls <b>26,277</b> hourly LMP data points from
+          <span>Pulls <b>192,698</b> hourly LMP data points from
           California ISO (2025), decomposing each into congestion, energy, and loss components</span></li>
         <li><span class="bullet"></span>
-          <span>Classifies all <b>3</b> California ISO pricing zones as
+          <span>Classifies all <b>22</b> California ISO pricing zones as
           transmission-constrained, generation-constrained, both, or unconstrained using weighted
           multi-factor scoring</span></li>
         
@@ -434,16 +434,16 @@ table.pnode-table tbody tr:hover {
     <h2 class="section-title">Key Findings</h2>
     <div class="stat-cards">
       <div class="stat-card">
-        <div class="stat-value">3</div>
+        <div class="stat-value">22</div>
         <div class="stat-label">Zones Analyzed</div>
-        <div class="stat-detail">2 constrained (0 transmission,
-        2 both, 0 generation)</div>
+        <div class="stat-detail">7 constrained (3 transmission,
+        0 both, 4 generation)</div>
       </div>
       <div class="stat-card highlight">
-        <div class="stat-value">TH_ZP26_GEN-APND</div>
+        <div class="stat-value">SLAP_PGNC-APND</div>
         <div class="stat-label">Most Constrained Zone</div>
-        <div class="stat-detail">T-score 0.601,
-        $3.53/MWh avg congestion</div>
+        <div class="stat-detail">T-score 0.672,
+        $12.18/MWh avg congestion</div>
       </div>
       
       
@@ -505,9 +505,28 @@ table.pnode-table tbody tr:hover {
           </tr>
         </thead>
         <tbody>
-          <tr><td>TH_ZP26_GEN-APND</td><td><span class="cls-badge" style="background:#9b59b6">both</span></td><td>0.601</td><td>0.600</td><td>$3.53</td><td>37.8%</td><td>0</td></tr>
-<tr><td>TH_SP15_GEN-APND</td><td><span class="cls-badge" style="background:#9b59b6">both</span></td><td>0.576</td><td>0.596</td><td>$3.73</td><td>44.0%</td><td>0</td></tr>
-<tr><td>TH_NP15_GEN-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.250</td><td>0.400</td><td>$3.08</td><td>36.4%</td><td>0</td></tr>
+          <tr><td>SLAP_PGNC-APND</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.672</td><td>0.499</td><td>$12.18</td><td>61.3%</td><td>0</td></tr>
+<tr><td>SLAP_PGCC-APND</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.549</td><td>0.424</td><td>$7.04</td><td>36.0%</td><td>0</td></tr>
+<tr><td>SLAP_PGF1-APND</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.515</td><td>0.442</td><td>$4.87</td><td>39.8%</td><td>0</td></tr>
+<tr><td>SLAP_PGKN-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.473</td><td>0.448</td><td>$2.89</td><td>32.8%</td><td>0</td></tr>
+<tr><td>SLAP_PGSB-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.460</td><td>0.462</td><td>$5.13</td><td>40.0%</td><td>0</td></tr>
+<tr><td>SLAP_SCEW-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.451</td><td>0.400</td><td>$1.62</td><td>20.2%</td><td>0</td></tr>
+<tr><td>SLAP_VEA-APND</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.449</td><td>0.548</td><td>$2.38</td><td>27.9%</td><td>0</td></tr>
+<tr><td>SLAP_PGNB-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.445</td><td>0.437</td><td>$3.71</td><td>34.9%</td><td>0</td></tr>
+<tr><td>SLAP_PGP2-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.439</td><td>0.456</td><td>$4.32</td><td>35.5%</td><td>0</td></tr>
+<tr><td>SLAP_PGSF-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.438</td><td>0.490</td><td>$4.30</td><td>36.1%</td><td>0</td></tr>
+<tr><td>SLAP_PGNP-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.437</td><td>0.411</td><td>$2.72</td><td>28.3%</td><td>0</td></tr>
+<tr><td>SLAP_SCNW-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.436</td><td>0.404</td><td>$1.76</td><td>21.0%</td><td>0</td></tr>
+<tr><td>SLAP_SCEN-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.435</td><td>0.445</td><td>$1.79</td><td>21.4%</td><td>0</td></tr>
+<tr><td>SLAP_PGEB-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.435</td><td>0.440</td><td>$4.01</td><td>36.1%</td><td>0</td></tr>
+<tr><td>SLAP_SCEC-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.435</td><td>0.434</td><td>$1.61</td><td>20.0%</td><td>0</td></tr>
+<tr><td>SLAP_PGSI-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.421</td><td>0.428</td><td>$3.00</td><td>32.1%</td><td>0</td></tr>
+<tr><td>SLAP_PGHB-APND</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.397</td><td>0.600</td><td>$6.00</td><td>55.5%</td><td>0</td></tr>
+<tr><td>SLAP_SDG1-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.391</td><td>0.406</td><td>$3.02</td><td>35.1%</td><td>0</td></tr>
+<tr><td>SLAP_PGST-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.373</td><td>0.419</td><td>$3.39</td><td>35.3%</td><td>0</td></tr>
+<tr><td>SLAP_SCLD-APND</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.362</td><td>0.501</td><td>$2.75</td><td>32.0%</td><td>0</td></tr>
+<tr><td>SLAP_SCHD-APND</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.332</td><td>0.507</td><td>$3.36</td><td>50.7%</td><td>0</td></tr>
+<tr><td>SLAP_PGFG-APND</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.313</td><td>0.436</td><td>$5.49</td><td>51.1%</td><td>0</td></tr>
         </tbody>
       </table>
     </div>
