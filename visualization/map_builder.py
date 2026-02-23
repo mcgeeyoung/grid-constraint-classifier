@@ -174,6 +174,13 @@ def create_interactive_map(
             feat["properties"]["t_score"] = round(info.get("transmission_score", 0), 3)
             feat["properties"]["g_score"] = round(info.get("generation_score", 0), 3)
             feat["properties"]["avg_cong"] = round(info.get("avg_abs_congestion", 0), 2)
+            # Ensure NAME field exists for tooltip (HIFLD has it, NYISO uses Zone_Name)
+            if "NAME" not in feat["properties"]:
+                feat["properties"]["NAME"] = (
+                    feat["properties"].get("Zone_Name", "")
+                    or feat["properties"].get("Name", "")
+                    or zone
+                )
 
         def boundary_style(feature):
             cls = feature["properties"].get("classification", "unconstrained")
