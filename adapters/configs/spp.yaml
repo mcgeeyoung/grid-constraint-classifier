@@ -78,3 +78,17 @@ zones:
     centroid_lat: 46.00
     centroid_lon: -100.00
     states: [ND, SD, MT]
+
+# HIFLD Electric Retail Service Territory OIDs for SPP member utilities.
+# Used to render the SPP footprint boundary on the map.
+hifld_territory_oids:
+  OKGE: [657]       # Oklahoma Gas & Electric Co
+  AEPW: [884]       # Public Service Co of Oklahoma (PSO)
+  WFEC: [2610]      # Grand River Dam Authority (closest large OK territory)
+  KCPL: [2, 3, 402] # Evergy Metro (MO), Evergy Kansas South, Evergy Missouri West
+  EDE: [2358]        # Empire District Electric Co
+  SPS: [1200]        # Southwestern Public Service Co
+  OPPD: [665]        # Omaha Public Power District
+  NPPD: [504]        # Nebraska Public Power District
+  LES: [168]         # Lincoln Electric System
+  WAUE: [472]        # Basin Electric Power Coop (ND/SD/MT footprint)
