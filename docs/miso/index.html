@@ -413,10 +413,10 @@ table.pnode-table tbody tr:hover {
     <div class="feature-list">
       <ul>
         <li><span class="bullet"></span>
-          <span>Pulls <b>70,080</b> hourly LMP data points from
+          <span>Pulls <b>306,600</b> hourly LMP data points from
           Midcontinent ISO (2025), decomposing each into congestion, energy, and loss components</span></li>
         <li><span class="bullet"></span>
-          <span>Classifies all <b>8</b> Midcontinent ISO pricing zones as
+          <span>Classifies all <b>35</b> Midcontinent ISO pricing zones as
           transmission-constrained, generation-constrained, both, or unconstrained using weighted
           multi-factor scoring</span></li>
         
@@ -434,16 +434,16 @@ table.pnode-table tbody tr:hover {
     <h2 class="section-title">Key Findings</h2>
     <div class="stat-cards">
       <div class="stat-card">
-        <div class="stat-value">8</div>
+        <div class="stat-value">35</div>
         <div class="stat-label">Zones Analyzed</div>
-        <div class="stat-detail">5 constrained (3 transmission,
-        1 both, 1 generation)</div>
+        <div class="stat-detail">15 constrained (9 transmission,
+        2 both, 4 generation)</div>
       </div>
       <div class="stat-card highlight">
-        <div class="stat-value">LOUISIANA.HUB</div>
+        <div class="stat-value">LAFA</div>
         <div class="stat-label">Most Constrained Zone</div>
-        <div class="stat-detail">T-score 0.999,
-        $9.50/MWh avg congestion</div>
+        <div class="stat-detail">T-score 0.828,
+        $9.26/MWh avg congestion</div>
       </div>
       
       
@@ -505,14 +505,41 @@ table.pnode-table tbody tr:hover {
           </tr>
         </thead>
         <tbody>
-          <tr><td>LOUISIANA.HUB</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.999</td><td>0.400</td><td>$9.50</td><td>68.5%</td><td>0</td></tr>
-<tr><td>TEXAS.HUB</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.694</td><td>0.427</td><td>$8.46</td><td>68.6%</td><td>0</td></tr>
-<tr><td>MS.HUB</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.683</td><td>0.455</td><td>$8.06</td><td>65.3%</td><td>0</td></tr>
-<tr><td>ARKANSAS.HUB</td><td><span class="cls-badge" style="background:#9b59b6">both</span></td><td>0.661</td><td>0.600</td><td>$8.10</td><td>65.4%</td><td>0</td></tr>
-<tr><td>MINN.HUB</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.397</td><td>0.533</td><td>$6.01</td><td>63.7%</td><td>0</td></tr>
-<tr><td>MICHIGAN.HUB</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.138</td><td>0.453</td><td>$3.05</td><td>40.6%</td><td>0</td></tr>
-<tr><td>ILLINOIS.HUB</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.118</td><td>0.467</td><td>$2.69</td><td>35.3%</td><td>0</td></tr>
-<tr><td>INDIANA.HUB</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.092</td><td>0.430</td><td>$2.79</td><td>38.8%</td><td>0</td></tr>
+          <tr><td>LAFA</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.828</td><td>0.418</td><td>$9.26</td><td>68.8%</td><td>0</td></tr>
+<tr><td>LEPA</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.786</td><td>0.417</td><td>$9.30</td><td>68.6%</td><td>0</td></tr>
+<tr><td>CLEC</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.703</td><td>0.413</td><td>$8.91</td><td>69.3%</td><td>0</td></tr>
+<tr><td>EES</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.626</td><td>0.410</td><td>$8.45</td><td>67.8%</td><td>0</td></tr>
+<tr><td>EMBA</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.591</td><td>0.415</td><td>$8.03</td><td>65.5%</td><td>0</td></tr>
+<tr><td>MDU</td><td><span class="cls-badge" style="background:#9b59b6">both</span></td><td>0.587</td><td>0.577</td><td>$11.89</td><td>81.0%</td><td>0</td></tr>
+<tr><td>EAI</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.574</td><td>0.444</td><td>$7.92</td><td>66.0%</td><td>0</td></tr>
+<tr><td>SME</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.558</td><td>0.422</td><td>$7.44</td><td>63.8%</td><td>0</td></tr>
+<tr><td>ALTW</td><td><span class="cls-badge" style="background:#9b59b6">both</span></td><td>0.525</td><td>0.600</td><td>$10.73</td><td>72.5%</td><td>0</td></tr>
+<tr><td>MP</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.523</td><td>0.468</td><td>$13.11</td><td>75.0%</td><td>0</td></tr>
+<tr><td>OTP</td><td><span class="cls-badge" style="background:#e74c3c">transmission</span></td><td>0.516</td><td>0.498</td><td>$11.11</td><td>77.5%</td><td>0</td></tr>
+<tr><td>GRE</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.446</td><td>0.469</td><td>$8.72</td><td>71.3%</td><td>0</td></tr>
+<tr><td>SMP</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.398</td><td>0.507</td><td>$6.80</td><td>67.4%</td><td>0</td></tr>
+<tr><td>MEC</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.394</td><td>0.553</td><td>$7.88</td><td>66.4%</td><td>0</td></tr>
+<tr><td>NSP</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.377</td><td>0.469</td><td>$6.31</td><td>65.2%</td><td>0</td></tr>
+<tr><td>DPC</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.360</td><td>0.465</td><td>$5.01</td><td>60.8%</td><td>0</td></tr>
+<tr><td>MIUP</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.328</td><td>0.559</td><td>$4.25</td><td>55.4%</td><td>0</td></tr>
+<tr><td>UPPC</td><td><span class="cls-badge" style="background:#3498db">generation</span></td><td>0.327</td><td>0.542</td><td>$4.36</td><td>55.8%</td><td>0</td></tr>
+<tr><td>WPS</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.298</td><td>0.448</td><td>$3.93</td><td>53.4%</td><td>0</td></tr>
+<tr><td>MGE</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.268</td><td>0.406</td><td>$3.78</td><td>51.6%</td><td>0</td></tr>
+<tr><td>AMMO</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.255</td><td>0.419</td><td>$3.06</td><td>41.1%</td><td>0</td></tr>
+<tr><td>ALTE</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.246</td><td>0.400</td><td>$3.54</td><td>50.0%</td><td>0</td></tr>
+<tr><td>CWLP</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.234</td><td>0.443</td><td>$3.23</td><td>35.9%</td><td>0</td></tr>
+<tr><td>SIGE</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.233</td><td>0.436</td><td>$3.66</td><td>44.0%</td><td>0</td></tr>
+<tr><td>DECO</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.230</td><td>0.466</td><td>$3.07</td><td>40.3%</td><td>0</td></tr>
+<tr><td>AMIL</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.227</td><td>0.416</td><td>$2.27</td><td>33.6%</td><td>0</td></tr>
+<tr><td>SIPC</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.213</td><td>0.408</td><td>$4.47</td><td>46.0%</td><td>0</td></tr>
+<tr><td>BREC</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.206</td><td>0.416</td><td>$3.38</td><td>43.7%</td><td>0</td></tr>
+<tr><td>MPW</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.204</td><td>0.447</td><td>$3.36</td><td>45.5%</td><td>0</td></tr>
+<tr><td>IPL</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.203</td><td>0.419</td><td>$3.21</td><td>41.3%</td><td>0</td></tr>
+<tr><td>NIPS</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.202</td><td>0.402</td><td>$2.67</td><td>36.5%</td><td>0</td></tr>
+<tr><td>CONS</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.199</td><td>0.469</td><td>$2.95</td><td>40.7%</td><td>0</td></tr>
+<tr><td>HE</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.196</td><td>0.405</td><td>$2.81</td><td>37.6%</td><td>0</td></tr>
+<tr><td>CIN</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.194</td><td>0.431</td><td>$2.97</td><td>40.3%</td><td>0</td></tr>
+<tr><td>WEC</td><td><span class="cls-badge" style="background:#2ecc71">unconstrained</span></td><td>0.182</td><td>0.402</td><td>$2.85</td><td>41.5%</td><td>0</td></tr>
         </tbody>
       </table>
     </div>
