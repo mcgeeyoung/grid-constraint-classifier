@@ -28,6 +28,8 @@ class ISO(Base):
     pipeline_runs: Mapped[list["PipelineRun"]] = relationship(back_populates="iso")
     pnodes: Mapped[list["Pnode"]] = relationship(back_populates="iso")
     data_centers: Mapped[list["DataCenter"]] = relationship(back_populates="iso")
+    transmission_lines: Mapped[list["TransmissionLine"]] = relationship(back_populates="iso")
+    substations: Mapped[list["Substation"]] = relationship(back_populates="iso")
 
     def __repr__(self) -> str:
         return f"<ISO(iso_code={self.iso_code!r})>"
@@ -38,3 +40,5 @@ from .zone import Zone  # noqa: E402
 from .pipeline_run import PipelineRun  # noqa: E402
 from .pnode import Pnode  # noqa: E402
 from .data_center import DataCenter  # noqa: E402
+from .transmission_line import TransmissionLine  # noqa: E402
+from .substation import Substation  # noqa: E402

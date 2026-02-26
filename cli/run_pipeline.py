@@ -17,6 +17,7 @@ Usage:
   python -m cli.run_pipeline --iso all                    # All 7 ISOs
   python -m cli.run_pipeline --iso pjm --pnode-drilldown  # With pnode analysis
   python -m cli.run_pipeline --iso pjm --dc-scrape        # With DC scraping
+  python -m cli.run_pipeline --iso caiso --pnode-drilldown --grip-overlay  # CAISO with GRIP
 """
 
 import argparse
@@ -71,6 +72,7 @@ def run_single_iso(
     skip_download: bool = False,
     pnode_drilldown: bool = False,
     dc_scrape: bool = False,
+    grip_overlay: bool = False,
 ) -> dict:
     """
     Run the full pipeline for a single ISO.
@@ -83,7 +85,7 @@ def run_single_iso(
     log = setup_logging(output_dir)
     log.info("=" * 60)
     log.info(f"Grid Constraint -> DER Mapping Pipeline: {iso_id.upper()}")
-    log.info(f"Year: {year} | Pnode drill-down: {pnode_drilldown} | DC scrape: {dc_scrape}")
+    log.info(f"Year: {year} | Pnode drill-down: {pnode_drilldown} | DC scrape: {dc_scrape} | GRIP overlay: {grip_overlay}")
     log.info("=" * 60)
 
     # Initialize adapter
@@ -113,6 +115,36 @@ def run_single_iso(
         return {}
 
     log.info(f"Zone LMPs: {len(zone_lmps)} rows, {zone_lmps['pnode_name'].nunique()} zones")
+
+    # >>> DB: Write zone LMP time-series
+    if db_writer:
+        try:
+            # Build the DataFrame the writer expects from the raw zone_lmps
+            # Adapter columns vary by ISO; map to the canonical names
+            import pandas as _pd
+            col_map = {
+                "pnode_name": "zone",
+                # Timestamp columns (try multiple conventions)
+                "datetime_utc": "timestamp_utc",
+                "datetime_beginning_ept": "timestamp_utc",
+                "datetime_beginning_utc": "timestamp_utc",
+                # LMP components
+                "total_lmp_da": "lmp",
+                "lmp_da": "lmp",
+                "system_energy_price_da": "energy",
+                "energy_price_da": "energy",
+                "congestion_price_da": "congestion",
+                "marginal_loss_price_da": "loss",
+                "loss_price_da": "loss",
+                # Hour
+                "hour": "hour_local",
+            }
+            # Only rename columns that actually exist
+            rename = {k: v for k, v in col_map.items() if k in zone_lmps.columns}
+            lmp_for_db = zone_lmps.rename(columns=rename)
+            db_writer.write_zone_lmps(lmp_for_db)
+        except Exception as e:
+            log.warning(f"DB zone LMP write failed (non-fatal): {e}")
 
     # Determine zone key for GeoJSON features (used throughout pipeline)
     zone_key = "pjm_zone" if iso_id == "pjm" else "iso_zone"
@@ -167,11 +199,25 @@ def run_single_iso(
         except Exception as e:
             log.debug(f"PJM GIS data unavailable: {e}")
 
+    # >>> DB: Write transmission lines and zone boundaries
+    if db_writer:
+        try:
+            if tx_geojson.get("features"):
+                db_writer.write_transmission_lines(tx_geojson)
+        except Exception as e:
+            log.warning(f"DB transmission line write failed (non-fatal): {e}")
+        try:
+            if zone_boundary_geojson.get("features"):
+                db_writer.write_zone_boundaries(zone_boundary_geojson)
+        except Exception as e:
+            log.warning(f"DB zone boundary write failed (non-fatal): {e}")
+
     zone_centroids = config.get_zone_centroids()
 
     # -- Phase 1.5: Data Center Overlay --
     dc_locations = []
     dc_summary = {}
+    dc_records = []  # Keep reference for DB write
 
     if dc_scrape:
         log.info("Phase 1.5: Data Center Scrape")
@@ -274,6 +320,13 @@ def run_single_iso(
             except Exception:
                 pass
 
+    # >>> DB: Write data centers
+    if db_writer and dc_records:
+        try:
+            db_writer.write_data_centers(dc_records)
+        except Exception as e:
+            log.warning(f"DB data center write failed (non-fatal): {e}")
+
     # -- Phase 2: Constraint Classification --
     log.info("")
     log.info("Phase 2: Constraint Classification")
@@ -365,6 +418,146 @@ def run_single_iso(
         if pnode_results:
             log.info(f"Loaded cached pnode data: {len(pnode_results)} zones")
 
+        # Load cached pnode coordinates if available
+        geo_cache = data_dir / iso_id / "geo" / "pnode_coordinates.json"
+        if geo_cache.exists():
+            try:
+                with open(geo_cache) as f:
+                    pnode_coordinates = json.load(f)
+                log.info(f"Loaded cached pnode coordinates: {len(pnode_coordinates)} entries")
+            except Exception:
+                pass
+
+    # >>> DB: Write pnode coordinates (standalone backfill from cache)
+    if db_writer and pnode_coordinates and not pnode_results:
+        try:
+            db_writer.write_pnode_coordinates(pnode_coordinates)
+        except Exception as e:
+            log.warning(f"DB pnode coordinate write failed (non-fatal): {e}")
+
+    # -- Phase 2.75: GRIP Distribution Overlay --
+    grip_overlay_results = {}
+
+    if grip_overlay and iso_id == "caiso" and pnode_results:
+        log.info("")
+        log.info("Phase 2.75: PG&E GRIP Distribution Overlay")
+        try:
+            from scraping.grip_fetcher import fetch_grip_substations
+            from src.grip_matcher import match_pnodes_to_grip
+            from src.grip_overlay import compute_division_overlay, build_substation_hotspots
+
+            grip_cache = data_dir / iso_id / "grip_substations.csv"
+            grip_df = fetch_grip_substations(cache_path=grip_cache)
+            log.info(f"GRIP data: {len(grip_df)} banks, {grip_df['division'].nunique()} divisions")
+
+            # >>> DB: Write GRIP substations
+            if db_writer:
+                try:
+                    db_writer.write_substations(grip_cache)
+                except Exception as e:
+                    log.warning(f"DB substation write failed (non-fatal): {e}")
+
+            # Get PNode scored data
+            pge_data = pnode_results.get("PGE_ALL", {})
+            all_scored = pge_data.get("all_scored", [])
+            pnode_names = [p["pnode_name"] for p in all_scored]
+
+            if pnode_names:
+                match_cache = data_dir / iso_id / "pnode_grip_matches.csv"
+                match_df = match_pnodes_to_grip(
+                    pnode_names=pnode_names,
+                    grip_df=grip_df,
+                    pnode_coords=pnode_coordinates,
+                    cache_path=match_cache,
+                    force=False,
+                )
+
+                import pandas as _pd
+                pnode_scores_df = _pd.DataFrame(all_scored)
+                division_overlay = compute_division_overlay(pnode_scores_df, grip_df, match_df)
+                substation_hotspots = build_substation_hotspots(pnode_scores_df, grip_df, match_df)
+
+                matched_prefixes = set(match_df["caiso_prefix"]) if not match_df.empty else set()
+                scored_prefixes = set(
+                    p["pnode_name"].split("_")[0].upper()
+                    for p in all_scored if p.get("pnode_name")
+                )
+
+                # Build metadata (handle old CSV format without match_type column)
+                meta = {
+                    "total_grip_banks": len(grip_df),
+                    "matched_prefixes": len(matched_prefixes),
+                    "total_pnodes": len(all_scored),
+                }
+                if not match_df.empty and "match_type" in match_df.columns:
+                    meta["name_matches"] = int(
+                        (match_df["match_type"] == "name").sum()
+                    )
+                    meta["proximity_matches"] = int(
+                        (match_df["match_type"] == "proximity").sum()
+                    )
+                else:
+                    meta["name_matches"] = len(match_df) if not match_df.empty else 0
+                    meta["proximity_matches"] = 0
+
+                # Fetch PG&E division boundary polygons for map visualization
+                from scraping.grip_fetcher import fetch_division_boundaries
+                div_boundary_cache = data_dir / iso_id / "division_boundaries.json"
+                division_geojson = fetch_division_boundaries(
+                    cache_path=div_boundary_cache
+                )
+
+                # Enrich GeoJSON features with risk data + store centroids
+                risk_lookup = {d["division"]: d for d in division_overlay}
+                division_centroids = {}
+                for feat in division_geojson.get("features", []):
+                    div_name = feat["properties"].get("division", "")
+                    risk_data = risk_lookup.get(div_name, {})
+                    feat["properties"]["risk"] = risk_data.get("risk", "LOW")
+                    feat["properties"]["combined_risk"] = round(
+                        risk_data.get("combined_risk", 0), 4
+                    )
+                    feat["properties"]["tx_risk"] = round(
+                        risk_data.get("tx_risk", 0), 4
+                    )
+                    feat["properties"]["dx_risk"] = round(
+                        risk_data.get("dx_risk", 0), 4
+                    )
+                    feat["properties"]["avg_loading"] = round(
+                        risk_data.get("avg_loading", 0), 1
+                    )
+                    division_centroids[div_name] = {
+                        "lat": feat["properties"].get("centroid_lat", 0),
+                        "lon": feat["properties"].get("centroid_lon", 0),
+                    }
+
+                meta["division_centroids"] = division_centroids
+
+                grip_overlay_results = {
+                    "division_overlay": division_overlay,
+                    "substation_hotspots": substation_hotspots,
+                    "metadata": meta,
+                    "_division_geojson": division_geojson,
+                }
+
+                critical_divs = [
+                    d["division"] for d in division_overlay if d.get("risk") == "CRITICAL"
+                ]
+                log.info(
+                    f"GRIP overlay complete: {len(division_overlay)} divisions, "
+                    f"{len(critical_divs)} CRITICAL ({', '.join(critical_divs)}), "
+                    f"{len(division_geojson.get('features', []))} boundary polygons"
+                )
+            else:
+                log.warning("No PNode scores available for GRIP overlay")
+        except Exception as e:
+            log.warning(f"GRIP overlay failed (non-fatal): {e}")
+            import traceback
+            log.debug(traceback.format_exc())
+
+    elif grip_overlay and iso_id != "caiso":
+        log.info("GRIP overlay only available for CAISO, skipping")
+
     # -- Phase 3: DER Recommendations --
     log.info("")
     log.info("Phase 3: DER Recommendations")
@@ -387,6 +580,9 @@ def run_single_iso(
     if pnode_results and pnode_coordinates:
         pnode_map_data = {"coordinates": pnode_coordinates, "results": pnode_results}
 
+    # Extract division boundary GeoJSON if available (CAISO GRIP overlay)
+    div_geojson = grip_overlay_results.get("_division_geojson") if grip_overlay_results else None
+
     map_path = create_interactive_map(
         classification_df,
         zone_centroids,
@@ -395,6 +591,7 @@ def run_single_iso(
         transmission_geojson=tx_geojson,
         pnode_data=pnode_map_data,
         zone_boundaries=zone_boundary_geojson,
+        division_boundaries=div_geojson,
         backbone_geojson=backbone_geojson,
         output_path=output_dir / "grid_constraint_map.html",
         map_center=config.map_center,
@@ -462,6 +659,14 @@ def run_single_iso(
     if pnode_results:
         summary["pnode_drilldown"] = pnode_results
 
+    if grip_overlay_results:
+        # Strip internal-only keys (large GeoJSON) before export
+        export_grip = {
+            k: v for k, v in grip_overlay_results.items()
+            if not k.startswith("_")
+        }
+        summary["grip_overlay"] = export_grip
+
     if dc_summary:
         # Build dynamic zone mapping for SPP (settlement locations -> DC zones)
         if iso_id == "spp" and "dc_zone_to_cls_zones" not in dc_summary:
@@ -515,9 +720,9 @@ def run_single_iso(
         json.dump(summary, f, indent=2)
     log.info(f"Exported summary to {summary_path}")
 
-    # Write pnode scores to DB
+    # >>> DB: Write pnode scores with coordinates
     if db_writer and pnode_results:
-        db_writer.write_pnode_scores(pnode_results)
+        db_writer.write_pnode_scores(pnode_results, pnode_coordinates=pnode_coordinates or None)
 
     # Mark pipeline run as complete
     if db_writer:
@@ -575,6 +780,10 @@ def main():
         help="Scrape data center listings from interconnection.fyi",
     )
     parser.add_argument(
+        "--grip-overlay", action="store_true",
+        help="Run PG&E GRIP distribution overlay (CAISO only, requires --pnode-drilldown)",
+    )
+    parser.add_argument(
         "--list-isos", action="store_true",
         help="List supported ISOs and exit",
     )
@@ -608,6 +817,7 @@ def main():
             skip_download=args.skip_download,
             pnode_drilldown=args.pnode_drilldown,
             dc_scrape=args.dc_scrape,
+            grip_overlay=args.grip_overlay,
         )
     else:
         if iso_id not in SUPPORTED_ISOS:
@@ -619,6 +829,7 @@ def main():
             skip_download=args.skip_download,
             pnode_drilldown=args.pnode_drilldown,
             dc_scrape=args.dc_scrape,
+            grip_overlay=args.grip_overlay,
         )
 
 
