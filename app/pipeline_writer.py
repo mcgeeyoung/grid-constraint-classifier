@@ -20,7 +20,7 @@ from app.models import (
     ISO, Zone, ZoneLMP, PipelineRun,
     ZoneClassification, Pnode, PnodeScore,
     DataCenter, DERRecommendation,
-    TransmissionLine, Substation,
+    TransmissionLine, Substation, Feeder,
     HierarchyScore, DERValuation, DERLocation,
 )
 
@@ -535,12 +535,13 @@ class PipelineWriter:
 
         Expected columns: substationname, bankname, division,
             facilityratingmw, facilityloadingmw2025,
-            peakfacilityloadingpercent, facilitytype
+            peakfacilityloadingpercent, facilitytype, lat, lon
         """
         if not self._iso:
             self._ensure_iso_and_zones()
         try:
-            count = 0
+            created = 0
+            updated = 0
             with open(csv_path, newline="") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
@@ -549,6 +550,8 @@ class PipelineWriter:
                         continue
 
                     bank = row.get("bankname", "").strip() or None
+                    lat = _safe_float(row.get("lat"))
+                    lon = _safe_float(row.get("lon"))
 
                     existing = self.db.query(Substation).filter(
                         Substation.iso_id == self._iso.id,
@@ -556,6 +559,21 @@ class PipelineWriter:
                         Substation.bank_name == bank,
                     ).first()
                     if existing:
+                        # Update existing records missing lat/lon or loading data
+                        changed = False
+                        if lat is not None and existing.lat is None:
+                            existing.lat = lat
+                            existing.lon = lon
+                            changed = True
+                        if existing.peak_loading_pct is None:
+                            pct = _safe_float(row.get("peakfacilityloadingpercent"))
+                            if pct is not None:
+                                existing.peak_loading_pct = pct
+                                existing.facility_rating_mw = _safe_float(row.get("facilityratingmw"))
+                                existing.facility_loading_mw = _safe_float(row.get("facilityloadingmw2025"))
+                                changed = True
+                        if changed:
+                            updated += 1
                         continue
 
                     record = Substation(
@@ -567,14 +585,78 @@ class PipelineWriter:
                         facility_loading_mw=_safe_float(row.get("facilityloadingmw2025")),
                         peak_loading_pct=_safe_float(row.get("peakfacilityloadingpercent")),
                         facility_type=row.get("facilitytype", "").strip() or None,
+                        lat=lat,
+                        lon=lon,
                     )
                     self.db.add(record)
-                    count += 1
+                    created += 1
 
             self.db.commit()
-            logger.info(f"DB: Wrote {count} substations")
+            logger.info(f"DB: Wrote {created} substations, updated {updated} existing")
         except Exception as e:
             logger.warning(f"DB write failed (substations): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # Feeders (distribution feeders off substations)
+    # ------------------------------------------------------------------
+
+    def write_feeders(self, feeders: list[dict], batch_size: int = 500):
+        """
+        Write feeder records from a list of dicts.
+
+        Args:
+            feeders: list of dicts with keys:
+                substation_id, feeder_id_external, capacity_mw,
+                peak_loading_mw, peak_loading_pct, voltage_kv,
+                geometry_json (optional)
+        Deduplicates on (substation_id, feeder_id_external).
+        """
+        if not feeders:
+            return
+        try:
+            created = 0
+            batch: list[Feeder] = []
+
+            for f in feeders:
+                sub_id = f.get("substation_id")
+                ext_id = f.get("feeder_id_external")
+                if not sub_id:
+                    continue
+
+                # Check for existing record
+                if ext_id:
+                    existing = self.db.query(Feeder).filter(
+                        Feeder.substation_id == sub_id,
+                        Feeder.feeder_id_external == ext_id,
+                    ).first()
+                    if existing:
+                        continue
+
+                record = Feeder(
+                    substation_id=sub_id,
+                    feeder_id_external=ext_id,
+                    capacity_mw=f.get("capacity_mw"),
+                    peak_loading_mw=f.get("peak_loading_mw"),
+                    peak_loading_pct=f.get("peak_loading_pct"),
+                    voltage_kv=f.get("voltage_kv"),
+                    geometry_json=f.get("geometry_json"),
+                )
+                batch.append(record)
+                created += 1
+
+                if len(batch) >= batch_size:
+                    self.db.bulk_save_objects(batch)
+                    self.db.commit()
+                    batch = []
+
+            if batch:
+                self.db.bulk_save_objects(batch)
+                self.db.commit()
+
+            logger.info(f"DB: Wrote {created} feeders")
+        except Exception as e:
+            logger.warning(f"DB write failed (feeders): {e}")
             self.db.rollback()
 
     # ------------------------------------------------------------------

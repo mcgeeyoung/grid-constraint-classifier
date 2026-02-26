@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.models import (
     ZoneClassification, PnodeScore, Substation, Pnode,
-    PipelineRun, Feeder,
+    PipelineRun, Feeder, HierarchyScore,
 )
 from core.der_profiles import compute_coincidence_factor, get_eac_category
 from core.geo_resolver import GeoResolution
@@ -113,12 +113,14 @@ def compute_der_value(
     # Substation loading value
     sub_value = _compute_substation_value(
         db, resolution.substation_id, cf, capacity_mw, config,
+        pipeline_run_id=run.id,
     )
     result.substation_loading_value = sub_value
 
-    # Feeder capacity value (Phase 2, returns 0 if no feeder data)
+    # Feeder capacity value
     feeder_value = _compute_feeder_value(
         db, resolution.feeder_id, cf, capacity_mw, config,
+        pipeline_run_id=run.id,
     )
     result.feeder_capacity_value = feeder_value
 
@@ -318,12 +320,17 @@ def _compute_substation_value(
     coincidence_factor: float,
     capacity_mw: float,
     config: dict,
+    pipeline_run_id: Optional[int] = None,
 ) -> float:
     """
     Substation loading value: relief from deferring capacity upgrades.
 
     Formula: loading_relief * peak_loading_pct * avoided_capacity_cost * capacity_mw
     Only applies when substation is loaded above 80%.
+
+    When a HierarchyScore exists for this substation, the combined TX+DX
+    score is used as a multiplier to boost value at locations with both
+    transmission congestion and distribution loading.
     """
     if not substation_id:
         return 0.0
@@ -347,6 +354,23 @@ def _compute_substation_value(
     # Value = loading_factor * coincidence * capacity_kw * avoided_cost_per_kw
     capacity_kw = capacity_mw * 1000
     value = loading_factor * coincidence_factor * capacity_kw * avoided_cost
+
+    # Enrich with hierarchy score: boost value when TX+DX risk is high
+    if pipeline_run_id:
+        h_score = (
+            db.query(HierarchyScore)
+            .filter(
+                HierarchyScore.pipeline_run_id == pipeline_run_id,
+                HierarchyScore.level == "substation",
+                HierarchyScore.entity_id == substation_id,
+            )
+            .first()
+        )
+        if h_score and h_score.combined_score:
+            # Boost: 1.0x at combined=0, up to 1.5x at combined=1.0
+            hierarchy_boost = 1.0 + 0.5 * h_score.combined_score
+            value *= hierarchy_boost
+
     return round(value, 2)
 
 
@@ -356,12 +380,13 @@ def _compute_feeder_value(
     coincidence_factor: float,
     capacity_mw: float,
     config: dict,
+    pipeline_run_id: Optional[int] = None,
 ) -> float:
     """
     Feeder capacity value: relief from deferring feeder upgrades.
 
     Same pattern as substation but with feeder-level loading data.
-    Returns 0 if no feeder data available (Phase 2 enhancement).
+    Returns 0 if no feeder data available.
     """
     if not feeder_id:
         return 0.0
@@ -380,6 +405,22 @@ def _compute_feeder_value(
 
     capacity_kw = capacity_mw * 1000
     value = loading_factor * coincidence_factor * capacity_kw * avoided_cost
+
+    # Enrich with hierarchy score
+    if pipeline_run_id:
+        h_score = (
+            db.query(HierarchyScore)
+            .filter(
+                HierarchyScore.pipeline_run_id == pipeline_run_id,
+                HierarchyScore.level == "feeder",
+                HierarchyScore.entity_id == feeder_id,
+            )
+            .first()
+        )
+        if h_score and h_score.combined_score:
+            hierarchy_boost = 1.0 + 0.5 * h_score.combined_score
+            value *= hierarchy_boost
+
     return round(value, 2)
 
 

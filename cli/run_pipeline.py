@@ -73,6 +73,7 @@ def run_single_iso(
     pnode_drilldown: bool = False,
     dc_scrape: bool = False,
     grip_overlay: bool = False,
+    valuation: bool = False,
 ) -> dict:
     """
     Run the full pipeline for a single ISO.
@@ -579,6 +580,72 @@ def run_single_iso(
     if db_writer:
         db_writer.write_recommendations(recommendations)
 
+    # -- Phase 3.5: Hierarchy Scoring + DER Valuation --
+    if (valuation or grip_overlay) and db_writer:
+        log.info("")
+        log.info("Phase 3.5: Hierarchy Scoring + DER Valuation")
+
+        try:
+            # Link any unlinked substations to zones
+            db_writer.backfill_substation_zones()
+
+            # Compute hierarchy scores
+            from core.hierarchy_scorer import compute_all_hierarchy_scores
+
+            if db_writer._run:
+                h_scores = compute_all_hierarchy_scores(
+                    db_writer.db, db_writer._run.id, db_writer._iso.id,
+                )
+                if h_scores:
+                    db_writer.write_hierarchy_scores(h_scores)
+
+                # Compute valuations for any existing DERLocation records
+                from app.models import DERLocation
+                from core.valuation_engine import compute_der_value
+                from core.geo_resolver import resolve
+
+                der_locations = (
+                    db_writer.db.query(DERLocation)
+                    .filter(DERLocation.iso_id == db_writer._iso.id)
+                    .all()
+                )
+
+                if der_locations:
+                    log.info(f"  Computing valuations for {len(der_locations)} DER locations...")
+                    val_dicts = []
+                    for loc in der_locations:
+                        try:
+                            resolution = resolve(db_writer.db, loc.lat, loc.lon)
+                            val = compute_der_value(
+                                db=db_writer.db,
+                                resolution=resolution,
+                                der_type=loc.der_type,
+                                capacity_mw=loc.capacity_mw,
+                                pipeline_run_id=db_writer._run.id,
+                            )
+                            val_dicts.append({
+                                "der_location_id": loc.id,
+                                "zone_congestion_value": val.zone_congestion_value,
+                                "pnode_multiplier": val.pnode_multiplier,
+                                "substation_loading_value": val.substation_loading_value,
+                                "feeder_capacity_value": val.feeder_capacity_value,
+                                "total_constraint_relief_value": val.total_constraint_relief_value,
+                                "coincidence_factor": val.coincidence_factor,
+                                "effective_capacity_mw": val.effective_capacity_mw,
+                                "value_tier": val.value_tier,
+                                "value_breakdown": val.value_breakdown,
+                            })
+                        except Exception as ve:
+                            log.debug(f"  Valuation failed for DER {loc.id}: {ve}")
+
+                    if val_dicts:
+                        db_writer.write_der_valuations(val_dicts)
+                        log.info(f"  Wrote {len(val_dicts)} DER valuations")
+                else:
+                    log.info("  No DER locations to value")
+        except Exception as e:
+            log.warning(f"Phase 3.5 failed (non-fatal): {e}")
+
     # -- Phase 4: Visualization --
     log.info("")
     log.info("Phase 4: Visualization")
@@ -791,6 +858,10 @@ def main():
         help="Run PG&E GRIP distribution overlay (CAISO only, requires --pnode-drilldown)",
     )
     parser.add_argument(
+        "--valuation", action="store_true",
+        help="Run hierarchy scoring and DER valuation (Phase 3.5)",
+    )
+    parser.add_argument(
         "--list-isos", action="store_true",
         help="List supported ISOs and exit",
     )
@@ -825,6 +896,7 @@ def main():
             pnode_drilldown=args.pnode_drilldown,
             dc_scrape=args.dc_scrape,
             grip_overlay=args.grip_overlay,
+            valuation=args.valuation,
         )
     else:
         if iso_id not in SUPPORTED_ISOS:
@@ -837,6 +909,7 @@ def main():
             pnode_drilldown=args.pnode_drilldown,
             dc_scrape=args.dc_scrape,
             grip_overlay=args.grip_overlay,
+            valuation=args.valuation,
         )
 
 
