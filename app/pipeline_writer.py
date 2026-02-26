@@ -103,6 +103,31 @@ class PipelineWriter:
 
         self.db.commit()
 
+    def _get_or_create_zone(self, zone_code: str) -> Optional[Zone]:
+        """Get or create a zone record for codes not in the adapter config."""
+        if not zone_code or not self._iso:
+            return None
+        zone = self._zone_lookup.get(zone_code)
+        if zone:
+            return zone
+        try:
+            zone = self.db.query(Zone).filter(
+                Zone.iso_id == self._iso.id, Zone.zone_code == zone_code
+            ).first()
+            if not zone:
+                zone = Zone(
+                    iso_id=self._iso.id,
+                    zone_code=str(zone_code)[:50],
+                    zone_name=str(zone_code)[:100],
+                )
+                self.db.add(zone)
+                self.db.flush()
+            self._zone_lookup[zone_code] = zone
+            return zone
+        except Exception:
+            self.db.rollback()
+            return None
+
     def write_zone_lmp_count(self, count: int):
         """Update the pipeline run with zone LMP row count."""
         if not self._run:
@@ -118,6 +143,21 @@ class PipelineWriter:
     # Zone LMP time-series
     # ------------------------------------------------------------------
 
+    def _clear_zone_lmps(self):
+        """Delete existing zone LMP rows for this ISO (allows clean re-runs)."""
+        if not self._iso:
+            return
+        try:
+            deleted = self.db.query(ZoneLMP).filter(
+                ZoneLMP.iso_id == self._iso.id
+            ).delete()
+            self.db.commit()
+            if deleted:
+                logger.info(f"DB: Cleared {deleted} existing zone LMP rows")
+        except Exception as e:
+            logger.warning(f"DB clear zone_lmps failed: {e}")
+            self.db.rollback()
+
     def write_zone_lmps(self, lmp_df: pd.DataFrame, batch_size: int = 5000):
         """
         Write zone-level LMP rows to the database.
@@ -129,6 +169,17 @@ class PipelineWriter:
         """
         if not self._iso:
             self._ensure_iso_and_zones()
+        self._clear_zone_lmps()
+
+        # Deduplicate on (zone, timestamp_utc) keeping first occurrence
+        lmp_df = lmp_df.drop_duplicates(subset=["zone", "timestamp_utc"], keep="first")
+
+        # Pre-create all zones before batch insertion
+        for zone_code in lmp_df["zone"].unique():
+            if zone_code not in self._zone_lookup:
+                self._get_or_create_zone(zone_code)
+        self.db.commit()
+
         try:
             count = 0
             batch: list[ZoneLMP] = []
@@ -153,13 +204,34 @@ class PipelineWriter:
                 count += 1
 
                 if len(batch) >= batch_size:
-                    self.db.bulk_save_objects(batch)
-                    self.db.commit()
+                    try:
+                        self.db.bulk_save_objects(batch)
+                        self.db.commit()
+                    except Exception as batch_err:
+                        logger.warning(f"DB batch failed, retrying row-by-row: {batch_err}")
+                        self.db.rollback()
+                        for obj in batch:
+                            try:
+                                self.db.add(obj)
+                                self.db.flush()
+                            except Exception:
+                                self.db.rollback()
+                        self.db.commit()
                     batch = []
 
             if batch:
-                self.db.bulk_save_objects(batch)
-                self.db.commit()
+                try:
+                    self.db.bulk_save_objects(batch)
+                    self.db.commit()
+                except Exception:
+                    self.db.rollback()
+                    for obj in batch:
+                        try:
+                            self.db.add(obj)
+                            self.db.flush()
+                        except Exception:
+                            self.db.rollback()
+                    self.db.commit()
 
             logger.info(f"DB: Wrote {count} zone LMP rows")
             if self._run:
@@ -182,7 +254,9 @@ class PipelineWriter:
             for _, row in classification_df.iterrows():
                 zone = self._zone_lookup.get(row["zone"])
                 if not zone:
-                    continue
+                    zone = self._get_or_create_zone(row["zone"])
+                    if not zone:
+                        continue
 
                 cls = ZoneClassification(
                     pipeline_run_id=self._run.id,
@@ -515,7 +589,9 @@ class PipelineWriter:
             for rec in recommendations:
                 zone = self._zone_lookup.get(rec.get("zone"))
                 if not zone:
-                    continue
+                    zone = self._get_or_create_zone(rec.get("zone"))
+                    if not zone:
+                        continue
 
                 der_rec = DERRecommendation(
                     pipeline_run_id=self._run.id,

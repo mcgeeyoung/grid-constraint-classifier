@@ -16,7 +16,7 @@ class Zone(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iso_id: Mapped[int] = mapped_column(ForeignKey("isos.id"))
-    zone_code: Mapped[str] = mapped_column(String(20), nullable=False)
+    zone_code: Mapped[str] = mapped_column(String(50), nullable=False)
     zone_name: Mapped[Optional[str]] = mapped_column(String(100))
     centroid_lat: Mapped[Optional[float]] = mapped_column(Float)
     centroid_lon: Mapped[Optional[float]] = mapped_column(Float)
