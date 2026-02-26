@@ -120,28 +120,35 @@ def run_single_iso(
     if db_writer:
         try:
             # Build the DataFrame the writer expects from the raw zone_lmps
-            # Adapter columns vary by ISO; map to the canonical names
+            # Adapter columns vary by ISO; map to the canonical DB names
             import pandas as _pd
-            col_map = {
-                "pnode_name": "zone",
-                # Timestamp columns (try multiple conventions)
-                "datetime_utc": "timestamp_utc",
-                "datetime_beginning_ept": "timestamp_utc",
-                "datetime_beginning_utc": "timestamp_utc",
-                # LMP components
-                "total_lmp_da": "lmp",
-                "lmp_da": "lmp",
-                "system_energy_price_da": "energy",
-                "energy_price_da": "energy",
-                "congestion_price_da": "congestion",
-                "marginal_loss_price_da": "loss",
-                "loss_price_da": "loss",
-                # Hour
-                "hour": "hour_local",
-            }
-            # Only rename columns that actually exist
-            rename = {k: v for k, v in col_map.items() if k in zone_lmps.columns}
-            lmp_for_db = zone_lmps.rename(columns=rename)
+            lmp_for_db = zone_lmps.copy()
+            cols = set(lmp_for_db.columns)
+
+            # Zone name: always use pnode_name
+            # PJM has an existing 'zone' column (all None) that conflicts
+            if 'zone' in lmp_for_db.columns and 'pnode_name' in lmp_for_db.columns:
+                lmp_for_db = lmp_for_db.drop(columns=['zone'])
+            lmp_for_db = lmp_for_db.rename(columns={"pnode_name": "zone"})
+
+            # Timestamp: prefer UTC, fall back to EPT
+            if "datetime_beginning_utc" in cols:
+                lmp_for_db = lmp_for_db.rename(columns={"datetime_beginning_utc": "timestamp_utc"})
+            elif "datetime_beginning_ept" in cols:
+                lmp_for_db = lmp_for_db.rename(columns={"datetime_beginning_ept": "timestamp_utc"})
+            elif "datetime_utc" in cols:
+                lmp_for_db = lmp_for_db.rename(columns={"datetime_utc": "timestamp_utc"})
+
+            # LMP components
+            for src, dst in [
+                ("total_lmp_da", "lmp"), ("lmp_da", "lmp"),
+                ("system_energy_price_da", "energy"), ("energy_price_da", "energy"),
+                ("congestion_price_da", "congestion"),
+                ("marginal_loss_price_da", "loss"), ("loss_price_da", "loss"),
+                ("hour", "hour_local"),
+            ]:
+                if src in lmp_for_db.columns and dst not in lmp_for_db.columns:
+                    lmp_for_db = lmp_for_db.rename(columns={src: dst})
             db_writer.write_zone_lmps(lmp_for_db)
         except Exception as e:
             log.warning(f"DB zone LMP write failed (non-fatal): {e}")
