@@ -27,9 +27,13 @@ class Settings:
     API_VERSION: str = "1.0.0"
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
+        "http://localhost:5173",
         "http://localhost:8000",
         "https://wattcarbon.github.io",
     ]
+
+    # External API authentication (comma-separated keys)
+    GCC_API_KEYS: str = os.environ.get("GCC_API_KEYS", "")
 
     # Pipeline credentials (optional)
     PJM_SUBSCRIPTION_KEY: str = os.environ.get("PJM_SUBSCRIPTION_KEY", "")

@@ -106,3 +106,23 @@ class OverviewResponse(BaseModel):
     generation_constrained: int = 0
     both_constrained: int = 0
     unconstrained: int = 0
+
+
+class TopZone(BaseModel):
+    zone_code: str
+    zone_name: Optional[str] = None
+    avg_constraint_value: float
+
+
+class ValueSummaryResponse(BaseModel):
+    iso_code: str
+    iso_name: str
+    total_zones: int
+    constrained_zones: int
+    total_substations: int
+    overloaded_substations: int
+    total_der_locations: int
+    total_portfolio_value: float
+    avg_value_per_kw_year: float
+    tier_distribution: dict[str, int]
+    top_zones: list[TopZone]

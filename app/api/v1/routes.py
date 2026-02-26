@@ -2,20 +2,27 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.auth import require_api_key
 from app.database import get_db
 from app.models import (
     ISO, Zone, ZoneLMP, PipelineRun, ZoneClassification,
     Pnode, PnodeScore, DataCenter, DERRecommendation,
+    Substation, DERLocation, DERValuation,
 )
 from app.schemas.responses import (
     ISOResponse, ZoneResponse, ZoneClassificationResponse,
     PnodeScoreResponse, ZoneLMPResponse, DataCenterResponse,
     DERRecommendationResponse, PipelineRunResponse, OverviewResponse,
+    ValueSummaryResponse, TopZone,
 )
+
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/api/v1")
 
@@ -303,3 +310,128 @@ def get_overview(db: Session = Depends(get_db)):
         result.append(overview)
 
     return result
+
+
+@router.get(
+    "/isos/{iso_id}/value-summary",
+    response_model=ValueSummaryResponse,
+    dependencies=[Depends(require_api_key)],
+)
+@limiter.limit("30/minute")
+def get_value_summary(
+    iso_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Aggregated value summary for an ISO.
+
+    Requires X-API-Key header. Rate-limited to 30 requests per minute.
+    """
+    iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
+    if not iso:
+        raise HTTPException(404, f"ISO '{iso_id}' not found")
+
+    # Zone counts
+    total_zones = db.query(Zone).filter(Zone.iso_id == iso.id).count()
+
+    latest_run = (
+        db.query(PipelineRun)
+        .filter(PipelineRun.iso_id == iso.id, PipelineRun.status == "completed")
+        .order_by(PipelineRun.completed_at.desc())
+        .first()
+    )
+
+    constrained_zones = 0
+    if latest_run:
+        constrained_zones = (
+            db.query(ZoneClassification)
+            .filter(
+                ZoneClassification.pipeline_run_id == latest_run.id,
+                ZoneClassification.classification != "unconstrained",
+            )
+            .count()
+        )
+
+    # Substation counts
+    total_substations = (
+        db.query(Substation).filter(Substation.iso_id == iso.id).count()
+    )
+    overloaded_substations = (
+        db.query(Substation)
+        .filter(
+            Substation.iso_id == iso.id,
+            Substation.peak_loading_pct >= 80.0,
+        )
+        .count()
+    )
+
+    # DER location + valuation aggregates
+    total_der_locations = (
+        db.query(DERLocation).filter(DERLocation.iso_id == iso.id).count()
+    )
+
+    val_agg = (
+        db.query(
+            func.coalesce(func.sum(DERValuation.total_constraint_relief_value), 0.0),
+            func.coalesce(func.avg(
+                DERValuation.total_constraint_relief_value
+                / (DERLocation.capacity_mw * 1000)
+            ), 0.0),
+        )
+        .join(DERLocation, DERValuation.der_location_id == DERLocation.id)
+        .filter(DERLocation.iso_id == iso.id)
+        .first()
+    )
+    total_portfolio_value = float(val_agg[0]) if val_agg else 0.0
+    avg_value_per_kw_year = float(val_agg[1]) if val_agg else 0.0
+
+    # Tier distribution
+    tier_rows = (
+        db.query(DERValuation.value_tier, func.count())
+        .join(DERLocation, DERValuation.der_location_id == DERLocation.id)
+        .filter(
+            DERLocation.iso_id == iso.id,
+            DERValuation.value_tier.isnot(None),
+        )
+        .group_by(DERValuation.value_tier)
+        .all()
+    )
+    tier_distribution = {tier: count for tier, count in tier_rows}
+
+    # Top 5 zones by average constraint value
+    top_zone_rows = (
+        db.query(
+            Zone.zone_code,
+            Zone.zone_name,
+            func.avg(DERValuation.total_constraint_relief_value).label("avg_val"),
+        )
+        .join(DERLocation, DERLocation.zone_id == Zone.id)
+        .join(DERValuation, DERValuation.der_location_id == DERLocation.id)
+        .filter(Zone.iso_id == iso.id)
+        .group_by(Zone.zone_code, Zone.zone_name)
+        .order_by(func.avg(DERValuation.total_constraint_relief_value).desc())
+        .limit(5)
+        .all()
+    )
+    top_zones = [
+        TopZone(
+            zone_code=row.zone_code,
+            zone_name=row.zone_name,
+            avg_constraint_value=float(row.avg_val) if row.avg_val else 0.0,
+        )
+        for row in top_zone_rows
+    ]
+
+    return ValueSummaryResponse(
+        iso_code=iso.iso_code,
+        iso_name=iso.iso_name,
+        total_zones=total_zones,
+        constrained_zones=constrained_zones,
+        total_substations=total_substations,
+        overloaded_substations=overloaded_substations,
+        total_der_locations=total_der_locations,
+        total_portfolio_value=total_portfolio_value,
+        avg_value_per_kw_year=avg_value_per_kw_year,
+        tier_distribution=tier_distribution,
+        top_zones=top_zones,
+    )
