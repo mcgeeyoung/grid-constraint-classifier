@@ -21,6 +21,7 @@ from app.models import (
     ZoneClassification, Pnode, PnodeScore,
     DataCenter, DERRecommendation,
     TransmissionLine, Substation,
+    HierarchyScore, DERValuation, DERLocation,
 )
 
 logger = logging.getLogger(__name__)
@@ -610,6 +611,217 @@ class PipelineWriter:
             logger.info(f"DB: Wrote {count} DER recommendations")
         except Exception as e:
             logger.warning(f"DB write failed (recommendations): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # Hierarchy scores (new)
+    # ------------------------------------------------------------------
+
+    def write_hierarchy_scores(self, scores: list[dict], batch_size: int = 500):
+        """
+        Write pre-computed constraint scores at each hierarchy level.
+
+        Args:
+            scores: list of dicts with keys:
+                level (iso/zone/substation/feeder/circuit), entity_id,
+                congestion_score, loading_score, combined_score,
+                constraint_tier, constraint_loadshape
+        """
+        if not self._run or not scores:
+            return
+        try:
+            count = 0
+            batch: list[HierarchyScore] = []
+
+            for s in scores:
+                record = HierarchyScore(
+                    pipeline_run_id=self._run.id,
+                    level=s["level"],
+                    entity_id=s["entity_id"],
+                    congestion_score=s.get("congestion_score"),
+                    loading_score=s.get("loading_score"),
+                    combined_score=s.get("combined_score"),
+                    constraint_tier=s.get("constraint_tier"),
+                    constraint_loadshape=s.get("constraint_loadshape"),
+                )
+                batch.append(record)
+                count += 1
+
+                if len(batch) >= batch_size:
+                    self.db.bulk_save_objects(batch)
+                    self.db.commit()
+                    batch = []
+
+            if batch:
+                self.db.bulk_save_objects(batch)
+                self.db.commit()
+
+            logger.info(f"DB: Wrote {count} hierarchy scores")
+        except Exception as e:
+            logger.warning(f"DB write failed (hierarchy_scores): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # DER valuations (new)
+    # ------------------------------------------------------------------
+
+    def write_der_valuations(self, valuations: list[dict], batch_size: int = 500):
+        """
+        Write computed DER constraint-relief valuations.
+
+        Args:
+            valuations: list of dicts with keys:
+                der_location_id, zone_congestion_value, pnode_multiplier,
+                substation_loading_value, feeder_capacity_value,
+                total_constraint_relief_value, coincidence_factor,
+                effective_capacity_mw, value_tier, value_breakdown
+        """
+        if not self._run or not valuations:
+            return
+        try:
+            count = 0
+            batch: list[DERValuation] = []
+
+            for v in valuations:
+                record = DERValuation(
+                    pipeline_run_id=self._run.id,
+                    der_location_id=v["der_location_id"],
+                    zone_congestion_value=v.get("zone_congestion_value"),
+                    pnode_multiplier=v.get("pnode_multiplier"),
+                    substation_loading_value=v.get("substation_loading_value"),
+                    feeder_capacity_value=v.get("feeder_capacity_value"),
+                    total_constraint_relief_value=v.get("total_constraint_relief_value"),
+                    coincidence_factor=v.get("coincidence_factor"),
+                    effective_capacity_mw=v.get("effective_capacity_mw"),
+                    value_tier=v.get("value_tier"),
+                    value_breakdown=v.get("value_breakdown"),
+                )
+                batch.append(record)
+                count += 1
+
+                if len(batch) >= batch_size:
+                    self.db.bulk_save_objects(batch)
+                    self.db.commit()
+                    batch = []
+
+            if batch:
+                self.db.bulk_save_objects(batch)
+                self.db.commit()
+
+            logger.info(f"DB: Wrote {count} DER valuations")
+        except Exception as e:
+            logger.warning(f"DB write failed (der_valuations): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # Backfill: link substations to zones via spatial proximity
+    # ------------------------------------------------------------------
+
+    def backfill_substation_zones(self):
+        """
+        One-time spatial join: assign zone_id and nearest_pnode_id to
+        substations that have lat/lon but no zone linkage.
+
+        Uses haversine distance to find the containing or nearest zone
+        (via centroid) and the nearest pnode.
+        """
+        if not self._iso:
+            self._ensure_iso_and_zones()
+
+        from math import radians, sin, cos, sqrt, atan2
+
+        def _haversine(lat1, lon1, lat2, lon2):
+            R = 6371.0
+            dlat = radians(lat2 - lat1)
+            dlon = radians(lon2 - lon1)
+            a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+            return R * 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        try:
+            # Load zones with centroids
+            zones = self.db.query(Zone).filter(
+                Zone.iso_id == self._iso.id,
+                Zone.centroid_lat.isnot(None),
+            ).all()
+
+            # Load pnodes with coordinates
+            pnodes = self.db.query(Pnode).filter(
+                Pnode.iso_id == self._iso.id,
+                Pnode.lat.isnot(None),
+            ).all()
+
+            # Load substations needing linkage
+            subs = self.db.query(Substation).filter(
+                Substation.iso_id == self._iso.id,
+                Substation.lat.isnot(None),
+                Substation.zone_id.is_(None),
+            ).all()
+
+            if not subs:
+                logger.info("DB: No substations need zone backfill")
+                return
+
+            # Try shapely for polygon containment
+            use_polygons = False
+            zone_polygons = {}
+            try:
+                from shapely.geometry import shape, Point
+                use_polygons = True
+                for z in zones:
+                    if z.boundary_geojson:
+                        try:
+                            zone_polygons[z.id] = (z, shape(z.boundary_geojson))
+                        except Exception:
+                            pass
+            except ImportError:
+                pass
+
+            zone_linked = 0
+            pnode_linked = 0
+
+            for sub in subs:
+                # Zone assignment: polygon first, then centroid fallback
+                matched_zone = None
+
+                if use_polygons and zone_polygons:
+                    pt = Point(sub.lon, sub.lat)
+                    for zid, (z, poly) in zone_polygons.items():
+                        if poly.contains(pt):
+                            matched_zone = z
+                            break
+
+                if not matched_zone and zones:
+                    best_dist = float("inf")
+                    for z in zones:
+                        d = _haversine(sub.lat, sub.lon, z.centroid_lat, z.centroid_lon)
+                        if d < best_dist:
+                            best_dist = d
+                            matched_zone = z
+
+                if matched_zone:
+                    sub.zone_id = matched_zone.id
+                    zone_linked += 1
+
+                # Nearest pnode
+                if pnodes:
+                    best_pnode = None
+                    best_dist = float("inf")
+                    for p in pnodes:
+                        d = _haversine(sub.lat, sub.lon, p.lat, p.lon)
+                        if d < best_dist:
+                            best_dist = d
+                            best_pnode = p
+                    if best_pnode and best_dist < 50.0:
+                        sub.nearest_pnode_id = best_pnode.id
+                        pnode_linked += 1
+
+            self.db.commit()
+            logger.info(
+                f"DB: Backfill substations — {zone_linked} zones linked, "
+                f"{pnode_linked} pnodes linked (of {len(subs)} total)"
+            )
+        except Exception as e:
+            logger.warning(f"DB backfill failed (substation_zones): {e}")
             self.db.rollback()
 
     # ------------------------------------------------------------------

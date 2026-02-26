@@ -16,6 +16,8 @@ class Substation(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iso_id: Mapped[int] = mapped_column(ForeignKey("isos.id"), nullable=False)
+    zone_id: Mapped[Optional[int]] = mapped_column(ForeignKey("zones.id"), nullable=True)
+    nearest_pnode_id: Mapped[Optional[int]] = mapped_column(ForeignKey("pnodes.id"), nullable=True)
     substation_name: Mapped[str] = mapped_column(String(200), nullable=False)
     bank_name: Mapped[Optional[str]] = mapped_column(String(200))
     division: Mapped[Optional[str]] = mapped_column(String(100))
@@ -28,9 +30,15 @@ class Substation(Base):
 
     # Relationships
     iso: Mapped["ISO"] = relationship(back_populates="substations")
+    zone: Mapped[Optional["Zone"]] = relationship(back_populates="substations")
+    nearest_pnode: Mapped[Optional["Pnode"]] = relationship()
+    feeders: Mapped[list["Feeder"]] = relationship(back_populates="substation")
 
     def __repr__(self) -> str:
         return f"<Substation(name={self.substation_name!r}, rating={self.facility_rating_mw}MW)>"
 
 
 from .iso import ISO  # noqa: E402
+from .zone import Zone  # noqa: E402
+from .pnode import Pnode  # noqa: E402
+from .feeder import Feeder  # noqa: E402

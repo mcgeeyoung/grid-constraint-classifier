@@ -30,6 +30,7 @@ class Zone(Base):
     pnodes: Mapped[list["Pnode"]] = relationship(back_populates="zone")
     data_centers: Mapped[list["DataCenter"]] = relationship(back_populates="zone")
     der_recommendations: Mapped[list["DERRecommendation"]] = relationship(back_populates="zone")
+    substations: Mapped[list["Substation"]] = relationship(back_populates="zone")
 
     def __repr__(self) -> str:
         return f"<Zone(zone_code={self.zone_code!r})>"
@@ -41,3 +42,4 @@ from .zone_classification import ZoneClassification  # noqa: E402
 from .pnode import Pnode  # noqa: E402
 from .data_center import DataCenter  # noqa: E402
 from .der_recommendation import DERRecommendation  # noqa: E402
+from .substation import Substation  # noqa: E402
