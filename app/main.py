@@ -12,6 +12,7 @@ from app.config import settings
 from app.api.v1.routes import router as v1_router
 from app.api.v1.valuation_routes import router as valuation_router
 from app.api.v1.hierarchy_routes import router as hierarchy_router
+from app.api.v1.wattcarbon_routes import router as wattcarbon_router
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -36,6 +37,7 @@ app.add_middleware(
 app.include_router(v1_router)
 app.include_router(valuation_router)
 app.include_router(hierarchy_router)
+app.include_router(wattcarbon_router)
 
 
 @app.get("/health")

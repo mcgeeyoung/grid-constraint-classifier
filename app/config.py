@@ -38,5 +38,12 @@ class Settings:
     ISONE_USERNAME: str = os.environ.get("ISONE_USERNAME", "")
     ISONE_PASSWORD: str = os.environ.get("ISONE_PASSWORD", "")
 
+    # WattCarbon API credentials
+    WATTCARBON_EMAIL: str = os.environ.get("WATTCARBON_EMAIL", "")
+    WATTCARBON_API_KEY: str = os.environ.get("WATTCARBON_API_KEY", "")
+    WATTCARBON_API_URL: str = os.environ.get(
+        "WATTCARBON_API_URL", "https://api.wattcarbon.com"
+    )
+
 
 settings = Settings()

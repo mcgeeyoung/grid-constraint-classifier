@@ -74,6 +74,7 @@ def run_single_iso(
     dc_scrape: bool = False,
     grip_overlay: bool = False,
     valuation: bool = False,
+    sync_wattcarbon: bool = False,
 ) -> dict:
     """
     Run the full pipeline for a single ISO.
@@ -646,6 +647,69 @@ def run_single_iso(
         except Exception as e:
             log.warning(f"Phase 3.5 failed (non-fatal): {e}")
 
+    # -- Phase 3.75: WattCarbon Asset Sync --
+    if sync_wattcarbon and db_writer:
+        log.info("")
+        log.info("Phase 3.75: WattCarbon Asset Sync")
+        try:
+            from cli.sync_wattcarbon_assets import sync_assets
+
+            sync_summary = sync_assets(status="active", dry_run=False, force=False)
+            log.info(
+                f"  WattCarbon sync: {sync_summary['created']} created, "
+                f"{sync_summary['updated']} updated, "
+                f"{sync_summary['skipped']} skipped"
+            )
+
+            # Compute valuations for newly synced WattCarbon assets
+            if db_writer._run:
+                from app.models import DERLocation
+                from core.valuation_engine import compute_der_value
+                from core.geo_resolver import resolve as geo_resolve
+
+                wc_locations = (
+                    db_writer.db.query(DERLocation)
+                    .filter(
+                        DERLocation.source == "wattcarbon",
+                        DERLocation.iso_id == db_writer._iso.id,
+                    )
+                    .all()
+                )
+
+                if wc_locations:
+                    log.info(f"  Computing valuations for {len(wc_locations)} WattCarbon assets...")
+                    wc_val_dicts = []
+                    for loc in wc_locations:
+                        try:
+                            resolution = geo_resolve(db_writer.db, loc.lat, loc.lon)
+                            val = compute_der_value(
+                                db=db_writer.db,
+                                resolution=resolution,
+                                der_type=loc.der_type,
+                                capacity_mw=loc.capacity_mw,
+                                pipeline_run_id=db_writer._run.id,
+                            )
+                            wc_val_dicts.append({
+                                "der_location_id": loc.id,
+                                "zone_congestion_value": val.zone_congestion_value,
+                                "pnode_multiplier": val.pnode_multiplier,
+                                "substation_loading_value": val.substation_loading_value,
+                                "feeder_capacity_value": val.feeder_capacity_value,
+                                "total_constraint_relief_value": val.total_constraint_relief_value,
+                                "coincidence_factor": val.coincidence_factor,
+                                "effective_capacity_mw": val.effective_capacity_mw,
+                                "value_tier": val.value_tier,
+                                "value_breakdown": val.value_breakdown,
+                            })
+                        except Exception as ve:
+                            log.debug(f"  WC valuation failed for DER {loc.id}: {ve}")
+
+                    if wc_val_dicts:
+                        db_writer.write_der_valuations(wc_val_dicts)
+                        log.info(f"  Wrote {len(wc_val_dicts)} WattCarbon DER valuations")
+        except Exception as e:
+            log.warning(f"WattCarbon sync failed (non-fatal): {e}")
+
     # -- Phase 4: Visualization --
     log.info("")
     log.info("Phase 4: Visualization")
@@ -862,6 +926,10 @@ def main():
         help="Run hierarchy scoring and DER valuation (Phase 3.5)",
     )
     parser.add_argument(
+        "--sync-wattcarbon", action="store_true",
+        help="Sync WattCarbon enrolled assets and compute valuations (Phase 3.75)",
+    )
+    parser.add_argument(
         "--list-isos", action="store_true",
         help="List supported ISOs and exit",
     )
@@ -897,6 +965,7 @@ def main():
             dc_scrape=args.dc_scrape,
             grip_overlay=args.grip_overlay,
             valuation=args.valuation,
+            sync_wattcarbon=args.sync_wattcarbon,
         )
     else:
         if iso_id not in SUPPORTED_ISOS:
@@ -910,6 +979,7 @@ def main():
             dc_scrape=args.dc_scrape,
             grip_overlay=args.grip_overlay,
             valuation=args.valuation,
+            sync_wattcarbon=args.sync_wattcarbon,
         )
 
 

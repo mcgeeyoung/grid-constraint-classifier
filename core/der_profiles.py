@@ -69,6 +69,18 @@ CATEGORY_DEFAULT_CF = {
 }
 
 
+# Map WattCarbon API asset `kind` values to internal der_type keys.
+WATTCARBON_KIND_MAP: dict[str, str] = {
+    "solar": "solar",
+    "storage": "storage",
+    "demand_response": "demand_response",
+    "energy_efficiency_eemetered": "energy_efficiency_eemetered",
+    "energy_efficiency_lighting": "energy_efficiency_eemetered",
+    "electrification_nrel_resstock": "weatherization",
+    "electrification_rewiring_america_deemed": "weatherization",
+}
+
+
 def get_der_profile(der_type: str) -> Optional[dict[str, list[float]]]:
     """Get the canonical 12x24 output profile for a DER type.
 

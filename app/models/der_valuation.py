@@ -1,8 +1,9 @@
 """DER valuation model (computed constraint-relief values)."""
 
+from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey, UniqueConstraint, JSON
+from sqlalchemy import String, Float, ForeignKey, UniqueConstraint, JSON, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -26,6 +27,15 @@ class DERValuation(Base):
     effective_capacity_mw: Mapped[Optional[float]] = mapped_column(Float)
     value_tier: Mapped[Optional[str]] = mapped_column(String(20))
     value_breakdown: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Retrospective valuation fields (actual metered performance)
+    actual_savings_mwh: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    actual_constraint_relief_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    actual_zone_congestion_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    actual_substation_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    actual_feeder_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    retrospective_start: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    retrospective_end: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     pipeline_run: Mapped["PipelineRun"] = relationship()
