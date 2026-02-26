@@ -5,8 +5,11 @@ Called by cli/run_pipeline.py after each phase to write classification
 results, pnode scores, data centers, and DER recommendations to the DB.
 """
 
+import csv
+import json
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -17,6 +20,7 @@ from app.models import (
     ISO, Zone, ZoneLMP, PipelineRun,
     ZoneClassification, Pnode, PnodeScore,
     DataCenter, DERRecommendation,
+    TransmissionLine, Substation,
 )
 
 logger = logging.getLogger(__name__)
@@ -110,6 +114,65 @@ class PipelineWriter:
             logger.warning(f"DB write failed (zone_lmp_count): {e}")
             self.db.rollback()
 
+    # ------------------------------------------------------------------
+    # Zone LMP time-series
+    # ------------------------------------------------------------------
+
+    def write_zone_lmps(self, lmp_df: pd.DataFrame, batch_size: int = 5000):
+        """
+        Write zone-level LMP rows to the database.
+
+        Expects a DataFrame with columns:
+            zone, timestamp_utc, lmp, energy, congestion, loss,
+            hour_local, month
+        Skips rows for zones not in this ISO's zone_lookup.
+        """
+        if not self._iso:
+            self._ensure_iso_and_zones()
+        try:
+            count = 0
+            batch: list[ZoneLMP] = []
+
+            for _, row in lmp_df.iterrows():
+                zone = self._zone_lookup.get(row["zone"])
+                if not zone:
+                    continue
+
+                record = ZoneLMP(
+                    iso_id=self._iso.id,
+                    zone_id=zone.id,
+                    timestamp_utc=row["timestamp_utc"],
+                    lmp=row["lmp"],
+                    energy=row.get("energy"),
+                    congestion=row.get("congestion"),
+                    loss=row.get("loss"),
+                    hour_local=row["hour_local"],
+                    month=row["month"],
+                )
+                batch.append(record)
+                count += 1
+
+                if len(batch) >= batch_size:
+                    self.db.bulk_save_objects(batch)
+                    self.db.commit()
+                    batch = []
+
+            if batch:
+                self.db.bulk_save_objects(batch)
+                self.db.commit()
+
+            logger.info(f"DB: Wrote {count} zone LMP rows")
+            if self._run:
+                self._run.zone_lmp_rows = count
+                self.db.commit()
+        except Exception as e:
+            logger.warning(f"DB write failed (zone_lmps): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # Classifications (existing)
+    # ------------------------------------------------------------------
+
     def write_classifications(self, classification_df: pd.DataFrame):
         """Write zone classification results."""
         if not self._run:
@@ -140,16 +203,27 @@ class PipelineWriter:
             logger.warning(f"DB write failed (classifications): {e}")
             self.db.rollback()
 
-    def write_pnode_scores(self, pnode_results: dict):
-        """Write pnode severity scores."""
+    # ------------------------------------------------------------------
+    # Pnode scores (existing, now also writes coordinates)
+    # ------------------------------------------------------------------
+
+    def write_pnode_scores(self, pnode_results: dict, pnode_coordinates: Optional[dict] = None):
+        """
+        Write pnode severity scores.
+
+        Args:
+            pnode_results: {zone_code: {all_scored: [...]}} from pnode analyzer
+            pnode_coordinates: optional {node_id: {lat, lon, source, matched_name}}
+                loaded from data/{iso}/geo/pnode_coordinates.json
+        """
         if not self._run or not pnode_results:
             return
+        coords = pnode_coordinates or {}
         try:
             count = 0
             for zone_code, analysis in pnode_results.items():
                 zone = self._zone_lookup.get(zone_code)
-                if not zone:
-                    continue
+                # zone may be None for aggregate keys like PGE_ALL
 
                 for pdata in analysis.get("all_scored", []):
                     ext_id = str(pdata.get("pnode_id", pdata["pnode_name"]))
@@ -159,14 +233,22 @@ class PipelineWriter:
                         Pnode.node_id_external == ext_id,
                     ).first()
                     if not pnode:
+                        coord = coords.get(pdata["pnode_name"], {})
                         pnode = Pnode(
                             iso_id=self._iso.id,
-                            zone_id=zone.id,
+                            zone_id=zone.id if zone else None,
                             node_id_external=ext_id,
                             node_name=pdata["pnode_name"],
+                            lat=coord.get("lat"),
+                            lon=coord.get("lon"),
                         )
                         self.db.add(pnode)
                         self.db.flush()
+                    elif not pnode.lat:
+                        coord = coords.get(pdata["pnode_name"], {})
+                        if coord.get("lat"):
+                            pnode.lat = coord["lat"]
+                            pnode.lon = coord.get("lon")
 
                     score = PnodeScore(
                         pipeline_run_id=self._run.id,
@@ -186,6 +268,243 @@ class PipelineWriter:
         except Exception as e:
             logger.warning(f"DB write failed (pnode_scores): {e}")
             self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # Pnode coordinates (standalone backfill)
+    # ------------------------------------------------------------------
+
+    def write_pnode_coordinates(self, pnode_coordinates: dict):
+        """
+        Backfill lat/lon on existing Pnode records, or create stubs for
+        pnodes that only exist in the coordinates file.
+
+        Args:
+            pnode_coordinates: {node_id: {lat, lon, source, matched_name}}
+        """
+        if not self._iso:
+            self._ensure_iso_and_zones()
+        try:
+            updated = 0
+            created = 0
+            for ext_id, coord in pnode_coordinates.items():
+                lat = coord.get("lat")
+                lon = coord.get("lon")
+                if lat is None or lon is None:
+                    continue
+
+                pnode = self.db.query(Pnode).filter(
+                    Pnode.iso_id == self._iso.id,
+                    Pnode.node_id_external == ext_id,
+                ).first()
+
+                if pnode:
+                    if not pnode.lat:
+                        pnode.lat = lat
+                        pnode.lon = lon
+                        updated += 1
+                else:
+                    pnode = Pnode(
+                        iso_id=self._iso.id,
+                        node_id_external=ext_id,
+                        node_name=coord.get("matched_name") or ext_id,
+                        lat=lat,
+                        lon=lon,
+                    )
+                    self.db.add(pnode)
+                    created += 1
+
+            self.db.commit()
+            logger.info(f"DB: Pnode coordinates — {updated} updated, {created} created")
+        except Exception as e:
+            logger.warning(f"DB write failed (pnode_coordinates): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # Data centers
+    # ------------------------------------------------------------------
+
+    def write_data_centers(self, dc_list: list[dict]):
+        """
+        Write data center records from dc_combined.json.
+
+        Expects list of dicts with keys:
+            slug, facility_name, county, state_code, status, capacity_mw,
+            operator, iso_zone, lat (optional), lon (optional)
+        """
+        if not self._iso:
+            self._ensure_iso_and_zones()
+        try:
+            count = 0
+            for dc in dc_list:
+                slug = dc.get("slug")
+                if not slug:
+                    continue
+
+                existing = self.db.query(DataCenter).filter(
+                    DataCenter.external_slug == slug
+                ).first()
+                if existing:
+                    continue
+
+                zone_code = dc.get("iso_zone")
+                zone = self._zone_lookup.get(zone_code)
+
+                record = DataCenter(
+                    iso_id=self._iso.id,
+                    zone_id=zone.id if zone else None,
+                    external_slug=slug,
+                    facility_name=dc.get("facility_name"),
+                    status=dc.get("status"),
+                    capacity_mw=dc.get("capacity_mw"),
+                    lat=dc.get("lat"),
+                    lon=dc.get("lon"),
+                    state_code=dc.get("state_code"),
+                    county=dc.get("county"),
+                    operator=dc.get("operator"),
+                    scraped_at=datetime.now(timezone.utc),
+                )
+                self.db.add(record)
+                count += 1
+
+            self.db.commit()
+            logger.info(f"DB: Wrote {count} data centers")
+        except Exception as e:
+            logger.warning(f"DB write failed (data_centers): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # Zone boundaries (GeoJSON)
+    # ------------------------------------------------------------------
+
+    def write_zone_boundaries(self, geojson: dict):
+        """
+        Populate boundary_geojson on Zone records from a GeoJSON
+        FeatureCollection.
+
+        Expects features with properties.iso_zone matching zone_code.
+        """
+        if not self._iso:
+            self._ensure_iso_and_zones()
+        features = geojson.get("features", [])
+        try:
+            count = 0
+            for feat in features:
+                props = feat.get("properties", {})
+                zone_code = props.get("iso_zone") or props.get("NAME")
+                zone = self._zone_lookup.get(zone_code)
+                if not zone:
+                    continue
+
+                zone.boundary_geojson = feat.get("geometry")
+                count += 1
+
+            self.db.commit()
+            logger.info(f"DB: Wrote {count} zone boundaries")
+        except Exception as e:
+            logger.warning(f"DB write failed (zone_boundaries): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # Transmission lines (HIFLD GeoJSON)
+    # ------------------------------------------------------------------
+
+    def write_transmission_lines(self, geojson: dict, batch_size: int = 500):
+        """
+        Write transmission line features from HIFLD GeoJSON.
+
+        Expects a FeatureCollection with LineString features having
+        properties: VOLTAGE, OWNER, SUB_1, SUB_2, SHAPE__Len
+        """
+        if not self._iso:
+            self._ensure_iso_and_zones()
+        features = geojson.get("features", [])
+        try:
+            count = 0
+            batch: list[TransmissionLine] = []
+
+            for feat in features:
+                props = feat.get("properties", {})
+                record = TransmissionLine(
+                    iso_id=self._iso.id,
+                    voltage_kv=props.get("VOLTAGE"),
+                    owner=props.get("OWNER"),
+                    sub_1=props.get("SUB_1"),
+                    sub_2=props.get("SUB_2"),
+                    shape_length=props.get("SHAPE__Len"),
+                    geometry_json=feat.get("geometry"),
+                )
+                batch.append(record)
+                count += 1
+
+                if len(batch) >= batch_size:
+                    self.db.bulk_save_objects(batch)
+                    self.db.commit()
+                    batch = []
+
+            if batch:
+                self.db.bulk_save_objects(batch)
+                self.db.commit()
+
+            logger.info(f"DB: Wrote {count} transmission lines")
+        except Exception as e:
+            logger.warning(f"DB write failed (transmission_lines): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # Substations (GRIP CSV)
+    # ------------------------------------------------------------------
+
+    def write_substations(self, csv_path: Path):
+        """
+        Write substation records from a GRIP CSV file.
+
+        Expected columns: substationname, bankname, division,
+            facilityratingmw, facilityloadingmw2025,
+            peakfacilityloadingpercent, facilitytype
+        """
+        if not self._iso:
+            self._ensure_iso_and_zones()
+        try:
+            count = 0
+            with open(csv_path, newline="") as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    name = row.get("substationname", "").strip()
+                    if not name:
+                        continue
+
+                    bank = row.get("bankname", "").strip() or None
+
+                    existing = self.db.query(Substation).filter(
+                        Substation.iso_id == self._iso.id,
+                        Substation.substation_name == name,
+                        Substation.bank_name == bank,
+                    ).first()
+                    if existing:
+                        continue
+
+                    record = Substation(
+                        iso_id=self._iso.id,
+                        substation_name=name,
+                        bank_name=bank,
+                        division=row.get("division", "").strip() or None,
+                        facility_rating_mw=_safe_float(row.get("facilityratingmw")),
+                        facility_loading_mw=_safe_float(row.get("facilityloadingmw2025")),
+                        peak_loading_pct=_safe_float(row.get("peakfacilityloadingpercent")),
+                        facility_type=row.get("facilitytype", "").strip() or None,
+                    )
+                    self.db.add(record)
+                    count += 1
+
+            self.db.commit()
+            logger.info(f"DB: Wrote {count} substations")
+        except Exception as e:
+            logger.warning(f"DB write failed (substations): {e}")
+            self.db.rollback()
+
+    # ------------------------------------------------------------------
+    # DER recommendations (existing)
+    # ------------------------------------------------------------------
 
     def write_recommendations(self, recommendations: list[dict]):
         """Write DER recommendations."""
@@ -217,6 +536,10 @@ class PipelineWriter:
             logger.warning(f"DB write failed (recommendations): {e}")
             self.db.rollback()
 
+    # ------------------------------------------------------------------
+    # Run lifecycle (existing)
+    # ------------------------------------------------------------------
+
     def complete_run(self, error: Optional[str] = None):
         """Mark the pipeline run as completed or failed."""
         if not self._run:
@@ -231,6 +554,16 @@ class PipelineWriter:
         except Exception as e:
             logger.warning(f"DB write failed (complete_run): {e}")
             self.db.rollback()
+
+
+def _safe_float(val) -> Optional[float]:
+    """Convert a string to float, returning None on failure."""
+    if val is None:
+        return None
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return None
 
 
 def get_pipeline_writer(iso_id: str, adapter) -> Optional[PipelineWriter]:

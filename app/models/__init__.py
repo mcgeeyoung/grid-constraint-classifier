@@ -10,6 +10,8 @@ from .pnode import Pnode
 from .pnode_score import PnodeScore
 from .data_center import DataCenter
 from .der_recommendation import DERRecommendation
+from .transmission_line import TransmissionLine
+from .substation import Substation
 
 __all__ = [
     "Base",
@@ -22,4 +24,6 @@ __all__ = [
     "PnodeScore",
     "DataCenter",
     "DERRecommendation",
+    "TransmissionLine",
+    "Substation",
 ]
