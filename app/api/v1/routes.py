@@ -129,6 +129,49 @@ def get_pnode_scores(iso_id: str, zone_code: str, db: Session = Depends(get_db))
     ]
 
 
+@router.get("/isos/{iso_id}/pnodes", response_model=list[PnodeScoreResponse])
+def get_all_pnode_scores(iso_id: str, db: Session = Depends(get_db)):
+    """Get all pnode severity scores for an ISO (all zones)."""
+    iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
+    if not iso:
+        raise HTTPException(404, f"ISO '{iso_id}' not found")
+
+    latest_run = (
+        db.query(PipelineRun)
+        .filter(PipelineRun.iso_id == iso.id, PipelineRun.status == "completed")
+        .order_by(PipelineRun.completed_at.desc())
+        .first()
+    )
+    if not latest_run:
+        return []
+
+    results = (
+        db.query(PnodeScore, Pnode)
+        .join(Pnode, PnodeScore.pnode_id == Pnode.id)
+        .filter(
+            PnodeScore.pipeline_run_id == latest_run.id,
+            Pnode.iso_id == iso.id,
+        )
+        .order_by(PnodeScore.severity_score.desc())
+        .all()
+    )
+
+    return [
+        PnodeScoreResponse(
+            node_id_external=pnode.node_id_external,
+            node_name=pnode.node_name,
+            severity_score=score.severity_score,
+            tier=score.tier,
+            avg_congestion=score.avg_congestion,
+            max_congestion=score.max_congestion,
+            congested_hours_pct=score.congested_hours_pct,
+            lat=pnode.lat,
+            lon=pnode.lon,
+        )
+        for score, pnode in results
+    ]
+
+
 @router.get("/isos/{iso_id}/zones/{zone_code}/lmps", response_model=list[ZoneLMPResponse])
 def get_zone_lmps(
     iso_id: str,

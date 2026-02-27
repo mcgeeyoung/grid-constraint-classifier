@@ -27,28 +27,27 @@ import { ref, computed, watch } from 'vue'
 import { LCircleMarker, LPopup } from '@vue-leaflet/vue-leaflet'
 import { useIsoStore } from '@/stores/isoStore'
 import { useMapStore } from '@/stores/mapStore'
-import { fetchPnodeScores, type PnodeScore } from '@/api/isos'
+import { fetchAllPnodeScores, type PnodeScore } from '@/api/isos'
 
 const isoStore = useIsoStore()
 const mapStore = useMapStore()
 const pnodes = ref<PnodeScore[]>([])
 
 const visiblePnodes = computed(() => {
-  // Only show when zoomed in enough
-  if (mapStore.zoom < 8) return []
+  if (mapStore.zoom < 7) return []
   return pnodes.value.filter(p => p.lat != null && p.lon != null)
 })
 
-// Load pnodes when a zone is selected
+// Load all pnodes when ISO is selected
 watch(
-  () => mapStore.selectedZoneCode,
-  async (zoneCode) => {
-    if (!zoneCode || !isoStore.selectedISO) {
+  () => isoStore.selectedISO,
+  async (iso) => {
+    if (!iso) {
       pnodes.value = []
       return
     }
     try {
-      pnodes.value = await fetchPnodeScores(isoStore.selectedISO, zoneCode)
+      pnodes.value = await fetchAllPnodeScores(iso)
     } catch {
       pnodes.value = []
     }

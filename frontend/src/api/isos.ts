@@ -80,7 +80,8 @@ export async function fetchClassifications(isoCode: string): Promise<ZoneClassif
 }
 
 export async function fetchDataCenters(isoCode?: string): Promise<DataCenter[]> {
-  const params = isoCode ? { iso_id: isoCode } : {}
+  const params: Record<string, string | number> = { limit: 5000 }
+  if (isoCode) params.iso_id = isoCode
   const { data } = await client.get<DataCenter[]>('/data-centers', { params })
   return data
 }
@@ -134,6 +135,11 @@ export interface ZoneLMP {
 
 export async function fetchPnodeScores(isoCode: string, zoneCode: string): Promise<PnodeScore[]> {
   const { data } = await client.get<PnodeScore[]>(`/isos/${isoCode}/zones/${zoneCode}/pnodes`)
+  return data
+}
+
+export async function fetchAllPnodeScores(isoCode: string): Promise<PnodeScore[]> {
+  const { data } = await client.get<PnodeScore[]>(`/isos/${isoCode}/pnodes`)
   return data
 }
 

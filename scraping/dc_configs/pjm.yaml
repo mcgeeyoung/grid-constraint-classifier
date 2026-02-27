@@ -98,6 +98,7 @@ operator_to_zone:
   "rappahannock electric cooperative": DOM
   "northern virginia electric cooperative": DOM
   "manassas electric system": DOM
+  "a&n electric cooperative": DOM
   # Dayton / AES
   "aes/dp&l": DAY
   # Non-PJM operators (explicitly filtered out)
