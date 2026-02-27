@@ -49,6 +49,15 @@
         </div>
       </div>
 
+      <!-- Pnode severity legend -->
+      <div v-if="mapStore.selectedZoneCode && mapStore.zoom >= 8" class="mb-2">
+        <div class="text-caption font-weight-bold mb-1">Pnode Severity</div>
+        <div v-for="item in pnodeLegend" :key="item.label" class="d-flex align-center ga-1 mb-px">
+          <span :style="{ width: '10px', height: '10px', borderRadius: '50%', background: item.color, display: 'inline-block' }" />
+          <span class="text-caption">{{ item.label }}</span>
+        </div>
+      </div>
+
       <!-- WattCarbon assets legend -->
       <div v-if="mapStore.showAssets">
         <div class="text-caption font-weight-bold mb-1">WattCarbon Assets</div>
@@ -92,6 +101,13 @@ const dcLegend = [
   { label: 'Planned', color: '#e67e22' },
   { label: 'Under Construction', color: '#f1c40f' },
   { label: 'Proposed', color: '#9b59b6' },
+]
+
+const pnodeLegend = [
+  { label: 'Critical', color: '#e74c3c' },
+  { label: 'Severe', color: '#e67e22' },
+  { label: 'Moderate', color: '#f1c40f' },
+  { label: 'Low', color: '#2ecc71' },
 ]
 
 const assetLegend = [

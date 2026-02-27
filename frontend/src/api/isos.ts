@@ -109,6 +109,46 @@ export interface ValueSummary {
   top_zones: TopZone[]
 }
 
+export interface PnodeScore {
+  node_id_external: string
+  node_name: string | null
+  severity_score: number
+  tier: string
+  avg_congestion: number | null
+  max_congestion: number | null
+  congested_hours_pct: number | null
+  lat: number | null
+  lon: number | null
+}
+
+export interface ZoneLMP {
+  timestamp_utc: string
+  lmp: number
+  energy: number | null
+  congestion: number | null
+  loss: number | null
+  hour_local: number
+  month: number
+}
+
+export async function fetchPnodeScores(isoCode: string, zoneCode: string): Promise<PnodeScore[]> {
+  const { data } = await client.get<PnodeScore[]>(`/isos/${isoCode}/zones/${zoneCode}/pnodes`)
+  return data
+}
+
+export async function fetchZoneLMPs(
+  isoCode: string,
+  zoneCode: string,
+  limit?: number,
+  month?: number,
+): Promise<ZoneLMP[]> {
+  const params: Record<string, number> = {}
+  if (limit !== undefined) params.limit = limit
+  if (month !== undefined) params.month = month
+  const { data } = await client.get<ZoneLMP[]>(`/isos/${isoCode}/zones/${zoneCode}/lmps`, { params })
+  return data
+}
+
 export async function fetchOverview(): Promise<Overview[]> {
   const { data } = await client.get<Overview[]>('/overview')
   return data

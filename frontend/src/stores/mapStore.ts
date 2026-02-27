@@ -24,6 +24,12 @@ export const useMapStore = defineStore('map', () => {
   // Zone color mode
   const zoneColorMode = ref<ZoneColorMode>('classification')
 
+  // Filters
+  const filterClassifications = ref<string[]>([]) // empty = show all
+  const filterTiers = ref<string[]>([]) // empty = show all
+  const filterDerType = ref<string | null>(null)
+  const filterMinLoading = ref<number>(0) // 0 = no filter
+
   // Selected entities for side panel
   const selectedZoneCode = ref<string | null>(null)
   const selectedSubstationId = ref<number | null>(null)
@@ -55,6 +61,10 @@ export const useMapStore = defineStore('map', () => {
     showDataCenters,
     showAssets,
     zoneColorMode,
+    filterClassifications,
+    filterTiers,
+    filterDerType,
+    filterMinLoading,
     selectedZoneCode,
     selectedSubstationId,
     selectedAssetId,

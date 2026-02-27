@@ -23,8 +23,10 @@
 import { computed } from 'vue'
 import { LCircleMarker, LPopup } from '@vue-leaflet/vue-leaflet'
 import { useIsoStore } from '@/stores/isoStore'
+import { useMapStore } from '@/stores/mapStore'
 
 const isoStore = useIsoStore()
+const mapStore = useMapStore()
 
 interface DERWithTier {
   id: number
@@ -38,7 +40,12 @@ interface DERWithTier {
 }
 
 const visibleDERs = computed<DERWithTier[]>(() => {
-  return isoStore.derLocations.filter(d => d.lat != null && d.lon != null) as DERWithTier[]
+  return (isoStore.derLocations as DERWithTier[]).filter(d => {
+    if (d.lat == null || d.lon == null) return false
+    if (mapStore.filterTiers.length > 0 && !mapStore.filterTiers.includes(d.value_tier ?? 'low')) return false
+    if (mapStore.filterDerType && d.der_type !== mapStore.filterDerType) return false
+    return true
+  })
 })
 
 const TIER_COLORS: Record<string, string> = {

@@ -99,6 +99,19 @@
     >
       Save as DER Location
     </v-btn>
+
+    <v-btn
+      color="secondary"
+      variant="outlined"
+      size="small"
+      block
+      class="mt-2"
+      :disabled="valuationStore.isInComparison() || valuationStore.comparisonList.length >= 10"
+      @click="valuationStore.addToComparison()"
+    >
+      <v-icon start size="16">mdi-compare</v-icon>
+      {{ valuationStore.isInComparison() ? 'Already in Comparison' : `Add to Comparison (${valuationStore.comparisonList.length})` }}
+    </v-btn>
   </div>
 
   <div v-else class="text-center text-medium-emphasis pa-4">

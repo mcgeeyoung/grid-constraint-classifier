@@ -73,10 +73,22 @@
       v-if="showPanel"
       style="width: 400px; border-left: 1px solid #333; overflow-y: auto; background: #1e1e2e;"
     >
+      <div class="pa-2 pb-0">
+        <FilterBar />
+      </div>
       <v-tabs v-model="activeTab" density="compact" bg-color="surface">
         <v-tab value="valuation">Valuation</v-tab>
         <v-tab value="zone">Zone</v-tab>
         <v-tab value="substation">Substation</v-tab>
+        <v-tab value="compare">
+          Compare
+          <v-badge
+            v-if="valuationStore.comparisonList.length > 0"
+            :content="valuationStore.comparisonList.length"
+            color="secondary"
+            inline
+          />
+        </v-tab>
         <v-tab value="asset">Asset</v-tab>
         <v-tab value="hierarchy">Hierarchy</v-tab>
       </v-tabs>
@@ -85,6 +97,7 @@
         <ValuationResult v-if="activeTab === 'valuation'" />
         <ZoneDetail v-else-if="activeTab === 'zone'" />
         <SubstationDetail v-else-if="activeTab === 'substation'" />
+        <ComparisonPanel v-else-if="activeTab === 'compare'" @select-site="activeTab = 'valuation'" />
         <AssetDetail v-else-if="activeTab === 'asset'" />
         <HierarchyTree v-else-if="activeTab === 'hierarchy'" />
       </div>
@@ -98,6 +111,8 @@ import GridMap from '@/components/map/GridMap.vue'
 import ValuationResult from '@/components/panels/ValuationResult.vue'
 import ZoneDetail from '@/components/panels/ZoneDetail.vue'
 import SubstationDetail from '@/components/panels/SubstationDetail.vue'
+import FilterBar from '@/components/panels/FilterBar.vue'
+import ComparisonPanel from '@/components/panels/ComparisonPanel.vue'
 import AssetDetail from '@/components/panels/AssetDetail.vue'
 import HierarchyTree from '@/components/panels/HierarchyTree.vue'
 import { useIsoStore } from '@/stores/isoStore'

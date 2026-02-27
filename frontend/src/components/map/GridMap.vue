@@ -20,6 +20,8 @@
     <SubstationMarkers v-if="mapStore.showSubstations" />
     <DataCenterMarkers v-if="mapStore.showDataCenters" />
     <AssetMarkers v-if="mapStore.showAssets" />
+    <PnodeMarkers />
+    <ComparisonMarkers />
     <SitingPopup />
   </l-map>
   <MapLegend />
@@ -34,6 +36,8 @@ import DERMarkers from './DERMarkers.vue'
 import SubstationMarkers from './SubstationMarkers.vue'
 import DataCenterMarkers from './DataCenterMarkers.vue'
 import AssetMarkers from './AssetMarkers.vue'
+import PnodeMarkers from './PnodeMarkers.vue'
+import ComparisonMarkers from './ComparisonMarkers.vue'
 import SitingPopup from './SitingPopup.vue'
 import MapLegend from './MapLegend.vue'
 

@@ -32,7 +32,11 @@ const hierarchyStore = useHierarchyStore()
 const mapStore = useMapStore()
 
 const visibleSubs = computed<Substation[]>(() => {
-  return hierarchyStore.substations.filter(s => s.lat != null && s.lon != null)
+  return hierarchyStore.substations.filter(s => {
+    if (s.lat == null || s.lon == null) return false
+    if (mapStore.filterMinLoading > 0 && (s.peak_loading_pct ?? 0) < mapStore.filterMinLoading) return false
+    return true
+  })
 })
 
 function loadingColor(pct: number | null): string {

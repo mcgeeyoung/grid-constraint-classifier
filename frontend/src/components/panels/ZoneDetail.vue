@@ -45,6 +45,87 @@
       </p>
     </div>
 
+    <!-- Congestion Profile -->
+    <div class="mt-4">
+      <v-divider class="mb-3" />
+      <div
+        class="d-flex align-center justify-space-between"
+        style="cursor: pointer;"
+        @click="showCongestionProfile = !showCongestionProfile"
+      >
+        <h4 class="text-subtitle-2">Congestion Profile</h4>
+        <v-icon size="16">{{ showCongestionProfile ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+      </div>
+
+      <div v-if="showCongestionProfile" class="mt-2">
+        <!-- Month selector -->
+        <v-select
+          v-model="selectedMonth"
+          :items="monthOptions"
+          density="compact"
+          variant="outlined"
+          hide-details
+          class="mb-2"
+          style="max-width: 160px;"
+        />
+
+        <div v-if="lmpLoading" class="text-center pa-2">
+          <v-progress-circular indeterminate size="20" color="primary" />
+        </div>
+
+        <div v-else-if="lmpData.length > 0">
+          <!-- SVG Sparkline -->
+          <svg
+            :viewBox="`0 0 ${sparkWidth} ${sparkHeight}`"
+            :width="sparkWidth"
+            :height="sparkHeight"
+            style="width: 100%; height: auto;"
+          >
+            <!-- Zero line -->
+            <line
+              :x1="0" :y1="zeroY" :x2="sparkWidth" :y2="zeroY"
+              stroke="rgba(255,255,255,0.15)" stroke-width="0.5"
+            />
+            <!-- Congestion area -->
+            <path
+              :d="areaPath"
+              fill="rgba(231, 76, 60, 0.2)"
+            />
+            <!-- Congestion line -->
+            <path
+              :d="linePath"
+              fill="none"
+              stroke="#e74c3c"
+              stroke-width="1"
+            />
+          </svg>
+
+          <!-- Summary stats -->
+          <div class="d-flex justify-space-between mt-2 text-caption">
+            <div>
+              <span class="text-medium-emphasis">Avg:</span>
+              ${{ lmpStats.avg.toFixed(2) }}
+            </div>
+            <div>
+              <span class="text-medium-emphasis">Max:</span>
+              ${{ lmpStats.max.toFixed(2) }}
+            </div>
+            <div>
+              <span class="text-medium-emphasis">Congested:</span>
+              {{ lmpStats.congestedPct.toFixed(0) }}%
+            </div>
+          </div>
+          <div class="text-caption text-medium-emphasis mt-1">
+            {{ lmpData.length }} hours of data
+          </div>
+        </div>
+
+        <div v-else class="text-caption text-medium-emphasis">
+          No LMP data available
+        </div>
+      </div>
+    </div>
+
     <!-- Recommendations -->
     <div v-if="rec" class="mt-4">
       <v-divider class="mb-3" />
@@ -73,9 +154,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, h } from 'vue'
+import { ref, computed, watch, defineComponent, h } from 'vue'
 import { useIsoStore } from '@/stores/isoStore'
 import { useMapStore } from '@/stores/mapStore'
+import { fetchZoneLMPs, type ZoneLMP } from '@/api/isos'
 
 const isoStore = useIsoStore()
 const mapStore = useMapStore()
@@ -93,6 +175,115 @@ const derCount = computed(() => {
 const rec = computed(() => {
   if (!mapStore.selectedZoneCode) return null
   return isoStore.recommendationsForZone(mapStore.selectedZoneCode)
+})
+
+// Congestion profile state
+const showCongestionProfile = ref(false)
+const lmpData = ref<ZoneLMP[]>([])
+const lmpLoading = ref(false)
+const selectedMonth = ref<number | null>(null)
+
+const monthOptions = [
+  { title: 'All Months', value: null },
+  { title: 'January', value: 1 },
+  { title: 'February', value: 2 },
+  { title: 'March', value: 3 },
+  { title: 'April', value: 4 },
+  { title: 'May', value: 5 },
+  { title: 'June', value: 6 },
+  { title: 'July', value: 7 },
+  { title: 'August', value: 8 },
+  { title: 'September', value: 9 },
+  { title: 'October', value: 10 },
+  { title: 'November', value: 11 },
+  { title: 'December', value: 12 },
+]
+
+// Load LMP data when profile is expanded or month changes
+watch(
+  [() => mapStore.selectedZoneCode, showCongestionProfile, selectedMonth],
+  async ([zoneCode, show, month]) => {
+    if (!zoneCode || !show || !isoStore.selectedISO) {
+      lmpData.value = []
+      return
+    }
+    lmpLoading.value = true
+    try {
+      lmpData.value = await fetchZoneLMPs(
+        isoStore.selectedISO,
+        zoneCode,
+        720,
+        month ?? undefined,
+      )
+    } catch {
+      lmpData.value = []
+    } finally {
+      lmpLoading.value = false
+    }
+  },
+  { immediate: true },
+)
+
+// Sparkline dimensions
+const sparkWidth = 320
+const sparkHeight = 60
+
+const congestionValues = computed(() => {
+  return lmpData.value
+    .map(d => d.congestion ?? 0)
+    .reverse() // chronological order (endpoint returns desc)
+})
+
+const lmpStats = computed(() => {
+  const vals = congestionValues.value
+  if (vals.length === 0) return { avg: 0, max: 0, congestedPct: 0 }
+  const absVals = vals.map(v => Math.abs(v))
+  const avg = absVals.reduce((s, v) => s + v, 0) / vals.length
+  const max = Math.max(...absVals)
+  const congested = vals.filter(v => Math.abs(v) > 1).length
+  return { avg, max, congestedPct: (congested / vals.length) * 100 }
+})
+
+const zeroY = computed(() => {
+  const vals = congestionValues.value
+  if (vals.length === 0) return sparkHeight / 2
+  const min = Math.min(...vals, 0)
+  const max = Math.max(...vals, 0)
+  const range = max - min || 1
+  return ((max - 0) / range) * (sparkHeight - 4) + 2
+})
+
+const linePath = computed(() => {
+  const vals = congestionValues.value
+  if (vals.length < 2) return ''
+  const min = Math.min(...vals, 0)
+  const max = Math.max(...vals, 0)
+  const range = max - min || 1
+  const dx = sparkWidth / (vals.length - 1)
+
+  return vals.map((v, i) => {
+    const x = i * dx
+    const y = ((max - v) / range) * (sparkHeight - 4) + 2
+    return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+})
+
+const areaPath = computed(() => {
+  const vals = congestionValues.value
+  if (vals.length < 2) return ''
+  const min = Math.min(...vals, 0)
+  const max = Math.max(...vals, 0)
+  const range = max - min || 1
+  const dx = sparkWidth / (vals.length - 1)
+  const zy = zeroY.value
+
+  const points = vals.map((v, i) => {
+    const x = i * dx
+    const y = ((max - v) / range) * (sparkHeight - 4) + 2
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  })
+
+  return `M0,${zy} L${points.join(' L')} L${sparkWidth},${zy} Z`
 })
 
 function classificationColor(cls: string): string {
