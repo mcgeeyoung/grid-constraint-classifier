@@ -17,6 +17,7 @@ from .circuit import Circuit
 from .der_location import DERLocation
 from .der_valuation import DERValuation
 from .hierarchy_score import HierarchyScore
+from .substation_load_profile import SubstationLoadProfile
 
 __all__ = [
     "Base",
@@ -36,4 +37,5 @@ __all__ = [
     "DERLocation",
     "DERValuation",
     "HierarchyScore",
+    "SubstationLoadProfile",
 ]

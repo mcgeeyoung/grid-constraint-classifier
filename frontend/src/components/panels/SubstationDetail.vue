@@ -42,19 +42,19 @@
       </tbody>
     </v-table>
 
-    <!-- Congestion Profile -->
+    <!-- Load Profile -->
     <div class="mt-4">
       <v-divider class="mb-3" />
       <div
         class="d-flex align-center justify-space-between"
         style="cursor: pointer;"
-        @click="showCongestionProfile = !showCongestionProfile"
+        @click="showLoadProfile = !showLoadProfile"
       >
-        <h4 class="text-subtitle-2">Congestion Profile</h4>
-        <v-icon size="16">{{ showCongestionProfile ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
+        <h4 class="text-subtitle-2">Load Profile</h4>
+        <v-icon size="16">{{ showLoadProfile ? 'mdi-chevron-up' : 'mdi-chevron-down' }}</v-icon>
       </div>
 
-      <div v-if="showCongestionProfile" class="mt-2">
+      <div v-if="showLoadProfile" class="mt-2">
         <v-select
           v-model="selectedMonth"
           :items="monthOptions"
@@ -76,15 +76,33 @@
             :height="chartHeight"
             style="width: 100%; height: auto;"
           >
+            <!-- Low (base) bar -->
             <rect
               v-for="bar in bars"
-              :key="bar.hour"
+              :key="`low-${bar.hour}`"
               :x="bar.x"
-              :y="bar.y"
+              :y="bar.yLow"
               :width="bar.width"
-              :height="bar.height"
-              :fill="bar.color"
+              :height="bar.heightLow"
+              fill="rgba(52, 152, 219, 0.5)"
               rx="1"
+            />
+            <!-- High (range above low) bar -->
+            <rect
+              v-for="bar in bars"
+              :key="`high-${bar.hour}`"
+              :x="bar.x"
+              :y="bar.yHigh"
+              :width="bar.width"
+              :height="bar.heightRange"
+              fill="rgba(231, 76, 60, 0.6)"
+              rx="1"
+            />
+            <!-- Rating line -->
+            <line
+              v-if="ratingLineY !== null"
+              :x1="0" :y1="ratingLineY" :x2="chartWidth" :y2="ratingLineY"
+              stroke="rgba(241, 196, 15, 0.7)" stroke-width="1" stroke-dasharray="4,3"
             />
             <text
               v-for="label in xLabels"
@@ -97,27 +115,39 @@
             >{{ label.hour }}</text>
           </svg>
 
-          <div class="d-flex justify-space-between mt-2 text-caption">
-            <div>
-              <span class="text-medium-emphasis">Avg:</span>
-              ${{ loadshapeStats.avg.toFixed(2) }}
+          <div class="d-flex ga-3 mt-1 text-caption">
+            <div class="d-flex align-center ga-1">
+              <span style="display:inline-block;width:10px;height:10px;background:rgba(52,152,219,0.5);border-radius:2px;" />
+              <span class="text-medium-emphasis">Low</span>
             </div>
+            <div class="d-flex align-center ga-1">
+              <span style="display:inline-block;width:10px;height:10px;background:rgba(231,76,60,0.6);border-radius:2px;" />
+              <span class="text-medium-emphasis">High</span>
+            </div>
+            <div v-if="ratingLineY !== null" class="d-flex align-center ga-1">
+              <span style="display:inline-block;width:10px;height:2px;background:rgba(241,196,15,0.7);" />
+              <span class="text-medium-emphasis">Rating</span>
+            </div>
+          </div>
+
+          <div class="d-flex justify-space-between mt-2 text-caption">
             <div>
               <span class="text-medium-emphasis">Peak hr:</span>
               {{ loadshapeStats.peakHour }}:00
             </div>
             <div>
               <span class="text-medium-emphasis">Peak:</span>
-              ${{ loadshapeStats.max.toFixed(2) }}
+              {{ formatLoad(loadshapeStats.peakHigh) }}
             </div>
-          </div>
-          <div class="text-caption text-medium-emphasis mt-1">
-            Based on zone {{ hierarchyStore.selectedSubstation?.zone_code ?? '' }} congestion
+            <div>
+              <span class="text-medium-emphasis">Avg:</span>
+              {{ formatLoad(loadshapeStats.avgHigh) }}
+            </div>
           </div>
         </div>
 
         <div v-else class="text-caption text-medium-emphasis">
-          No congestion data available
+          No load profile data available
         </div>
       </div>
     </div>
@@ -145,7 +175,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useHierarchyStore } from '@/stores/hierarchyStore'
-import { fetchSubstationLoadshape, type LoadshapeHour } from '@/api/hierarchy'
+import { fetchSubstationLoadshape, type SubstationLoadshapeHour } from '@/api/hierarchy'
 
 const hierarchyStore = useHierarchyStore()
 
@@ -165,9 +195,9 @@ const loadingLabel = computed(() => {
   return 'Normal'
 })
 
-// Congestion profile state
-const showCongestionProfile = ref(false)
-const loadshapeData = ref<LoadshapeHour[]>([])
+// Load profile state
+const showLoadProfile = ref(false)
+const loadshapeData = ref<SubstationLoadshapeHour[]>([])
 const loadshapeLoading = ref(false)
 const selectedMonth = ref<number | null>(null)
 
@@ -188,7 +218,7 @@ const monthOptions = [
 ]
 
 watch(
-  [() => hierarchyStore.selectedSubstation?.id, showCongestionProfile, selectedMonth],
+  [() => hierarchyStore.selectedSubstation?.id, showLoadProfile, selectedMonth],
   async ([subId, show, month]) => {
     if (!subId || !show) {
       loadshapeData.value = []
@@ -212,33 +242,57 @@ const chartPadTop = 4
 const chartPadBottom = 14
 const barGap = 2
 
+function formatLoad(kw: number): string {
+  if (kw >= 1000) return (kw / 1000).toFixed(1) + ' MW'
+  return kw.toFixed(0) + ' kW'
+}
+
 const loadshapeStats = computed(() => {
   const data = loadshapeData.value
-  if (data.length === 0) return { avg: 0, max: 0, peakHour: 0 }
-  const vals = data.map(d => d.avg_congestion)
-  const avg = vals.reduce((s, v) => s + v, 0) / vals.length
-  const max = Math.max(...vals)
-  const peakHour = data[vals.indexOf(max)]?.hour ?? 0
-  return { avg, max, peakHour }
+  if (data.length === 0) return { avgHigh: 0, peakHigh: 0, peakHour: 0 }
+  const highs = data.map(d => d.load_high_kw)
+  const avgHigh = highs.reduce((s, v) => s + v, 0) / highs.length
+  const peakHigh = Math.max(...highs)
+  const peakHour = data[highs.indexOf(peakHigh)]?.hour ?? 0
+  return { avgHigh, peakHigh, peakHour }
+})
+
+// Rating in kW for the dashed reference line
+const ratingKw = computed(() => {
+  const mw = hierarchyStore.selectedSubstation?.facility_rating_mw
+  return mw != null ? mw * 1000 : null
+})
+
+const chartMaxKw = computed(() => {
+  const peak = loadshapeStats.value.peakHigh
+  const rating = ratingKw.value
+  if (rating != null) return Math.max(peak, rating) * 1.1
+  return peak * 1.1 || 1
+})
+
+const ratingLineY = computed(() => {
+  if (ratingKw.value == null) return null
+  const plotHeight = chartHeight - chartPadTop - chartPadBottom
+  const ratio = ratingKw.value / chartMaxKw.value
+  return chartPadTop + plotHeight - ratio * plotHeight
 })
 
 const bars = computed(() => {
   const data = loadshapeData.value
   if (data.length === 0) return []
-  const maxVal = loadshapeStats.value.max || 1
+  const maxKw = chartMaxKw.value
   const barWidth = (chartWidth - barGap * 24) / 24
   const plotHeight = chartHeight - chartPadTop - chartPadBottom
 
   return data.map(d => {
-    const ratio = d.avg_congestion / maxVal
-    const height = Math.max(ratio * plotHeight, 1)
+    const ratioLow = d.load_low_kw / maxKw
+    const ratioHigh = d.load_high_kw / maxKw
+    const heightLow = Math.max(ratioLow * plotHeight, 1)
+    const heightRange = Math.max((ratioHigh - ratioLow) * plotHeight, 0)
     const x = d.hour * (barWidth + barGap)
-    const y = chartPadTop + plotHeight - height
-    const r = Math.round(140 + ratio * 91)
-    const g = Math.round(100 - ratio * 24)
-    const b = Math.round(100 - ratio * 40)
-    const alpha = 0.4 + ratio * 0.6
-    return { hour: d.hour, x, y, width: barWidth, height, color: `rgba(${r},${g},${b},${alpha})` }
+    const yLow = chartPadTop + plotHeight - heightLow
+    const yHigh = chartPadTop + plotHeight - heightLow - heightRange
+    return { hour: d.hour, x, width: barWidth, yLow, heightLow, yHigh, heightRange }
   })
 })
 

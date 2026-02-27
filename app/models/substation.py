@@ -33,6 +33,7 @@ class Substation(Base):
     zone: Mapped[Optional["Zone"]] = relationship(back_populates="substations")
     nearest_pnode: Mapped[Optional["Pnode"]] = relationship()
     feeders: Mapped[list["Feeder"]] = relationship(back_populates="substation")
+    load_profiles: Mapped[list["SubstationLoadProfile"]] = relationship(back_populates="substation")
 
     def __repr__(self) -> str:
         return f"<Substation(name={self.substation_name!r}, rating={self.facility_rating_mw}MW)>"
@@ -42,3 +43,4 @@ from .iso import ISO  # noqa: E402
 from .zone import Zone  # noqa: E402
 from .pnode import Pnode  # noqa: E402
 from .feeder import Feeder  # noqa: E402
+from .substation_load_profile import SubstationLoadProfile  # noqa: E402

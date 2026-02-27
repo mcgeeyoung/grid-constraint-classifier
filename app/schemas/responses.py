@@ -67,6 +67,12 @@ class LoadshapeHourResponse(BaseModel):
     avg_congestion: float
 
 
+class SubstationLoadshapeHourResponse(BaseModel):
+    hour: int
+    load_low_kw: float
+    load_high_kw: float
+
+
 class DataCenterResponse(BaseModel):
     external_slug: Optional[str] = None
     facility_name: Optional[str] = None

@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import (
-    ISO, Zone, ZoneLMP, Substation, Feeder, Pnode,
-    PipelineRun, HierarchyScore,
+    ISO, Zone, Substation, Feeder, Pnode,
+    PipelineRun, HierarchyScore, SubstationLoadProfile,
 )
 from app.schemas.hierarchy_schemas import (
     SubstationResponse,
@@ -17,7 +17,7 @@ from app.schemas.hierarchy_schemas import (
     FeederResponse,
     HierarchyScoreResponse,
 )
-from app.schemas.responses import LoadshapeHourResponse
+from app.schemas.responses import SubstationLoadshapeHourResponse
 
 router = APIRouter(prefix="/api/v1")
 
@@ -138,34 +138,41 @@ def list_feeders(
     ]
 
 
-@router.get("/substations/{substation_id}/loadshape", response_model=list[LoadshapeHourResponse])
+@router.get("/substations/{substation_id}/loadshape", response_model=list[SubstationLoadshapeHourResponse])
 def get_substation_loadshape(
     substation_id: int,
     month: Optional[int] = Query(default=None, ge=1, le=12),
     db: Session = Depends(get_db),
 ):
-    """Get 24-hour average congestion loadshape for a substation (via its zone)."""
+    """Get 24-hour load profile for a substation from GRIP data.
+
+    Returns hourly low/high load in kW. If a specific month is given,
+    returns that month's profile. Otherwise averages across all 12 months.
+    """
     sub = db.query(Substation).get(substation_id)
     if not sub:
         raise HTTPException(404, f"Substation {substation_id} not found")
-    if not sub.zone_id:
-        return []
 
     query = (
         db.query(
-            ZoneLMP.hour_local,
-            func.avg(func.abs(ZoneLMP.congestion)).label("avg_congestion"),
+            SubstationLoadProfile.hour,
+            func.avg(SubstationLoadProfile.load_low_kw).label("avg_low"),
+            func.avg(SubstationLoadProfile.load_high_kw).label("avg_high"),
         )
-        .filter(ZoneLMP.iso_id == sub.iso_id, ZoneLMP.zone_id == sub.zone_id)
+        .filter(SubstationLoadProfile.substation_id == substation_id)
     )
 
     if month is not None:
-        query = query.filter(ZoneLMP.month == month)
+        query = query.filter(SubstationLoadProfile.month == month)
 
-    rows = query.group_by(ZoneLMP.hour_local).order_by(ZoneLMP.hour_local).all()
+    rows = query.group_by(SubstationLoadProfile.hour).order_by(SubstationLoadProfile.hour).all()
 
     return [
-        LoadshapeHourResponse(hour=row.hour_local, avg_congestion=float(row.avg_congestion or 0))
+        SubstationLoadshapeHourResponse(
+            hour=row.hour,
+            load_low_kw=float(row.avg_low or 0),
+            load_high_kw=float(row.avg_high or 0),
+        )
         for row in rows
     ]
 
