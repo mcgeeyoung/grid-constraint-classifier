@@ -18,6 +18,8 @@ export const useMapStore = defineStore('map', () => {
   const showZones = ref(true)
   const showDERs = ref(true)
   const showSubstations = ref(false)
+  const showDataCenters = ref(false)
+  const showAssets = ref(false)
 
   // Zone color mode
   const zoneColorMode = ref<ZoneColorMode>('classification')
@@ -25,6 +27,7 @@ export const useMapStore = defineStore('map', () => {
   // Selected entities for side panel
   const selectedZoneCode = ref<string | null>(null)
   const selectedSubstationId = ref<number | null>(null)
+  const selectedAssetId = ref<string | null>(null)
 
   function setClickedPoint(point: LatLng) {
     clickedPoint.value = point
@@ -49,9 +52,12 @@ export const useMapStore = defineStore('map', () => {
     showZones,
     showDERs,
     showSubstations,
+    showDataCenters,
+    showAssets,
     zoneColorMode,
     selectedZoneCode,
     selectedSubstationId,
+    selectedAssetId,
     setClickedPoint,
     clearClickedPoint,
     panTo,

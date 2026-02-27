@@ -42,6 +42,20 @@
             color="warning"
             @update:model-value="(v: any) => onSubstationToggle(!!v)"
           />
+          <v-checkbox
+            v-model="mapStore.showDataCenters"
+            label="Data Centers"
+            density="compact"
+            hide-details
+            color="info"
+          />
+          <v-checkbox
+            v-model="mapStore.showAssets"
+            label="WattCarbon Assets"
+            density="compact"
+            hide-details
+            color="purple"
+          />
         </v-card>
       </div>
 
@@ -63,6 +77,7 @@
         <v-tab value="valuation">Valuation</v-tab>
         <v-tab value="zone">Zone</v-tab>
         <v-tab value="substation">Substation</v-tab>
+        <v-tab value="asset">Asset</v-tab>
         <v-tab value="hierarchy">Hierarchy</v-tab>
       </v-tabs>
 
@@ -70,6 +85,7 @@
         <ValuationResult v-if="activeTab === 'valuation'" />
         <ZoneDetail v-else-if="activeTab === 'zone'" />
         <SubstationDetail v-else-if="activeTab === 'substation'" />
+        <AssetDetail v-else-if="activeTab === 'asset'" />
         <HierarchyTree v-else-if="activeTab === 'hierarchy'" />
       </div>
     </div>
@@ -82,6 +98,7 @@ import GridMap from '@/components/map/GridMap.vue'
 import ValuationResult from '@/components/panels/ValuationResult.vue'
 import ZoneDetail from '@/components/panels/ZoneDetail.vue'
 import SubstationDetail from '@/components/panels/SubstationDetail.vue'
+import AssetDetail from '@/components/panels/AssetDetail.vue'
 import HierarchyTree from '@/components/panels/HierarchyTree.vue'
 import { useIsoStore } from '@/stores/isoStore'
 import { useMapStore } from '@/stores/mapStore'
@@ -104,6 +121,11 @@ watch(() => mapStore.selectedZoneCode, (code) => {
 // Switch to substation tab when a substation is selected
 watch(() => mapStore.selectedSubstationId, (id) => {
   if (id) activeTab.value = 'substation'
+})
+
+// Switch to asset tab when an asset is selected
+watch(() => mapStore.selectedAssetId, (id) => {
+  if (id) activeTab.value = 'asset'
 })
 
 // Switch to valuation tab when a valuation completes

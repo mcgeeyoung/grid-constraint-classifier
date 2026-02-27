@@ -32,10 +32,28 @@
       </div>
 
       <!-- Substation loading legend -->
-      <div v-if="mapStore.showSubstations">
+      <div v-if="mapStore.showSubstations" class="mb-2">
         <div class="text-caption font-weight-bold mb-1">Substation Loading</div>
         <div v-for="item in loadingLegend" :key="item.label" class="d-flex align-center ga-1 mb-px">
           <span :style="{ width: '10px', height: '10px', borderRadius: '50%', background: item.color, display: 'inline-block' }" />
+          <span class="text-caption">{{ item.label }}</span>
+        </div>
+      </div>
+
+      <!-- Data center legend -->
+      <div v-if="mapStore.showDataCenters" class="mb-2">
+        <div class="text-caption font-weight-bold mb-1">Data Centers</div>
+        <div v-for="item in dcLegend" :key="item.label" class="d-flex align-center ga-1 mb-px">
+          <span :style="{ width: '10px', height: '10px', borderRadius: '50%', background: item.color, display: 'inline-block' }" />
+          <span class="text-caption">{{ item.label }}</span>
+        </div>
+      </div>
+
+      <!-- WattCarbon assets legend -->
+      <div v-if="mapStore.showAssets">
+        <div class="text-caption font-weight-bold mb-1">WattCarbon Assets</div>
+        <div v-for="item in assetLegend" :key="item.label" class="d-flex align-center ga-1 mb-px">
+          <span :style="{ width: '10px', height: '10px', borderRadius: '50%', background: item.color, border: '1.5px solid #fff', display: 'inline-block' }" />
           <span class="text-caption">{{ item.label }}</span>
         </div>
       </div>
@@ -67,5 +85,20 @@ const loadingLegend = [
   { label: '80-100%', color: '#e67e22' },
   { label: '60-80%', color: '#f1c40f' },
   { label: '< 60%', color: '#2ecc71' },
+]
+
+const dcLegend = [
+  { label: 'Operational', color: '#3498db' },
+  { label: 'Planned', color: '#e67e22' },
+  { label: 'Under Construction', color: '#f1c40f' },
+  { label: 'Proposed', color: '#9b59b6' },
+]
+
+const assetLegend = [
+  { label: 'Solar', color: '#f39c12' },
+  { label: 'Storage', color: '#8e44ad' },
+  { label: 'Demand Response', color: '#2980b9' },
+  { label: 'Wind', color: '#1abc9c' },
+  { label: 'EV Charger', color: '#e74c3c' },
 ]
 </script>

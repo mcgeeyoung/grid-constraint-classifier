@@ -18,6 +18,8 @@
     <ZoneLayer v-if="mapStore.showZones" />
     <DERMarkers v-if="mapStore.showDERs" />
     <SubstationMarkers v-if="mapStore.showSubstations" />
+    <DataCenterMarkers v-if="mapStore.showDataCenters" />
+    <AssetMarkers v-if="mapStore.showAssets" />
     <SitingPopup />
   </l-map>
   <MapLegend />
@@ -30,6 +32,8 @@ import { useMapStore } from '@/stores/mapStore'
 import ZoneLayer from './ZoneLayer.vue'
 import DERMarkers from './DERMarkers.vue'
 import SubstationMarkers from './SubstationMarkers.vue'
+import DataCenterMarkers from './DataCenterMarkers.vue'
+import AssetMarkers from './AssetMarkers.vue'
 import SitingPopup from './SitingPopup.vue'
 import MapLegend from './MapLegend.vue'
 
