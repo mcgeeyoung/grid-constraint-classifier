@@ -6,7 +6,7 @@
 
       <!-- Layer controls (floating) -->
       <div style="position: absolute; top: 12px; left: 12px; z-index: 1000;">
-        <v-card density="compact" class="pa-2" style="background: rgba(30,30,46,0.9);">
+        <v-card density="compact" class="pa-2" style="background: rgba(255,255,255,0.92);">
           <v-checkbox
             v-model="mapStore.showZones"
             label="Zones"
@@ -71,7 +71,7 @@
     <!-- Right panel -->
     <div
       v-if="showPanel"
-      style="width: 400px; border-left: 1px solid #333; overflow-y: auto; background: #1e1e2e;"
+      style="width: 400px; border-left: 1px solid #ddd; overflow-y: auto; background: #ffffff;"
     >
       <div class="pa-2 pb-0">
         <FilterBar />

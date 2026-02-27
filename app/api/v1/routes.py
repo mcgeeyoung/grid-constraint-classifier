@@ -202,7 +202,11 @@ def list_data_centers(
     db: Session = Depends(get_db),
 ):
     """List data centers, filterable by ISO, zone, status."""
-    query = db.query(DataCenter, ISO, Zone).join(ISO).outerjoin(Zone)
+    query = (
+        db.query(DataCenter, ISO, Zone)
+        .join(ISO, DataCenter.iso_id == ISO.id)
+        .outerjoin(Zone, DataCenter.zone_id == Zone.id)
+    )
 
     if iso_id:
         query = query.filter(ISO.iso_code == iso_id.lower())
@@ -249,7 +253,7 @@ def get_recommendations(iso_id: str, db: Session = Depends(get_db)):
 
     results = (
         db.query(DERRecommendation, Zone)
-        .join(Zone)
+        .join(Zone, DERRecommendation.zone_id == Zone.id)
         .filter(DERRecommendation.pipeline_run_id == latest_run.id)
         .order_by(Zone.zone_code)
         .all()
@@ -276,7 +280,7 @@ def list_pipeline_runs(
     db: Session = Depends(get_db),
 ):
     """List pipeline runs."""
-    query = db.query(PipelineRun, ISO).join(ISO)
+    query = db.query(PipelineRun, ISO).join(ISO, PipelineRun.iso_id == ISO.id)
 
     if iso_id:
         query = query.filter(ISO.iso_code == iso_id.lower())

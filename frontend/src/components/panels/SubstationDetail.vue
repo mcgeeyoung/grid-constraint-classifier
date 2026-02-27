@@ -110,7 +110,7 @@
               :x="label.x"
               :y="chartHeight - 1"
               text-anchor="middle"
-              fill="rgba(255,255,255,0.5)"
+              fill="rgba(0,0,0,0.5)"
               font-size="8"
             >{{ label.hour }}</text>
           </svg>

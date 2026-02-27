@@ -68,7 +68,7 @@
         </div>
 
         <!-- Mini value bar -->
-        <div class="mt-1" style="height: 6px; border-radius: 3px; overflow: hidden; background: rgba(255,255,255,0.08);">
+        <div class="mt-1" style="height: 6px; border-radius: 3px; overflow: hidden; background: rgba(0,0,0,0.08);">
           <div
             :style="{
               width: (entry.result.total_constraint_relief_value / maxValue * 100) + '%',

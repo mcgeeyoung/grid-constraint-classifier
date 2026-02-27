@@ -1,6 +1,6 @@
 <template>
-  <div style="position: absolute; bottom: 16px; left: 12px; z-index: 1000;">
-    <v-card density="compact" class="pa-2" style="background: rgba(30,30,46,0.92); min-width: 150px;">
+  <div style="position: absolute; bottom: 16px; right: 12px; z-index: 1000;">
+    <v-card density="compact" class="pa-2" style="background: rgba(255,255,255,0.92); min-width: 150px;">
       <!-- Zone legend -->
       <div v-if="mapStore.showZones" class="mb-2">
         <div class="text-caption font-weight-bold mb-1">
@@ -62,7 +62,7 @@
       <div v-if="mapStore.showAssets">
         <div class="text-caption font-weight-bold mb-1">WattCarbon Assets</div>
         <div v-for="item in assetLegend" :key="item.label" class="d-flex align-center ga-1 mb-px">
-          <span :style="{ width: '10px', height: '10px', borderRadius: '50%', background: item.color, border: '1.5px solid #fff', display: 'inline-block' }" />
+          <span :style="{ width: '10px', height: '10px', borderRadius: '50%', background: item.color, border: '1.5px solid #333', display: 'inline-block' }" />
           <span class="text-caption">{{ item.label }}</span>
         </div>
       </div>

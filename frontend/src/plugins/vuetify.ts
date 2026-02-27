@@ -8,17 +8,17 @@ export default createVuetify({
   components,
   directives,
   theme: {
-    defaultTheme: 'dark',
+    defaultTheme: 'light',
     themes: {
-      dark: {
+      light: {
         colors: {
-          primary: '#3498db',
-          secondary: '#2ecc71',
-          accent: '#e74c3c',
-          warning: '#f1c40f',
-          info: '#9b59b6',
-          surface: '#1e1e2e',
-          background: '#121220',
+          primary: '#2980b9',
+          secondary: '#27ae60',
+          accent: '#c0392b',
+          warning: '#d4a017',
+          info: '#8e44ad',
+          surface: '#ffffff',
+          background: '#f5f5f5',
         },
       },
     },

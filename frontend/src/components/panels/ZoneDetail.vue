@@ -98,7 +98,7 @@
               :x="label.x"
               :y="chartHeight - 1"
               text-anchor="middle"
-              fill="rgba(255,255,255,0.5)"
+              fill="rgba(0,0,0,0.5)"
               font-size="8"
             >{{ label.hour }}</text>
           </svg>
@@ -290,7 +290,7 @@ const RecCard = defineComponent({
   setup(props) {
     return () => h('div', {
       class: 'mb-2 pa-2 rounded',
-      style: 'border: 1px solid #444; background: rgba(255,255,255,0.03);',
+      style: 'border: 1px solid #ddd; background: rgba(0,0,0,0.02);',
     }, [
       h('div', { class: 'd-flex align-center ga-2 mb-1' }, [
         h('span', {

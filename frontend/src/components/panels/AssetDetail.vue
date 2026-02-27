@@ -126,7 +126,7 @@
         <div class="text-caption text-medium-emphasis mb-1">Actual vs. Projected</div>
         <div class="d-flex align-center ga-2 mb-1">
           <span class="text-caption" style="width: 60px;">Projected</span>
-          <div style="flex: 1; height: 12px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+          <div style="flex: 1; height: 12px; background: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden;">
             <div
               :style="{
                 width: projectedBarPct + '%',
@@ -142,7 +142,7 @@
         </div>
         <div class="d-flex align-center ga-2">
           <span class="text-caption" style="width: 60px;">Actual</span>
-          <div style="flex: 1; height: 12px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+          <div style="flex: 1; height: 12px; background: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden;">
             <div
               :style="{
                 width: actualBarPct + '%',
