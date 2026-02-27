@@ -16,7 +16,8 @@ from app.models import (
 )
 from app.schemas.responses import (
     ISOResponse, ZoneResponse, ZoneClassificationResponse,
-    PnodeScoreResponse, ZoneLMPResponse, DataCenterResponse,
+    PnodeScoreResponse, ZoneLMPResponse, LoadshapeHourResponse,
+    DataCenterResponse,
     DERRecommendationResponse, PipelineRunResponse, OverviewResponse,
     ValueSummaryResponse, TopZone,
 )
@@ -155,6 +156,41 @@ def get_zone_lmps(
 
     lmps = query.order_by(ZoneLMP.timestamp_utc.desc()).limit(limit).all()
     return lmps
+
+
+@router.get("/isos/{iso_id}/zones/{zone_code}/loadshape", response_model=list[LoadshapeHourResponse])
+def get_zone_loadshape(
+    iso_id: str,
+    zone_code: str,
+    month: Optional[int] = Query(default=None, ge=1, le=12),
+    db: Session = Depends(get_db),
+):
+    """Get 24-hour average congestion loadshape for a zone."""
+    iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
+    if not iso:
+        raise HTTPException(404, f"ISO '{iso_id}' not found")
+
+    zone = db.query(Zone).filter(Zone.iso_id == iso.id, Zone.zone_code == zone_code).first()
+    if not zone:
+        raise HTTPException(404, f"Zone '{zone_code}' not found in {iso_id}")
+
+    query = (
+        db.query(
+            ZoneLMP.hour_local,
+            func.avg(func.abs(ZoneLMP.congestion)).label("avg_congestion"),
+        )
+        .filter(ZoneLMP.iso_id == iso.id, ZoneLMP.zone_id == zone.id)
+    )
+
+    if month is not None:
+        query = query.filter(ZoneLMP.month == month)
+
+    rows = query.group_by(ZoneLMP.hour_local).order_by(ZoneLMP.hour_local).all()
+
+    return [
+        LoadshapeHourResponse(hour=row.hour_local, avg_congestion=float(row.avg_congestion or 0))
+        for row in rows
+    ]
 
 
 @router.get("/data-centers", response_model=list[DataCenterResponse])

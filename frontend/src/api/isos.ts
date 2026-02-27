@@ -150,6 +150,22 @@ export async function fetchZoneLMPs(
   return data
 }
 
+export interface LoadshapeHour {
+  hour: number
+  avg_congestion: number
+}
+
+export async function fetchZoneLoadshape(
+  isoCode: string,
+  zoneCode: string,
+  month?: number,
+): Promise<LoadshapeHour[]> {
+  const params: Record<string, number> = {}
+  if (month !== undefined) params.month = month
+  const { data } = await client.get<LoadshapeHour[]>(`/isos/${isoCode}/zones/${zoneCode}/loadshape`, { params })
+  return data
+}
+
 export async function fetchOverview(): Promise<Overview[]> {
   const { data } = await client.get<Overview[]>('/overview')
   return data

@@ -69,59 +69,59 @@
           style="max-width: 160px;"
         />
 
-        <div v-if="lmpLoading" class="text-center pa-2">
+        <div v-if="loadshapeLoading" class="text-center pa-2">
           <v-progress-circular indeterminate size="20" color="primary" />
         </div>
 
-        <div v-else-if="lmpData.length > 0">
-          <!-- SVG Sparkline -->
+        <div v-else-if="loadshapeData.length > 0">
+          <!-- 24-hour bar chart -->
           <svg
-            :viewBox="`0 0 ${sparkWidth} ${sparkHeight}`"
-            :width="sparkWidth"
-            :height="sparkHeight"
+            :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
+            :width="chartWidth"
+            :height="chartHeight"
             style="width: 100%; height: auto;"
           >
-            <!-- Zero line -->
-            <line
-              :x1="0" :y1="zeroY" :x2="sparkWidth" :y2="zeroY"
-              stroke="rgba(255,255,255,0.15)" stroke-width="0.5"
+            <rect
+              v-for="bar in bars"
+              :key="bar.hour"
+              :x="bar.x"
+              :y="bar.y"
+              :width="bar.width"
+              :height="bar.height"
+              :fill="bar.color"
+              rx="1"
             />
-            <!-- Congestion area -->
-            <path
-              :d="areaPath"
-              fill="rgba(231, 76, 60, 0.2)"
-            />
-            <!-- Congestion line -->
-            <path
-              :d="linePath"
-              fill="none"
-              stroke="#e74c3c"
-              stroke-width="1"
-            />
+            <!-- X-axis labels -->
+            <text
+              v-for="label in xLabels"
+              :key="label.hour"
+              :x="label.x"
+              :y="chartHeight - 1"
+              text-anchor="middle"
+              fill="rgba(255,255,255,0.5)"
+              font-size="8"
+            >{{ label.hour }}</text>
           </svg>
 
           <!-- Summary stats -->
           <div class="d-flex justify-space-between mt-2 text-caption">
             <div>
               <span class="text-medium-emphasis">Avg:</span>
-              ${{ lmpStats.avg.toFixed(2) }}
+              ${{ loadshapeStats.avg.toFixed(2) }}
             </div>
             <div>
-              <span class="text-medium-emphasis">Max:</span>
-              ${{ lmpStats.max.toFixed(2) }}
+              <span class="text-medium-emphasis">Peak hr:</span>
+              {{ loadshapeStats.peakHour }}:00
             </div>
             <div>
-              <span class="text-medium-emphasis">Congested:</span>
-              {{ lmpStats.congestedPct.toFixed(0) }}%
+              <span class="text-medium-emphasis">Peak:</span>
+              ${{ loadshapeStats.max.toFixed(2) }}
             </div>
-          </div>
-          <div class="text-caption text-medium-emphasis mt-1">
-            {{ lmpData.length }} hours of data
           </div>
         </div>
 
         <div v-else class="text-caption text-medium-emphasis">
-          No LMP data available
+          No congestion data available
         </div>
       </div>
     </div>
@@ -157,7 +157,7 @@
 import { ref, computed, watch, defineComponent, h } from 'vue'
 import { useIsoStore } from '@/stores/isoStore'
 import { useMapStore } from '@/stores/mapStore'
-import { fetchZoneLMPs, type ZoneLMP } from '@/api/isos'
+import { fetchZoneLoadshape, type LoadshapeHour } from '@/api/isos'
 
 const isoStore = useIsoStore()
 const mapStore = useMapStore()
@@ -179,8 +179,8 @@ const rec = computed(() => {
 
 // Congestion profile state
 const showCongestionProfile = ref(false)
-const lmpData = ref<ZoneLMP[]>([])
-const lmpLoading = ref(false)
+const loadshapeData = ref<LoadshapeHour[]>([])
+const loadshapeLoading = ref(false)
 const selectedMonth = ref<number | null>(null)
 
 const monthOptions = [
@@ -199,91 +199,75 @@ const monthOptions = [
   { title: 'December', value: 12 },
 ]
 
-// Load LMP data when profile is expanded or month changes
+// Load loadshape data when profile is expanded or month changes
 watch(
   [() => mapStore.selectedZoneCode, showCongestionProfile, selectedMonth],
   async ([zoneCode, show, month]) => {
     if (!zoneCode || !show || !isoStore.selectedISO) {
-      lmpData.value = []
+      loadshapeData.value = []
       return
     }
-    lmpLoading.value = true
+    loadshapeLoading.value = true
     try {
-      lmpData.value = await fetchZoneLMPs(
+      loadshapeData.value = await fetchZoneLoadshape(
         isoStore.selectedISO,
         zoneCode,
-        720,
         month ?? undefined,
       )
     } catch {
-      lmpData.value = []
+      loadshapeData.value = []
     } finally {
-      lmpLoading.value = false
+      loadshapeLoading.value = false
     }
   },
   { immediate: true },
 )
 
-// Sparkline dimensions
-const sparkWidth = 320
-const sparkHeight = 60
+// Bar chart dimensions
+const chartWidth = 320
+const chartHeight = 80
+const chartPadTop = 4
+const chartPadBottom = 14 // room for x-axis labels
+const barGap = 2
 
-const congestionValues = computed(() => {
-  return lmpData.value
-    .map(d => d.congestion ?? 0)
-    .reverse() // chronological order (endpoint returns desc)
+const loadshapeStats = computed(() => {
+  const data = loadshapeData.value
+  if (data.length === 0) return { avg: 0, max: 0, peakHour: 0 }
+  const vals = data.map(d => d.avg_congestion)
+  const avg = vals.reduce((s, v) => s + v, 0) / vals.length
+  const max = Math.max(...vals)
+  const peakHour = data[vals.indexOf(max)]?.hour ?? 0
+  return { avg, max, peakHour }
 })
 
-const lmpStats = computed(() => {
-  const vals = congestionValues.value
-  if (vals.length === 0) return { avg: 0, max: 0, congestedPct: 0 }
-  const absVals = vals.map(v => Math.abs(v))
-  const avg = absVals.reduce((s, v) => s + v, 0) / vals.length
-  const max = Math.max(...absVals)
-  const congested = vals.filter(v => Math.abs(v) > 1).length
-  return { avg, max, congestedPct: (congested / vals.length) * 100 }
-})
+const bars = computed(() => {
+  const data = loadshapeData.value
+  if (data.length === 0) return []
+  const maxVal = loadshapeStats.value.max || 1
+  const barWidth = (chartWidth - barGap * 24) / 24
+  const plotHeight = chartHeight - chartPadTop - chartPadBottom
 
-const zeroY = computed(() => {
-  const vals = congestionValues.value
-  if (vals.length === 0) return sparkHeight / 2
-  const min = Math.min(...vals, 0)
-  const max = Math.max(...vals, 0)
-  const range = max - min || 1
-  return ((max - 0) / range) * (sparkHeight - 4) + 2
-})
-
-const linePath = computed(() => {
-  const vals = congestionValues.value
-  if (vals.length < 2) return ''
-  const min = Math.min(...vals, 0)
-  const max = Math.max(...vals, 0)
-  const range = max - min || 1
-  const dx = sparkWidth / (vals.length - 1)
-
-  return vals.map((v, i) => {
-    const x = i * dx
-    const y = ((max - v) / range) * (sparkHeight - 4) + 2
-    return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
-  }).join(' ')
-})
-
-const areaPath = computed(() => {
-  const vals = congestionValues.value
-  if (vals.length < 2) return ''
-  const min = Math.min(...vals, 0)
-  const max = Math.max(...vals, 0)
-  const range = max - min || 1
-  const dx = sparkWidth / (vals.length - 1)
-  const zy = zeroY.value
-
-  const points = vals.map((v, i) => {
-    const x = i * dx
-    const y = ((max - v) / range) * (sparkHeight - 4) + 2
-    return `${x.toFixed(1)},${y.toFixed(1)}`
+  return data.map(d => {
+    const ratio = d.avg_congestion / maxVal
+    const height = Math.max(ratio * plotHeight, 1)
+    const x = d.hour * (barWidth + barGap)
+    const y = chartPadTop + plotHeight - height
+    // Intensity color: low = muted, high = bright red
+    const r = Math.round(140 + ratio * 91)  // 140 -> 231
+    const g = Math.round(100 - ratio * 24)  // 100 -> 76
+    const b = Math.round(100 - ratio * 40)  // 100 -> 60
+    const alpha = 0.4 + ratio * 0.6
+    return { hour: d.hour, x, y, width: barWidth, height, color: `rgba(${r},${g},${b},${alpha})` }
   })
+})
 
-  return `M0,${zy} L${points.join(' L')} L${sparkWidth},${zy} Z`
+const xLabels = computed(() => {
+  const hours = [0, 6, 12, 18, 23]
+  const barWidth = (chartWidth - barGap * 24) / 24
+  return hours.map(h => ({
+    hour: h,
+    x: h * (barWidth + barGap) + barWidth / 2,
+  }))
 })
 
 function classificationColor(cls: string): string {

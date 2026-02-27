@@ -62,6 +62,11 @@ class ZoneLMPResponse(BaseModel):
     month: int
 
 
+class LoadshapeHourResponse(BaseModel):
+    hour: int
+    avg_congestion: float
+
+
 class DataCenterResponse(BaseModel):
     external_slug: Optional[str] = None
     facility_name: Optional[str] = None
