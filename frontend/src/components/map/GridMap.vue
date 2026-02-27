@@ -28,9 +28,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet'
 import { useMapStore } from '@/stores/mapStore'
+import { useIsoStore } from '@/stores/isoStore'
 import ZoneLayer from './ZoneLayer.vue'
 import DERMarkers from './DERMarkers.vue'
 import SubstationMarkers from './SubstationMarkers.vue'
@@ -42,13 +43,30 @@ import SitingPopup from './SitingPopup.vue'
 import MapLegend from './MapLegend.vue'
 
 const mapStore = useMapStore()
+const isoStore = useIsoStore()
 const mapRef = ref<InstanceType<typeof LMap> | null>(null)
+const skipCenterSync = ref(false)
+
+// Pan to ISO region when selected, using Leaflet API directly
+watch(() => isoStore.selectedISO, () => {
+  // Suppress onCenterUpdate feedback while we programmatically pan
+  skipCenterSync.value = true
+  nextTick(() => {
+    const map = (mapRef.value as any)?.leafletObject
+    if (map) {
+      map.setView([mapStore.center.lat, mapStore.center.lng], mapStore.zoom)
+    }
+    // Re-enable center sync after Leaflet settles
+    setTimeout(() => { skipCenterSync.value = false }, 500)
+  })
+})
 
 function onMapClick(e: any) {
   mapStore.setClickedPoint({ lat: e.latlng.lat, lng: e.latlng.lng })
 }
 
 function onCenterUpdate(center: any) {
+  if (skipCenterSync.value) return
   if (center && typeof center.lat === 'number') {
     mapStore.center = { lat: center.lat, lng: center.lng }
   }
