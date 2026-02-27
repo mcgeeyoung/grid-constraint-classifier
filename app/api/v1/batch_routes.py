@@ -1,12 +1,11 @@
 """Batch valuation API endpoints."""
 
 from fastapi import APIRouter, Depends, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
 
 from app.auth import require_api_key
 from app.database import get_db
+from app.limiter import limiter
 from app.schemas.batch_schemas import (
     BatchValuationRequest,
     BatchValuationResponse,
@@ -16,8 +15,6 @@ from core.geo_resolver import resolve
 from core.valuation_engine import compute_der_value
 
 router = APIRouter(prefix="/api/v1")
-
-limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post(

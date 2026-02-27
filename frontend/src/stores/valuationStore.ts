@@ -7,6 +7,10 @@ export const useValuationStore = defineStore('valuation', () => {
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
+  // Preserve the inputs that produced the current result
+  const lastDerType = ref<string>('solar')
+  const lastCapacityMw = ref<number>(1.0)
+
   async function runSitingValuation(
     lat: number,
     lon: number,
@@ -16,6 +20,8 @@ export const useValuationStore = defineStore('valuation', () => {
     isLoading.value = true
     error.value = null
     sitingResult.value = null
+    lastDerType.value = derType
+    lastCapacityMw.value = capacityMw
     try {
       sitingResult.value = await prospectiveValuation(lat, lon, derType, capacityMw)
     } catch (e: any) {
@@ -48,6 +54,8 @@ export const useValuationStore = defineStore('valuation', () => {
     sitingResult,
     isLoading,
     error,
+    lastDerType,
+    lastCapacityMw,
     runSitingValuation,
     saveDERLocation,
     clear,

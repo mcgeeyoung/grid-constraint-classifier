@@ -69,6 +69,7 @@ class DERLocationResponse(BaseModel):
     source: str
     wattcarbon_asset_id: Optional[str] = None
     resolution_depth: Optional[str] = None
+    value_tier: Optional[str] = None
 
     class Config:
         from_attributes = True

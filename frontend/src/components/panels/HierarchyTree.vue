@@ -31,6 +31,11 @@
           {{ item.icon ?? 'mdi-circle-small' }}
         </v-icon>
       </template>
+      <template v-slot:append="{ item }">
+        <span v-if="item.subtitle" class="text-caption text-medium-emphasis ml-1">
+          {{ item.subtitle }}
+        </span>
+      </template>
     </v-treeview>
   </div>
 </template>
@@ -49,6 +54,7 @@ const mapStore = useMapStore()
 interface TreeNode {
   id: string
   title: string
+  subtitle?: string
   children?: TreeNode[]
   tier?: string
   icon?: string
@@ -60,43 +66,81 @@ interface TreeNode {
 }
 
 const treeItems = computed<TreeNode[]>(() => {
-  return isoStore.classifications.map(cls => ({
-    id: `zone-${cls.zone_code}`,
-    title: `${cls.zone_code}${cls.zone_name ? ' - ' + cls.zone_name : ''}`,
-    tier: cls.classification,
-    entityType: 'zone',
-    children: [], // lazy-loaded
-  }))
+  return isoStore.classifications.map(cls => {
+    const parts: string[] = []
+    if (cls.avg_abs_congestion != null) {
+      parts.push(`$${cls.avg_abs_congestion.toFixed(1)}/MWh`)
+    }
+    if (cls.congested_hours_pct != null) {
+      parts.push(`${(cls.congested_hours_pct * 100).toFixed(0)}% hrs`)
+    }
+    return {
+      id: `zone-${cls.zone_code}`,
+      title: `${cls.zone_code}${cls.zone_name ? ' - ' + cls.zone_name : ''}`,
+      subtitle: parts.length > 0 ? parts.join(' | ') : undefined,
+      tier: cls.classification,
+      entityType: 'zone',
+      children: [], // lazy-loaded
+    }
+  })
 })
 
 async function loadChildren(item: TreeNode): Promise<void> {
   if (!isoStore.selectedISO) return
 
-  if (item.id.startsWith('zone-')) {
-    const zoneCode = item.id.replace('zone-', '')
-    const subs = await fetchSubstations(isoStore.selectedISO, zoneCode)
-    item.children = subs.map(s => ({
-      id: `sub-${s.id}`,
-      title: s.substation_name ?? `Substation #${s.id}`,
-      icon: 'mdi-flash',
-      iconColor: substationColor(s.peak_loading_pct),
-      lat: s.lat ?? undefined,
-      lon: s.lon ?? undefined,
-      entityType: 'substation',
-      entityId: s.id,
-      children: [], // lazy-loaded
-    }))
-  } else if (item.id.startsWith('sub-')) {
-    const subId = Number(item.id.replace('sub-', ''))
-    const fds = await fetchFeeders(isoStore.selectedISO, subId)
-    item.children = fds.map(f => ({
-      id: `feeder-${f.id}`,
-      title: f.feeder_id_external ?? `Feeder #${f.id}`,
-      icon: 'mdi-transmission-tower',
-      iconColor: substationColor(f.peak_loading_pct),
-      entityType: 'feeder',
-      entityId: f.id,
-    }))
+  try {
+    if (item.id.startsWith('zone-')) {
+      const zoneCode = item.id.replace('zone-', '')
+      const subs = await fetchSubstations(isoStore.selectedISO, zoneCode)
+      item.children = subs.map(s => {
+        const parts: string[] = []
+        if (s.peak_loading_pct != null) {
+          parts.push(`${s.peak_loading_pct.toFixed(0)}%`)
+        }
+        if (s.facility_loading_mw != null && s.facility_rating_mw != null) {
+          parts.push(`${s.facility_loading_mw.toFixed(0)}/${s.facility_rating_mw.toFixed(0)} MW`)
+        }
+        return {
+          id: `sub-${s.id}`,
+          title: s.substation_name ?? `Substation #${s.id}`,
+          subtitle: parts.length > 0 ? parts.join(' | ') : undefined,
+          icon: 'mdi-flash',
+          iconColor: substationColor(s.peak_loading_pct),
+          lat: s.lat ?? undefined,
+          lon: s.lon ?? undefined,
+          entityType: 'substation',
+          entityId: s.id,
+          children: [], // lazy-loaded
+        }
+      })
+    } else if (item.id.startsWith('sub-')) {
+      const subId = Number(item.id.replace('sub-', ''))
+      const fds = await fetchFeeders(subId)
+      item.children = fds.map(f => {
+        const parts: string[] = []
+        if (f.peak_loading_pct != null) {
+          parts.push(`${f.peak_loading_pct.toFixed(0)}%`)
+        }
+        if (f.peak_loading_mw != null && f.capacity_mw != null) {
+          parts.push(`${f.peak_loading_mw.toFixed(1)}/${f.capacity_mw.toFixed(1)} MW`)
+        }
+        if (f.voltage_kv != null) {
+          parts.push(`${f.voltage_kv} kV`)
+        }
+        return {
+          id: `feeder-${f.id}`,
+          title: f.feeder_id_external ?? `Feeder #${f.id}`,
+          subtitle: parts.length > 0 ? parts.join(' | ') : undefined,
+          icon: 'mdi-transmission-tower',
+          iconColor: substationColor(f.peak_loading_pct),
+          entityType: 'feeder',
+          entityId: f.id,
+        }
+      })
+    }
+  } catch (e) {
+    console.error(`Failed to load children for ${item.id}:`, e)
+    item.children = []
   }
 }
 

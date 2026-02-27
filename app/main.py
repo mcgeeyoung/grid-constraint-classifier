@@ -9,21 +9,17 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
 from app.config import settings
+from app.limiter import limiter
 from app.api.v1.routes import router as v1_router
 from app.api.v1.valuation_routes import router as valuation_router
 from app.api.v1.hierarchy_routes import router as hierarchy_router
 from app.api.v1.wattcarbon_routes import router as wattcarbon_router
 from app.api.v1.batch_routes import router as batch_router
-
-# Rate limiter (in-memory, no Redis needed)
-limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title=settings.API_TITLE,

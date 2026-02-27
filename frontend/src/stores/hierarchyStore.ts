@@ -32,10 +32,8 @@ export const useHierarchyStore = defineStore('hierarchy', () => {
     try {
       selectedSubstation.value = await fetchSubstationDetail(substationId)
       if (selectedSubstation.value) {
-        const isoCode = selectedSubstation.value.zone_code?.split('_')[0]?.toLowerCase()
-        if (isoCode) {
-          feeders.value = await fetchFeeders(isoCode, substationId)
-        }
+        // fetchFeeders uses /substations/{id}/feeders, no isoCode needed
+        feeders.value = await fetchFeeders(substationId)
       }
     } finally {
       isLoading.value = false

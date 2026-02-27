@@ -20,6 +20,7 @@
     <SubstationMarkers v-if="mapStore.showSubstations" />
     <SitingPopup />
   </l-map>
+  <MapLegend />
 </template>
 
 <script setup lang="ts">
@@ -30,6 +31,7 @@ import ZoneLayer from './ZoneLayer.vue'
 import DERMarkers from './DERMarkers.vue'
 import SubstationMarkers from './SubstationMarkers.vue'
 import SitingPopup from './SitingPopup.vue'
+import MapLegend from './MapLegend.vue'
 
 const mapStore = useMapStore()
 const mapRef = ref<InstanceType<typeof LMap> | null>(null)

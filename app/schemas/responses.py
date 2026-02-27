@@ -23,6 +23,7 @@ class ZoneResponse(BaseModel):
     centroid_lat: Optional[float] = None
     centroid_lon: Optional[float] = None
     states: Optional[list] = None
+    boundary_geojson: Optional[dict] = None
 
     class Config:
         from_attributes = True

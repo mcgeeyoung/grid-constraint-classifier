@@ -6,6 +6,8 @@ export interface LatLng {
   lng: number
 }
 
+export type ZoneColorMode = 'classification' | 'value'
+
 export const useMapStore = defineStore('map', () => {
   const center = ref<LatLng>({ lat: 39.8, lng: -98.5 })
   const zoom = ref(5)
@@ -16,6 +18,9 @@ export const useMapStore = defineStore('map', () => {
   const showZones = ref(true)
   const showDERs = ref(true)
   const showSubstations = ref(false)
+
+  // Zone color mode
+  const zoneColorMode = ref<ZoneColorMode>('classification')
 
   // Selected entities for side panel
   const selectedZoneCode = ref<string | null>(null)
@@ -44,6 +49,7 @@ export const useMapStore = defineStore('map', () => {
     showZones,
     showDERs,
     showSubstations,
+    zoneColorMode,
     selectedZoneCode,
     selectedSubstationId,
     setClickedPoint,

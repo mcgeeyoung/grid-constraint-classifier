@@ -89,7 +89,32 @@ export async function fetchRecommendations(isoCode: string): Promise<DERRecommen
   return data
 }
 
+export interface TopZone {
+  zone_code: string
+  zone_name: string | null
+  avg_constraint_value: number
+}
+
+export interface ValueSummary {
+  iso_code: string
+  iso_name: string
+  total_zones: number
+  constrained_zones: number
+  total_substations: number
+  overloaded_substations: number
+  total_der_locations: number
+  total_portfolio_value: number
+  avg_value_per_kw_year: number
+  tier_distribution: Record<string, number>
+  top_zones: TopZone[]
+}
+
 export async function fetchOverview(): Promise<Overview[]> {
   const { data } = await client.get<Overview[]>('/overview')
+  return data
+}
+
+export async function fetchOverviewValues(): Promise<ValueSummary[]> {
+  const { data } = await client.get<ValueSummary[]>('/overview/values')
   return data
 }

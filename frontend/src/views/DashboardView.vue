@@ -4,7 +4,7 @@
     <div style="flex: 1; position: relative;">
       <GridMap />
 
-      <!-- Layer toggles (floating) -->
+      <!-- Layer controls (floating) -->
       <div style="position: absolute; top: 12px; left: 12px; z-index: 1000;">
         <v-card density="compact" class="pa-2" style="background: rgba(30,30,46,0.9);">
           <v-checkbox
@@ -14,6 +14,19 @@
             hide-details
             color="primary"
           />
+          <div v-if="mapStore.showZones" class="ml-6 mb-1">
+            <v-btn-toggle
+              v-model="mapStore.zoneColorMode"
+              mandatory
+              density="compact"
+              color="primary"
+              variant="outlined"
+              divided
+            >
+              <v-btn value="classification" size="x-small">Type</v-btn>
+              <v-btn value="value" size="x-small">Value</v-btn>
+            </v-btn-toggle>
+          </div>
           <v-checkbox
             v-model="mapStore.showDERs"
             label="DER Locations"

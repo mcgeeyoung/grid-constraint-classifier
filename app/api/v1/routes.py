@@ -3,13 +3,12 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth import require_api_key
 from app.database import get_db
+from app.limiter import limiter
 from app.models import (
     ISO, Zone, ZoneLMP, PipelineRun, ZoneClassification,
     Pnode, PnodeScore, DataCenter, DERRecommendation,
@@ -21,8 +20,6 @@ from app.schemas.responses import (
     DERRecommendationResponse, PipelineRunResponse, OverviewResponse,
     ValueSummaryResponse, TopZone,
 )
-
-limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/api/v1")
 
@@ -312,6 +309,19 @@ def get_overview(db: Session = Depends(get_db)):
     return result
 
 
+@router.get("/overview/values", response_model=list[ValueSummaryResponse])
+def get_overview_values(db: Session = Depends(get_db)):
+    """Cross-ISO value summary (open, no auth).
+
+    Returns ValueSummaryResponse for each ISO with DER valuations.
+    """
+    isos = db.query(ISO).order_by(ISO.iso_code).all()
+    results = []
+    for iso in isos:
+        results.append(_build_value_summary(db, iso))
+    return results
+
+
 @router.get(
     "/isos/{iso_id}/value-summary",
     response_model=ValueSummaryResponse,
@@ -330,8 +340,11 @@ def get_value_summary(
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
         raise HTTPException(404, f"ISO '{iso_id}' not found")
+    return _build_value_summary(db, iso)
 
-    # Zone counts
+
+def _build_value_summary(db: Session, iso: ISO) -> ValueSummaryResponse:
+    """Build ValueSummaryResponse for a single ISO (shared by both endpoints)."""
     total_zones = db.query(Zone).filter(Zone.iso_id == iso.id).count()
 
     latest_run = (
@@ -375,11 +388,11 @@ def get_value_summary(
             func.coalesce(func.sum(DERValuation.total_constraint_relief_value), 0.0),
             func.coalesce(func.avg(
                 DERValuation.total_constraint_relief_value
-                / (DERLocation.capacity_mw * 1000)
+                / func.nullif(DERLocation.capacity_mw * 1000, 0)
             ), 0.0),
         )
         .join(DERLocation, DERValuation.der_location_id == DERLocation.id)
-        .filter(DERLocation.iso_id == iso.id)
+        .filter(DERLocation.iso_id == iso.id, DERLocation.capacity_mw > 0)
         .first()
     )
     total_portfolio_value = float(val_agg[0]) if val_agg else 0.0

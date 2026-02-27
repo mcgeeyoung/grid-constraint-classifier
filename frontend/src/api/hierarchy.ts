@@ -61,7 +61,6 @@ export async function fetchSubstationDetail(substationId: number): Promise<Subst
 }
 
 export async function fetchFeeders(
-  isoCode: string,
   substationId: number,
 ): Promise<Feeder[]> {
   const { data } = await client.get<Feeder[]>(`/substations/${substationId}/feeders`)

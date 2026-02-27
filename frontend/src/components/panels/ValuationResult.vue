@@ -140,8 +140,8 @@ async function saveDER() {
   const ok = await valuationStore.saveDERLocation(
     geo.value.lat,
     geo.value.lon,
-    'solar', // default
-    result.value?.effective_capacity_mw ?? 1,
+    valuationStore.lastDerType,
+    valuationStore.lastCapacityMw,
   )
   isSaving.value = false
   if (ok && isoStore.selectedISO) {

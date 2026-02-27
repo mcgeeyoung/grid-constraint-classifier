@@ -1,10 +1,13 @@
 """API key authentication dependency."""
 
+import logging
 import os
 from typing import Optional, Set
 
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
+
+logger = logging.getLogger(__name__)
 
 _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
@@ -29,7 +32,7 @@ def require_api_key(
 
     valid_keys = _load_api_keys()
     if not valid_keys:
-        # No keys configured = auth disabled (dev mode)
+        logger.warning("GCC_API_KEYS not configured: API key auth disabled (dev mode)")
         return api_key
 
     if api_key not in valid_keys:

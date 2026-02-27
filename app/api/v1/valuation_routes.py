@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import ISO, Zone, Substation, DERLocation
+from app.models import ISO, Zone, Substation, DERLocation, DERValuation
 from app.schemas.valuation_schemas import (
     ProspectiveValuationRequest,
     CreateDERLocationRequest,
@@ -145,12 +145,13 @@ def list_der_locations(
     limit: int = Query(default=100, le=5000),
     db: Session = Depends(get_db),
 ):
-    """List DER locations with optional filters."""
+    """List DER locations with optional filters. Includes latest value_tier."""
     query = (
-        db.query(DERLocation, ISO, Zone, Substation)
+        db.query(DERLocation, ISO, Zone, Substation, DERValuation)
         .join(ISO, DERLocation.iso_id == ISO.id)
         .outerjoin(Zone, DERLocation.zone_id == Zone.id)
         .outerjoin(Substation, DERLocation.substation_id == Substation.id)
+        .outerjoin(DERValuation, DERValuation.der_location_id == DERLocation.id)
     )
 
     if iso_id:
@@ -177,8 +178,9 @@ def list_der_locations(
             lon=loc.lon,
             source=loc.source,
             wattcarbon_asset_id=loc.wattcarbon_asset_id,
+            value_tier=val.value_tier if val else None,
         )
-        for loc, iso, zone, sub in results
+        for loc, iso, zone, sub, val in results
     ]
 
 
