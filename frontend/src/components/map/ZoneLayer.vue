@@ -35,12 +35,16 @@ const zonesWithGeo = computed<ZoneGeo[]>(() => {
 
   const filters = mapStore.filterClassifications
   return isoStore.zones
-    .filter((z: any) => z.boundary_geojson)
-    .map((z: any) => ({
+    .filter(z => z.boundary_geojson)
+    .map(z => ({
       zone_code: z.zone_code,
       classification: clsMap.get(z.zone_code)?.classification ?? 'unconstrained',
       congestion: clsMap.get(z.zone_code)?.congestion ?? null,
-      geojson: z.boundary_geojson,
+      geojson: {
+        type: 'Feature' as const,
+        properties: { zone_code: z.zone_code },
+        geometry: z.boundary_geojson,
+      },
     }))
     .filter(z => filters.length === 0 || filters.includes(z.classification))
 })

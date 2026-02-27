@@ -14,6 +14,7 @@ export interface Zone {
   centroid_lat: number | null
   centroid_lon: number | null
   states: string[] | null
+  boundary_geojson: Record<string, any> | null
 }
 
 export interface ZoneClassification {
