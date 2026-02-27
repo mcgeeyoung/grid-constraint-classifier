@@ -67,6 +67,21 @@ export async function fetchFeeders(
   return data
 }
 
+export interface LoadshapeHour {
+  hour: number
+  avg_congestion: number
+}
+
+export async function fetchSubstationLoadshape(
+  substationId: number,
+  month?: number,
+): Promise<LoadshapeHour[]> {
+  const params: Record<string, number> = {}
+  if (month !== undefined) params.month = month
+  const { data } = await client.get<LoadshapeHour[]>(`/substations/${substationId}/loadshape`, { params })
+  return data
+}
+
 export async function fetchHierarchyScores(
   level?: string,
   entityId?: number,

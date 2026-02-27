@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import (
-    ISO, Zone, Substation, Feeder, Pnode,
+    ISO, Zone, ZoneLMP, Substation, Feeder, Pnode,
     PipelineRun, HierarchyScore,
 )
 from app.schemas.hierarchy_schemas import (
@@ -17,6 +17,7 @@ from app.schemas.hierarchy_schemas import (
     FeederResponse,
     HierarchyScoreResponse,
 )
+from app.schemas.responses import LoadshapeHourResponse
 
 router = APIRouter(prefix="/api/v1")
 
@@ -134,6 +135,38 @@ def list_feeders(
             voltage_kv=f.voltage_kv,
         )
         for f in feeders
+    ]
+
+
+@router.get("/substations/{substation_id}/loadshape", response_model=list[LoadshapeHourResponse])
+def get_substation_loadshape(
+    substation_id: int,
+    month: Optional[int] = Query(default=None, ge=1, le=12),
+    db: Session = Depends(get_db),
+):
+    """Get 24-hour average congestion loadshape for a substation (via its zone)."""
+    sub = db.query(Substation).get(substation_id)
+    if not sub:
+        raise HTTPException(404, f"Substation {substation_id} not found")
+    if not sub.zone_id:
+        return []
+
+    query = (
+        db.query(
+            ZoneLMP.hour_local,
+            func.avg(func.abs(ZoneLMP.congestion)).label("avg_congestion"),
+        )
+        .filter(ZoneLMP.iso_id == sub.iso_id, ZoneLMP.zone_id == sub.zone_id)
+    )
+
+    if month is not None:
+        query = query.filter(ZoneLMP.month == month)
+
+    rows = query.group_by(ZoneLMP.hour_local).order_by(ZoneLMP.hour_local).all()
+
+    return [
+        LoadshapeHourResponse(hour=row.hour_local, avg_congestion=float(row.avg_congestion or 0))
+        for row in rows
     ]
 
 
