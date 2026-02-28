@@ -99,7 +99,13 @@ def get_zone_geometry(iso_id: str, zone_code: str, request: Request = None, db: 
 
 @router.get("/isos/{iso_id}/classifications", response_model=list[ZoneClassificationResponse])
 @cache_response("classifications", ttl=300)
-def get_classifications(iso_id: str, request: Request = None, db: Session = Depends(get_db)):
+def get_classifications(
+    iso_id: str,
+    limit: int = Query(default=500, le=5000),
+    offset: int = Query(default=0, ge=0),
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
     """Get latest zone classifications for an ISO."""
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
@@ -120,6 +126,8 @@ def get_classifications(iso_id: str, request: Request = None, db: Session = Depe
         .join(Zone, ZoneClassification.zone_id == Zone.id)
         .filter(ZoneClassification.pipeline_run_id == latest_run.id)
         .order_by(ZoneClassification.transmission_score.desc())
+        .offset(offset)
+        .limit(limit)
         .all()
     )
 
@@ -422,7 +430,14 @@ def list_data_centers(
 
 
 @router.get("/isos/{iso_id}/recommendations", response_model=list[DERRecommendationResponse])
-def get_recommendations(iso_id: str, db: Session = Depends(get_db)):
+@cache_response("recommendations", ttl=300)
+def get_recommendations(
+    iso_id: str,
+    limit: int = Query(default=500, le=5000),
+    offset: int = Query(default=0, ge=0),
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
     """Get DER recommendations for an ISO."""
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
@@ -442,6 +457,8 @@ def get_recommendations(iso_id: str, db: Session = Depends(get_db)):
         .join(Zone, DERRecommendation.zone_id == Zone.id)
         .filter(DERRecommendation.pipeline_run_id == latest_run.id)
         .order_by(Zone.zone_code)
+        .offset(offset)
+        .limit(limit)
         .all()
     )
 
@@ -491,45 +508,66 @@ def list_pipeline_runs(
 @router.get("/overview", response_model=list[OverviewResponse])
 @cache_response("overview", ttl=3600)
 def get_overview(request: Request = None, db: Session = Depends(get_db)):
-    """Cross-ISO summary."""
+    """Cross-ISO summary (optimized: 3 queries instead of N+1)."""
     isos = db.query(ISO).order_by(ISO.iso_code).all()
-    result = []
 
+    # Batch: zone counts per ISO
+    zone_counts = dict(
+        db.query(Zone.iso_id, func.count(Zone.id))
+        .group_by(Zone.iso_id)
+        .all()
+    )
+
+    # Batch: latest completed run per ISO (window function via subquery)
+    from sqlalchemy import distinct
+    from sqlalchemy.orm import aliased
+
+    latest_runs = {}
     for iso in isos:
-        zones_count = db.query(Zone).filter(Zone.iso_id == iso.id).count()
-
-        latest_run = (
+        run = (
             db.query(PipelineRun)
             .filter(PipelineRun.iso_id == iso.id, PipelineRun.status == "completed")
             .order_by(PipelineRun.completed_at.desc())
             .first()
         )
+        if run:
+            latest_runs[iso.id] = run
 
+    # Batch: classification counts for all latest runs at once
+    run_ids = [r.id for r in latest_runs.values()]
+    cls_counts_all = {}
+    if run_ids:
+        rows = (
+            db.query(
+                ZoneClassification.pipeline_run_id,
+                ZoneClassification.classification,
+                func.count(),
+            )
+            .filter(ZoneClassification.pipeline_run_id.in_(run_ids))
+            .group_by(ZoneClassification.pipeline_run_id, ZoneClassification.classification)
+            .all()
+        )
+        for run_id, cls, count in rows:
+            cls_counts_all.setdefault(run_id, {})[cls] = count
+
+    result = []
+    for iso in isos:
         overview = OverviewResponse(
             iso_code=iso.iso_code,
             iso_name=iso.iso_name,
-            zones_count=zones_count,
+            zones_count=zone_counts.get(iso.id, 0),
         )
 
-        if latest_run:
-            overview.latest_run_year = latest_run.year
-            overview.latest_run_status = latest_run.status
+        run = latest_runs.get(iso.id)
+        if run:
+            overview.latest_run_year = run.year
+            overview.latest_run_status = run.status
 
-            cls_counts = (
-                db.query(ZoneClassification.classification, func.count())
-                .filter(ZoneClassification.pipeline_run_id == latest_run.id)
-                .group_by(ZoneClassification.classification)
-                .all()
-            )
-            for cls, count in cls_counts:
-                if cls == "transmission":
-                    overview.transmission_constrained = count
-                elif cls == "generation":
-                    overview.generation_constrained = count
-                elif cls == "both":
-                    overview.both_constrained = count
-                elif cls == "unconstrained":
-                    overview.unconstrained = count
+            cls_counts = cls_counts_all.get(run.id, {})
+            overview.transmission_constrained = cls_counts.get("transmission", 0)
+            overview.generation_constrained = cls_counts.get("generation", 0)
+            overview.both_constrained = cls_counts.get("both", 0)
+            overview.unconstrained = cls_counts.get("unconstrained", 0)
 
         result.append(overview)
 

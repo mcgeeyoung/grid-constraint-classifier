@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, Text, ForeignKey, UniqueConstraint, JSON
+from sqlalchemy import String, Float, Text, ForeignKey, Index, UniqueConstraint, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -12,6 +12,8 @@ class DERRecommendation(Base):
     __tablename__ = "der_recommendations"
     __table_args__ = (
         UniqueConstraint("pipeline_run_id", "zone_id", name="uq_der_recs"),
+        Index("ix_der_recs_pipeline_run_id", "pipeline_run_id"),
+        Index("ix_der_recs_zone_id", "zone_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
