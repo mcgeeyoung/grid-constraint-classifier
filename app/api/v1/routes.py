@@ -3,7 +3,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.auth import require_api_key
@@ -295,7 +295,11 @@ def get_zone_loadshape(
     month: Optional[int] = Query(default=None, ge=1, le=12),
     db: Session = Depends(get_db),
 ):
-    """Get 24-hour average congestion loadshape for a zone."""
+    """Get 24-hour average congestion loadshape for a zone.
+
+    Uses pre-computed materialized views (zone_lmp_hourly_avg / zone_lmp_hourly_avg_annual)
+    for fast retrieval. Falls back to live aggregation if views don't exist yet.
+    """
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
         raise HTTPException(404, f"ISO '{iso_id}' not found")
@@ -303,6 +307,37 @@ def get_zone_loadshape(
     zone = db.query(Zone).filter(Zone.iso_id == iso.id, Zone.zone_code == zone_code).first()
     if not zone:
         raise HTTPException(404, f"Zone '{zone_code}' not found in {iso_id}")
+
+    # Try materialized view first (instant), fall back to live aggregation
+    try:
+        if month is not None:
+            rows = db.execute(
+                text("""
+                    SELECT hour_local, avg_abs_congestion AS avg_congestion
+                    FROM zone_lmp_hourly_avg
+                    WHERE iso_id = :iso_id AND zone_id = :zone_id AND month = :month
+                    ORDER BY hour_local
+                """),
+                {"iso_id": iso.id, "zone_id": zone.id, "month": month},
+            ).fetchall()
+        else:
+            rows = db.execute(
+                text("""
+                    SELECT hour_local, avg_abs_congestion AS avg_congestion
+                    FROM zone_lmp_hourly_avg_annual
+                    WHERE iso_id = :iso_id AND zone_id = :zone_id
+                    ORDER BY hour_local
+                """),
+                {"iso_id": iso.id, "zone_id": zone.id},
+            ).fetchall()
+
+        return [
+            LoadshapeHourResponse(hour=row.hour_local, avg_congestion=float(row.avg_congestion or 0))
+            for row in rows
+        ]
+    except Exception:
+        # Materialized views may not exist yet; fall back to live query
+        db.rollback()
 
     query = (
         db.query(
@@ -689,3 +724,18 @@ def _build_value_summary(db: Session, iso: ISO) -> ValueSummaryResponse:
         tier_distribution=tier_distribution,
         top_zones=top_zones,
     )
+
+
+@router.post(
+    "/admin/refresh-matviews",
+    dependencies=[Depends(require_api_key)],
+)
+def refresh_matviews(db: Session = Depends(get_db)):
+    """Manually refresh materialized views for LMP aggregations.
+
+    Requires X-API-Key header. Use after bulk data loads or to force
+    re-computation of hourly aggregation views.
+    """
+    from app.matviews import refresh_materialized_views
+    refresh_materialized_views(db)
+    return {"status": "ok", "views_refreshed": ["zone_lmp_hourly_avg", "zone_lmp_hourly_avg_annual"]}

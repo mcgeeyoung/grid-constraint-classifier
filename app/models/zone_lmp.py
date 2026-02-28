@@ -1,4 +1,14 @@
-"""Zone-level LMP time series model."""
+"""Zone-level LMP time series model.
+
+The zone_lmps table is LIST-partitioned by iso_id in PostgreSQL.
+Each ISO gets its own physical partition (zone_lmps_iso_1, zone_lmps_iso_2, etc.)
+for efficient per-ISO queries. The composite primary key (id, iso_id) is required
+by PostgreSQL partitioning.
+
+Pre-computed aggregations are available via materialized views:
+  - zone_lmp_hourly_avg: per iso/zone/hour/month aggregates
+  - zone_lmp_hourly_avg_annual: per iso/zone/hour aggregates (all months)
+"""
 
 from datetime import datetime
 from typing import Optional
@@ -19,10 +29,12 @@ class ZoneLMP(Base):
         Index("ix_zone_lmps_iso_zone_ts", "iso_id", "zone_id", "timestamp_utc"),
         Index("ix_zone_lmps_hour_local", "hour_local"),
         Index("ix_zone_lmps_month", "month"),
+        # PostgreSQL list partitioning requires partition key in PK
+        {"postgresql_partition_by": "LIST (iso_id)"},
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    iso_id: Mapped[int] = mapped_column(ForeignKey("isos.id"), nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    iso_id: Mapped[int] = mapped_column(ForeignKey("isos.id"), primary_key=True)
     zone_id: Mapped[int] = mapped_column(ForeignKey("zones.id"), nullable=False)
     timestamp_utc: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     lmp: Mapped[float] = mapped_column(Float, nullable=False)

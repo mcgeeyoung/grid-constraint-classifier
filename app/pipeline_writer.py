@@ -921,8 +921,13 @@ class PipelineWriter:
                 self._run.error_message = str(error)[:1000]
             self.db.commit()
             logger.info(f"DB: Pipeline run #{self._run.id} -> {self._run.status}")
-            # Invalidate cached API responses for this ISO
+            # Post-completion tasks: refresh views + invalidate caches
             if self._run.status == "completed":
+                try:
+                    from app.matviews import refresh_materialized_views
+                    refresh_materialized_views(self.db)
+                except Exception as mv_err:
+                    logger.debug(f"Materialized view refresh skipped: {mv_err}")
                 try:
                     from app.cache import invalidate_iso_cache
                     from app.api.v1.tile_routes import clear_tile_etag
