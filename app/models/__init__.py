@@ -28,6 +28,7 @@ from .resource_need import ResourceNeed
 from .congestion import BalancingAuthority, InterfaceLMP, BAHourlyData, CongestionScore
 from .interconnection_queue import InterconnectionQueue
 from .docket_watchlist import DocketWatch
+from .data_coverage import DataCoverage
 
 __all__ = [
     "Base",
@@ -64,4 +65,5 @@ __all__ = [
     "CongestionScore",
     "InterconnectionQueue",
     "DocketWatch",
+    "DataCoverage",
 ]
