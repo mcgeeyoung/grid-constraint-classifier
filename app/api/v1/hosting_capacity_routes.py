@@ -1,11 +1,11 @@
 """API v1 routes for hosting capacity data (utilities, feeders, summaries)."""
 
-import math
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.api.v1.spatial import BBox, parse_bbox
 from app.database import get_db
 from app.models import (
     ISO, Utility, HostingCapacityRecord,
@@ -72,10 +72,7 @@ def list_hosting_capacity(
     code: str,
     limit: int = Query(default=200, le=5000),
     offset: int = Query(default=0, ge=0),
-    bbox: Optional[str] = Query(
-        None,
-        description="Bounding box: west,south,east,north",
-    ),
+    bbox: Optional[BBox] = Depends(parse_bbox),
     constraint: Optional[str] = Query(
         None, description="Filter by constraining_metric",
     ),
@@ -84,7 +81,10 @@ def list_hosting_capacity(
     ),
     db: Session = Depends(get_db),
 ):
-    """List hosting capacity records for a utility with optional filters."""
+    """List hosting capacity records for a utility with optional filters.
+
+    Supports bbox filtering: ?bbox=west,south,east,north
+    """
     util = _get_utility(db, code)
 
     query = (
@@ -93,11 +93,7 @@ def list_hosting_capacity(
     )
 
     if bbox:
-        west, south, east, north = _parse_bbox(bbox)
-        query = query.filter(
-            HostingCapacityRecord.centroid_lat.between(south, north),
-            HostingCapacityRecord.centroid_lon.between(west, east),
-        )
+        query = query.filter(bbox.filter_column(HostingCapacityRecord.geom))
 
     if constraint:
         query = query.filter(
@@ -142,11 +138,14 @@ def list_hosting_capacity(
 def hosting_capacity_geojson(
     code: str,
     limit: int = Query(default=5000, le=50000),
-    bbox: Optional[str] = Query(None),
+    bbox: Optional[BBox] = Depends(parse_bbox),
     constraint: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
-    """Export hosting capacity records as a GeoJSON FeatureCollection."""
+    """Export hosting capacity records as a GeoJSON FeatureCollection.
+
+    Supports bbox filtering: ?bbox=west,south,east,north
+    """
     util = _get_utility(db, code)
 
     query = (
@@ -156,11 +155,7 @@ def hosting_capacity_geojson(
     )
 
     if bbox:
-        west, south, east, north = _parse_bbox(bbox)
-        query = query.filter(
-            HostingCapacityRecord.centroid_lat.between(south, north),
-            HostingCapacityRecord.centroid_lon.between(west, east),
-        )
+        query = query.filter(bbox.filter_column(HostingCapacityRecord.geom))
 
     if constraint:
         query = query.filter(
@@ -283,36 +278,46 @@ def hosting_capacity_nearby(
     limit: int = Query(default=50, le=500),
     db: Session = Depends(get_db),
 ):
-    """Find hosting capacity records near a point, across all utilities."""
-    # Approximate degree offset for bounding box pre-filter
-    lat_offset = radius_km / 111.0
-    lon_offset = radius_km / (111.0 * max(math.cos(math.radians(lat)), 0.01))
+    """Find hosting capacity records near a point, across all utilities.
 
-    candidates = (
-        db.query(HostingCapacityRecord, Utility)
-        .join(Utility, HostingCapacityRecord.utility_id == Utility.id)
-        .filter(
-            HostingCapacityRecord.centroid_lat.isnot(None),
-            HostingCapacityRecord.centroid_lat.between(
-                lat - lat_offset, lat + lat_offset,
-            ),
-            HostingCapacityRecord.centroid_lon.between(
-                lon - lon_offset, lon + lon_offset,
-            ),
-        )
-        .all()
+    Uses PostGIS ST_DWithin for efficient spatial search with GiST index,
+    then ST_Distance for exact distance computation and sorting.
+    """
+    from geoalchemy2.functions import ST_DWithin, ST_Distance, ST_MakePoint, ST_SetSRID
+    from geoalchemy2.types import Geography
+    from sqlalchemy import cast, func
+
+    # Build the search point
+    search_point = ST_SetSRID(ST_MakePoint(lon, lat), 4326)
+
+    # ST_DWithin on geography type uses meters
+    radius_m = radius_km * 1000
+
+    # Distance expression (meters, using geography cast for accuracy)
+    dist_expr = ST_Distance(
+        cast(HostingCapacityRecord.geom, Geography),
+        cast(search_point, Geography),
     )
 
-    # Compute exact haversine distance and filter
-    results = []
-    for record, util in candidates:
-        dist = _haversine(lat, lon, record.centroid_lat, record.centroid_lon)
-        if dist <= radius_km:
-            results.append((record, util, dist))
-
-    # Sort by distance and limit
-    results.sort(key=lambda x: x[2])
-    results = results[:limit]
+    results = (
+        db.query(
+            HostingCapacityRecord,
+            Utility,
+            (dist_expr / 1000.0).label("distance_km"),
+        )
+        .join(Utility, HostingCapacityRecord.utility_id == Utility.id)
+        .filter(
+            HostingCapacityRecord.geom.isnot(None),
+            ST_DWithin(
+                cast(HostingCapacityRecord.geom, Geography),
+                cast(search_point, Geography),
+                radius_m,
+            ),
+        )
+        .order_by(dist_expr)
+        .limit(limit)
+        .all()
+    )
 
     return [
         HCNearbyResponse(
@@ -347,28 +352,4 @@ def _get_utility(db: Session, code: str) -> Utility:
     return util
 
 
-def _parse_bbox(bbox: str) -> tuple[float, float, float, float]:
-    """Parse bbox string into (west, south, east, north)."""
-    parts = bbox.split(",")
-    if len(parts) != 4:
-        raise HTTPException(
-            400, "bbox must have 4 comma-separated values: west,south,east,north",
-        )
-    try:
-        return tuple(float(p.strip()) for p in parts)
-    except ValueError:
-        raise HTTPException(400, "bbox values must be numeric")
 
-
-def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Haversine distance in km between two lat/lon points."""
-    R = 6371.0
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = (
-        math.sin(dlat / 2) ** 2
-        + math.cos(math.radians(lat1))
-        * math.cos(math.radians(lat2))
-        * math.sin(dlon / 2) ** 2
-    )
-    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
