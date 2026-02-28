@@ -15,6 +15,7 @@ import pandas as pd
 from adapters.arcgis_client import ArcGISClient
 
 from .base import HostingCapacityAdapter, UtilityHCConfig
+from .normalizer import normalize_hosting_capacity
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class ArcGISHostingCapacityAdapter(HostingCapacityAdapter):
             return pd.DataFrame()
 
         df = self._features_to_dataframe(features)
+        df = normalize_hosting_capacity(df, self.config)
 
         cache.parent.mkdir(parents=True, exist_ok=True)
         df.to_parquet(cache, index=False)
