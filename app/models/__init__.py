@@ -27,6 +27,7 @@ from .load_forecast import LoadForecast
 from .resource_need import ResourceNeed
 from .congestion import BalancingAuthority, InterfaceLMP, BAHourlyData, CongestionScore
 from .interconnection_queue import InterconnectionQueue
+from .docket_watchlist import DocketWatch
 
 __all__ = [
     "Base",
@@ -62,4 +63,5 @@ __all__ = [
     "BAHourlyData",
     "CongestionScore",
     "InterconnectionQueue",
+    "DocketWatch",
 ]

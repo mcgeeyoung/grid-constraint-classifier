@@ -1,0 +1,111 @@
+[
+  {
+    "state": "CA",
+    "docket_number": "R.21-06-017",
+    "title": "OIR to Advance Demand Flexibility Through Electric Rates",
+    "filing_type": "DER",
+    "priority": 1,
+    "notes": "Interconnection/Rule 21 modernization, DER integration"
+  },
+  {
+    "state": "CA",
+    "docket_number": "R.20-05-003",
+    "title": "Development of the Integrated Resource Planning Process",
+    "filing_type": "IRP",
+    "priority": 1,
+    "notes": "Statewide IRP, resource adequacy, system needs"
+  },
+  {
+    "state": "CA",
+    "docket_number": "R.14-08-013",
+    "title": "Distribution Resources Plans (DRP)",
+    "filing_type": "DRP",
+    "priority": 1,
+    "notes": "Grid Needs Assessment, hosting capacity, DER growth scenarios"
+  },
+  {
+    "state": "CA",
+    "docket_number": "R.22-07-005",
+    "title": "Modernize the Electric Grid for a High DER Future",
+    "filing_type": "DER",
+    "priority": 1,
+    "notes": "Grid modernization, DER integration standards"
+  },
+  {
+    "state": "VA",
+    "docket_number": "PUR-2023-00066",
+    "title": "Dominion Energy Virginia 2023 Integrated Resource Plan",
+    "utility_name": "Dominion Energy Virginia",
+    "filing_type": "IRP",
+    "priority": 1,
+    "notes": "Dominion IRP, filed every 3 years"
+  },
+  {
+    "state": "VA",
+    "docket_number": "PUR-2024-00063",
+    "title": "Dominion Energy Virginia Rate Case",
+    "utility_name": "Dominion Energy Virginia",
+    "filing_type": "rate_case",
+    "priority": 2,
+    "notes": "Dominion rate case with load forecast and capital plan data"
+  },
+  {
+    "state": "NC",
+    "docket_number": "E-100 Sub 190",
+    "title": "2023 Biennial IRP and Carbon Plan",
+    "utility_name": "Duke Energy Carolinas/Duke Energy Progress",
+    "filing_type": "IRP",
+    "priority": 1,
+    "notes": "Duke Energy IRP with Carbon Plan compliance, resource needs"
+  },
+  {
+    "state": "NC",
+    "docket_number": "E-100 Sub 179",
+    "title": "Competitive Procurement of Renewable Energy (CPRE)",
+    "filing_type": "DER",
+    "priority": 2,
+    "notes": "Duke competitive solar procurement program"
+  },
+  {
+    "state": "NC",
+    "docket_number": "E-100 Sub 101",
+    "title": "Avoided Cost and Interconnection Standards",
+    "filing_type": "interconnection",
+    "priority": 2,
+    "notes": "NC interconnection standards, avoided cost rates"
+  },
+  {
+    "state": "NY",
+    "docket_number": "14-01299",
+    "title": "Reforming the Energy Vision (REV) Track 2",
+    "filing_type": "REV",
+    "priority": 1,
+    "notes": "NY REV proceedings, DER valuation framework"
+  },
+  {
+    "state": "NY",
+    "docket_number": "20-00340",
+    "title": "Distribution System Planning",
+    "filing_type": "DRP",
+    "priority": 1,
+    "notes": "NY utility distribution system plans, hosting capacity"
+  },
+  {
+    "state": "NY",
+    "docket_number": "15-E-0302",
+    "title": "ConEd Rate Case and DER Integration",
+    "utility_name": "Consolidated Edison",
+    "filing_type": "rate_case",
+    "priority": 2,
+    "notes": "ConEd rate case, demand response, DER programs"
+  },
+  {
+    "state": "NY",
+    "docket_number": "20-E-0197",
+    "title": "National Grid Rate Case",
+    "utility_name": "National Grid",
+    "filing_type": "rate_case",
+    "priority": 2,
+    "notes": "National Grid rate case with grid modernization components"
+  }
+]
