@@ -4,13 +4,18 @@ Serves vector tiles directly from PostGIS using ST_AsMVT.
 Each layer returns geometry + key attributes for data-driven styling.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+import hashlib
+
+from fastapi import APIRouter, Depends, HTTPException, Header, Response
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 
 router = APIRouter(prefix="/api/v1/tiles")
+
+# Cached ETag value (recomputed when pipeline runs complete)
+_etag_cache: dict[str, str] = {}
 
 # Valid layer names and their configurations
 LAYER_CONFIG = {
@@ -169,6 +174,30 @@ def _build_tile_query(
     return sql
 
 
+def _get_etag(db: Session) -> str:
+    """Compute an ETag based on the latest pipeline run completion time.
+
+    Cached in-process so we don't query on every tile request.
+    """
+    if "current" in _etag_cache:
+        return _etag_cache["current"]
+
+    row = db.execute(
+        text(
+            "SELECT MAX(completed_at) FROM pipeline_runs WHERE status = 'completed'"
+        )
+    ).scalar()
+    tag_source = str(row) if row else "empty"
+    etag = hashlib.md5(tag_source.encode()).hexdigest()
+    _etag_cache["current"] = etag
+    return etag
+
+
+def clear_tile_etag():
+    """Clear the cached ETag (called after pipeline run completes)."""
+    _etag_cache.pop("current", None)
+
+
 @router.get(
     "/{layer}/{z}/{x}/{y}.mvt",
     response_class=Response,
@@ -182,6 +211,7 @@ def get_vector_tile(
     z: int,
     x: int,
     y: int,
+    if_none_match: str = Header(None),
     db: Session = Depends(get_db),
 ):
     """Serve a Mapbox Vector Tile for the given layer and tile coordinates.
@@ -189,13 +219,20 @@ def get_vector_tile(
     Layers: zones, pnodes, data_centers, substations, transmission_lines,
     feeders, der_locations.
 
-    Includes relevant attributes for data-driven styling in MapLibre GL JS.
+    Supports ETag/If-None-Match for conditional requests. Returns 304
+    when the client's cached tile is still valid.
     """
     if layer not in LAYER_CONFIG:
         raise HTTPException(
             404,
             f"Unknown layer '{layer}'. Valid layers: {', '.join(LAYER_CONFIG.keys())}",
         )
+
+    etag = _get_etag(db)
+
+    # Return 304 if client has a matching ETag
+    if if_none_match and if_none_match.strip('"') == etag:
+        return Response(status_code=304)
 
     sql = _build_tile_query(layer, z, x, y)
     result = db.execute(
@@ -211,6 +248,7 @@ def get_vector_tile(
         media_type="application/vnd.mapbox-vector-tile",
         headers={
             "Cache-Control": "public, max-age=3600",
+            "ETag": f'"{etag}"',
             "Access-Control-Allow-Origin": "*",
         },
     )

@@ -7,6 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth import require_api_key
+from app.cache import cache_response
 from app.database import get_db
 from app.limiter import limiter
 from app.models import (
@@ -34,7 +35,8 @@ def list_isos(db: Session = Depends(get_db)):
 
 
 @router.get("/isos/{iso_id}/zones", response_model=list[ZoneResponse])
-def list_zones(iso_id: str, db: Session = Depends(get_db)):
+@cache_response("zones", ttl=3600)
+def list_zones(iso_id: str, request: Request = None, db: Session = Depends(get_db)):
     """List zones for an ISO (without boundary geometry for performance)."""
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
@@ -62,7 +64,8 @@ def list_zones(iso_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/isos/{iso_id}/zones/geometry", response_model=list[ZoneGeometryResponse])
-def list_zone_geometries(iso_id: str, db: Session = Depends(get_db)):
+@cache_response("zone-geometries", ttl=86400)
+def list_zone_geometries(iso_id: str, request: Request = None, db: Session = Depends(get_db)):
     """Get boundary GeoJSON for all zones in an ISO (heavy, use sparingly)."""
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
@@ -80,7 +83,8 @@ def list_zone_geometries(iso_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/isos/{iso_id}/zones/{zone_code}/geometry", response_model=ZoneGeometryResponse)
-def get_zone_geometry(iso_id: str, zone_code: str, db: Session = Depends(get_db)):
+@cache_response("zone-geometry", ttl=86400)
+def get_zone_geometry(iso_id: str, zone_code: str, request: Request = None, db: Session = Depends(get_db)):
     """Get boundary GeoJSON for a single zone."""
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
@@ -94,7 +98,8 @@ def get_zone_geometry(iso_id: str, zone_code: str, db: Session = Depends(get_db)
 
 
 @router.get("/isos/{iso_id}/classifications", response_model=list[ZoneClassificationResponse])
-def get_classifications(iso_id: str, db: Session = Depends(get_db)):
+@cache_response("classifications", ttl=300)
+def get_classifications(iso_id: str, request: Request = None, db: Session = Depends(get_db)):
     """Get latest zone classifications for an ISO."""
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
@@ -134,11 +139,13 @@ def get_classifications(iso_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/isos/{iso_id}/zones/{zone_code}/pnodes", response_model=list[PnodeScoreResponse])
+@cache_response("pnodes", ttl=300)
 def get_pnode_scores(
     iso_id: str,
     zone_code: str,
     limit: int = Query(default=500, le=5000),
     offset: int = Query(default=0, ge=0),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Get pnode severity scores for a zone."""
@@ -189,11 +196,13 @@ def get_pnode_scores(
 
 
 @router.get("/isos/{iso_id}/pnodes", response_model=list[PnodeScoreResponse])
+@cache_response("pnodes", ttl=300)
 def get_all_pnode_scores(
     iso_id: str,
     limit: int = Query(default=1000, le=10000),
     offset: int = Query(default=0, ge=0),
     bbox: Optional[BBox] = Depends(parse_bbox),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Get all pnode severity scores for an ISO (all zones).
@@ -315,6 +324,7 @@ def get_zone_loadshape(
 
 
 @router.get("/data-centers", response_model=list[DataCenterResponse])
+@cache_response("data-centers", ttl=3600)
 def list_data_centers(
     iso_id: Optional[str] = None,
     zone_code: Optional[str] = None,
@@ -322,6 +332,7 @@ def list_data_centers(
     limit: int = Query(default=100, le=5000),
     offset: int = Query(default=0, ge=0),
     bbox: Optional[BBox] = Depends(parse_bbox),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """List data centers, filterable by ISO, zone, status, bbox.
@@ -443,7 +454,8 @@ def list_pipeline_runs(
 
 
 @router.get("/overview", response_model=list[OverviewResponse])
-def get_overview(db: Session = Depends(get_db)):
+@cache_response("overview", ttl=3600)
+def get_overview(request: Request = None, db: Session = Depends(get_db)):
     """Cross-ISO summary."""
     isos = db.query(ISO).order_by(ISO.iso_code).all()
     result = []

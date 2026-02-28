@@ -921,6 +921,15 @@ class PipelineWriter:
                 self._run.error_message = str(error)[:1000]
             self.db.commit()
             logger.info(f"DB: Pipeline run #{self._run.id} -> {self._run.status}")
+            # Invalidate cached API responses for this ISO
+            if self._run.status == "completed":
+                try:
+                    from app.cache import invalidate_iso_cache
+                    from app.api.v1.tile_routes import clear_tile_etag
+                    invalidate_iso_cache(self.iso_id)
+                    clear_tile_etag()
+                except Exception as cache_err:
+                    logger.debug(f"Cache invalidation skipped: {cache_err}")
         except Exception as e:
             logger.warning(f"DB write failed (complete_run): {e}")
             self.db.rollback()

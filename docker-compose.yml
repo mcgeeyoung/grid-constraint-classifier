@@ -12,6 +12,11 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
   web:
     build: .
     command: >
@@ -20,8 +25,10 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://gridclass:gridclass@db:5432/gridclass
+      REDIS_URL: redis://redis:6379/0
     depends_on:
       - db
+      - redis
     volumes:
       - .:/app
       - ./data:/app/data

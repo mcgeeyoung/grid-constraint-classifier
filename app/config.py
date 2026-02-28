@@ -19,6 +19,8 @@ class Settings:
         "postgresql://", "postgresql+asyncpg://", 1
     )
 
+    REDIS_URL: str = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+
     PROJECT_ROOT: Path = Path(__file__).parent.parent
     DATA_DIR: Path = PROJECT_ROOT / "data"
 

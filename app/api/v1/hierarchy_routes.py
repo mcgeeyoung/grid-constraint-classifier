@@ -2,10 +2,11 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.cache import cache_response
 from app.database import get_db
 from app.models import (
     ISO, Zone, Substation, Feeder, Pnode,
@@ -186,6 +187,7 @@ def get_substation_loadshape(
 
 
 @router.get("/hierarchy-scores", response_model=list[HierarchyScoreResponse])
+@cache_response("hierarchy-scores", ttl=300)
 def list_hierarchy_scores(
     level: Optional[str] = Query(None, description="Filter by level: zone, substation, feeder"),
     pipeline_run_id: Optional[int] = Query(None, description="Specific pipeline run"),
@@ -194,6 +196,7 @@ def list_hierarchy_scores(
     constraint_tier: Optional[str] = Query(None, description="CRITICAL, ELEVATED, MODERATE, LOW"),
     limit: int = Query(default=200, le=5000),
     offset: int = Query(default=0, ge=0),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """
