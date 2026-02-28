@@ -21,6 +21,7 @@ from app.api.v1.hierarchy_routes import router as hierarchy_router
 from app.api.v1.wattcarbon_routes import router as wattcarbon_router
 from app.api.v1.batch_routes import router as batch_router
 from app.api.v1.tile_routes import router as tile_router
+from app.api.v1.hosting_capacity_routes import router as hc_router
 from app.spatial_sync import register_spatial_sync
 
 app = FastAPI(
@@ -56,6 +57,7 @@ app.include_router(hierarchy_router)
 app.include_router(wattcarbon_router)
 app.include_router(batch_router)
 app.include_router(tile_router)
+app.include_router(hc_router)
 
 
 @app.get("/health")
