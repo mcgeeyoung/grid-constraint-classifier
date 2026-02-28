@@ -18,6 +18,8 @@ from .der_location import DERLocation
 from .der_valuation import DERValuation
 from .hierarchy_score import HierarchyScore
 from .substation_load_profile import SubstationLoadProfile
+from .utility import Utility
+from .hosting_capacity import HCIngestionRun, HostingCapacityRecord, HostingCapacitySummary
 
 __all__ = [
     "Base",
@@ -38,4 +40,8 @@ __all__ = [
     "DERValuation",
     "HierarchyScore",
     "SubstationLoadProfile",
+    "Utility",
+    "HCIngestionRun",
+    "HostingCapacityRecord",
+    "HostingCapacitySummary",
 ]
