@@ -81,6 +81,30 @@ LAYER_CONFIG = {
         "id_col": "id",
         "iso_filter": "direct",
     },
+    "gpkg_power_lines": {
+        "table": "gpkg_power_lines",
+        "geom_col": "geom",
+        "srid": 4326,
+        "attributes": "name, operator, max_voltage_kv, circuits, location",
+        "id_col": "id",
+        "iso_filter": None,
+    },
+    "gpkg_substations": {
+        "table": "gpkg_substations",
+        "geom_col": "geom",
+        "srid": 4326,
+        "attributes": "name, operator, substation_type, max_voltage_kv",
+        "id_col": "id",
+        "iso_filter": None,
+    },
+    "gpkg_power_plants": {
+        "table": "gpkg_power_plants",
+        "geom_col": "geom",
+        "srid": 4326,
+        "attributes": "name, operator, source, method, output_mw",
+        "id_col": "id",
+        "iso_filter": None,
+    },
 }
 
 # Clustering config for point layers: which layers cluster, and at what zoom threshold
@@ -130,6 +154,9 @@ TX_LINE_ZOOM_RULES = [
     (11, 99, 0, None),  # All voltages, full resolution
 ]
 
+# GeoPackage power lines use same zoom-level filtering (voltage in kV)
+GPKG_LINE_ZOOM_RULES = TX_LINE_ZOOM_RULES
+
 # Pnodes: join with pnode_scores for severity data
 PNODE_JOIN_SQL = """
     LEFT JOIN LATERAL (
@@ -159,8 +186,11 @@ def _build_iso_where(layer: str, iso_ids: list[int] | None) -> str:
     """Build an ISO filter WHERE clause for a layer."""
     if not iso_ids:
         return ""
-    id_list = ", ".join(str(i) for i in iso_ids)
     iso_filter = LAYER_CONFIG[layer].get("iso_filter", "direct")
+    if iso_filter is None:
+        # GeoPackage layers have no ISO association
+        return ""
+    id_list = ", ".join(str(i) for i in iso_ids)
     if iso_filter == "direct":
         return f"AND t.iso_id IN ({id_list})"
     elif iso_filter.startswith("join:"):
@@ -187,13 +217,21 @@ def _build_tile_query(
     # Geometry transform: clip to tile envelope and convert to MVT coordinates
     geom_expr = f"t.{geom_col}"
 
-    # Apply simplification for transmission lines based on zoom level
+    # Apply simplification for line layers based on zoom level
     extra_where = ""
     if layer == "transmission_lines":
         for min_z, max_z, min_voltage, tolerance in TX_LINE_ZOOM_RULES:
             if min_z <= z <= max_z:
                 if min_voltage > 0:
                     extra_where = f"AND COALESCE(t.voltage_kv, 0) >= {min_voltage}"
+                if tolerance is not None:
+                    geom_expr = f"ST_Simplify(t.{geom_col}, {tolerance})"
+                break
+    elif layer == "gpkg_power_lines":
+        for min_z, max_z, min_voltage, tolerance in GPKG_LINE_ZOOM_RULES:
+            if min_z <= z <= max_z:
+                if min_voltage > 0:
+                    extra_where = f"AND COALESCE(t.max_voltage_kv, 0) >= {min_voltage}"
                 if tolerance is not None:
                     geom_expr = f"ST_Simplify(t.{geom_col}, {tolerance})"
                 break
