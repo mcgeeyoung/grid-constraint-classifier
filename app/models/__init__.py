@@ -20,6 +20,11 @@ from .hierarchy_score import HierarchyScore
 from .substation_load_profile import SubstationLoadProfile
 from .utility import Utility
 from .hosting_capacity import HCIngestionRun, HostingCapacityRecord, HostingCapacitySummary
+from .regulator import Regulator
+from .filing import Filing, FilingDocument
+from .grid_constraint import GridConstraint
+from .load_forecast import LoadForecast
+from .resource_need import ResourceNeed
 
 __all__ = [
     "Base",
@@ -44,4 +49,10 @@ __all__ = [
     "HCIngestionRun",
     "HostingCapacityRecord",
     "HostingCapacitySummary",
+    "Regulator",
+    "Filing",
+    "FilingDocument",
+    "GridConstraint",
+    "LoadForecast",
+    "ResourceNeed",
 ]
