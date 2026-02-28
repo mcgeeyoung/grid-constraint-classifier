@@ -29,6 +29,7 @@ from .congestion import BalancingAuthority, InterfaceLMP, BAHourlyData, Congesti
 from .interconnection_queue import InterconnectionQueue
 from .docket_watchlist import DocketWatch
 from .data_coverage import DataCoverage
+from .monitor_event import MonitorEvent
 
 __all__ = [
     "Base",
@@ -66,4 +67,5 @@ __all__ = [
     "InterconnectionQueue",
     "DocketWatch",
     "DataCoverage",
+    "MonitorEvent",
 ]

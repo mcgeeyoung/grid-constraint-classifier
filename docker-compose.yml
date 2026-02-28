@@ -33,6 +33,19 @@ services:
       - .:/app
       - ./data:/app/data
 
+  worker:
+    build: .
+    command: python -m app.scheduler
+    environment:
+      DATABASE_URL: postgresql://gridclass:gridclass@db:5432/gridclass
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - .:/app
+      - ./data:/app/data
+
   frontend:
     image: node:20-alpine
     working_dir: /frontend
