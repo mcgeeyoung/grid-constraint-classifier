@@ -139,12 +139,21 @@ const TILE_LAYERS = [
   'pnodes', 'data_centers', 'der_locations', 'feeders',
 ]
 
+// GeoPackage infrastructure layers (no ISO filter, national coverage)
+const INFRA_TILE_LAYERS = [
+  'gpkg_power_lines', 'gpkg_substations', 'gpkg_power_plants',
+]
+
 function tileUrl(layer: string): string {
   const base = `${window.location.origin}${TILE_BASE}/${layer}/{z}/{x}/{y}.mvt`
   if (isoStore.selectedISOs.length > 0) {
     return `${base}?iso_id=${isoStore.selectedISOs.join(',')}`
   }
   return base
+}
+
+function infraTileUrl(layer: string): string {
+  return `${window.location.origin}${TILE_BASE}/${layer}/{z}/{x}/{y}.mvt`
 }
 
 function addTileSources() {
@@ -154,6 +163,16 @@ function addTileSources() {
     map.addSource(`${layer}-source`, {
       type: 'vector',
       tiles: [tileUrl(layer)],
+      minzoom: 0,
+      maxzoom: 14,
+    })
+  }
+
+  // GeoPackage infrastructure sources (national, no ISO filter)
+  for (const layer of INFRA_TILE_LAYERS) {
+    map.addSource(`${layer}-source`, {
+      type: 'vector',
+      tiles: [infraTileUrl(layer)],
       minzoom: 0,
       maxzoom: 14,
     })
@@ -466,6 +485,225 @@ function addLayers() {
       visibility: mapStore.showHostingCapacity ? 'visible' : 'none',
     },
   })
+
+  // ===============================================================
+  // GeoPackage Infrastructure Layers (OSM national data)
+  // ===============================================================
+
+  // --- Infrastructure power lines (voltage-colored, zoom-aware) ---
+  map.addLayer({
+    id: 'infra-power-lines',
+    type: 'line',
+    source: 'gpkg_power_lines-source',
+    'source-layer': 'gpkg_power_lines',
+    paint: {
+      'line-color': [
+        'interpolate', ['linear'],
+        ['coalesce', ['get', 'max_voltage_kv'], 0],
+        0, '#b0bec5',
+        69, '#90caf9',
+        115, '#42a5f5',
+        230, '#1565c0',
+        345, '#e53935',
+        500, '#b71c1c',
+        765, '#4a148c',
+      ] as unknown as ExpressionSpecification,
+      'line-width': [
+        'interpolate', ['linear'],
+        ['coalesce', ['get', 'max_voltage_kv'], 0],
+        0, 0.3,
+        69, 0.5,
+        230, 1.5,
+        500, 3,
+        765, 4,
+      ] as unknown as ExpressionSpecification,
+      'line-opacity': [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        1,
+        0.6,
+      ] as unknown as ExpressionSpecification,
+    },
+    layout: {
+      visibility: mapStore.showInfraLines ? 'visible' : 'none',
+    },
+  })
+
+  // --- Infrastructure power line voltage labels (zoom 10+) ---
+  map.addLayer({
+    id: 'infra-power-lines-label',
+    type: 'symbol',
+    source: 'gpkg_power_lines-source',
+    'source-layer': 'gpkg_power_lines',
+    minzoom: 10,
+    layout: {
+      'symbol-placement': 'line',
+      'text-field': [
+        'case',
+        ['has', 'max_voltage_kv'],
+        ['concat', ['to-string', ['get', 'max_voltage_kv']], ' kV'],
+        '',
+      ] as unknown as ExpressionSpecification,
+      'text-size': 10,
+      'text-font': ['Open Sans Regular'],
+      'text-offset': [0, -0.8],
+      'text-max-angle': 30,
+      visibility: mapStore.showInfraLines ? 'visible' : 'none',
+    },
+    paint: {
+      'text-color': '#5c35a0',
+      'text-halo-color': '#ffffff',
+      'text-halo-width': 1.5,
+    },
+  })
+
+  // --- Infrastructure substations (polygon outlines + fill) ---
+  map.addLayer({
+    id: 'infra-substations-fill',
+    type: 'fill',
+    source: 'gpkg_substations-source',
+    'source-layer': 'gpkg_substations',
+    minzoom: 9,
+    paint: {
+      'fill-color': [
+        'match', ['coalesce', ['get', 'substation_type'], 'unknown'],
+        'transmission', '#1565c0',
+        'distribution', '#43a047',
+        'generation', '#e53935',
+        'industrial', '#ff9800',
+        'switching', '#8e24aa',
+        '#757575',
+      ] as unknown as ExpressionSpecification,
+      'fill-opacity': 0.25,
+    },
+    layout: {
+      visibility: mapStore.showInfraSubstations ? 'visible' : 'none',
+    },
+  })
+
+  map.addLayer({
+    id: 'infra-substations-outline',
+    type: 'line',
+    source: 'gpkg_substations-source',
+    'source-layer': 'gpkg_substations',
+    minzoom: 9,
+    paint: {
+      'line-color': [
+        'match', ['coalesce', ['get', 'substation_type'], 'unknown'],
+        'transmission', '#1565c0',
+        'distribution', '#43a047',
+        'generation', '#e53935',
+        'industrial', '#ff9800',
+        'switching', '#8e24aa',
+        '#757575',
+      ] as unknown as ExpressionSpecification,
+      'line-width': 1.5,
+      'line-opacity': 0.7,
+    },
+    layout: {
+      visibility: mapStore.showInfraSubstations ? 'visible' : 'none',
+    },
+  })
+
+  // --- Infrastructure substation labels (zoom 12+) ---
+  map.addLayer({
+    id: 'infra-substations-label',
+    type: 'symbol',
+    source: 'gpkg_substations-source',
+    'source-layer': 'gpkg_substations',
+    minzoom: 12,
+    layout: {
+      'text-field': ['coalesce', ['get', 'name'], ''] as unknown as ExpressionSpecification,
+      'text-size': 11,
+      'text-font': ['Open Sans Regular'],
+      'text-offset': [0, 1.2],
+      'text-max-width': 10,
+      visibility: mapStore.showInfraSubstations ? 'visible' : 'none',
+    },
+    paint: {
+      'text-color': '#333333',
+      'text-halo-color': '#ffffff',
+      'text-halo-width': 1,
+    },
+  })
+
+  // --- Infrastructure power plants (polygon outlines + fill) ---
+  map.addLayer({
+    id: 'infra-power-plants-fill',
+    type: 'fill',
+    source: 'gpkg_power_plants-source',
+    'source-layer': 'gpkg_power_plants',
+    minzoom: 7,
+    paint: {
+      'fill-color': [
+        'match', ['coalesce', ['get', 'source'], 'unknown'],
+        'solar', '#fdd835',
+        'wind', '#4fc3f7',
+        'hydro', '#1565c0',
+        'gas', '#ff9800',
+        'coal', '#616161',
+        'nuclear', '#e53935',
+        'battery', '#7e57c2',
+        'oil', '#795548',
+        'biomass', '#66bb6a',
+        '#9e9e9e',
+      ] as unknown as ExpressionSpecification,
+      'fill-opacity': 0.35,
+    },
+    layout: {
+      visibility: mapStore.showInfraPowerPlants ? 'visible' : 'none',
+    },
+  })
+
+  map.addLayer({
+    id: 'infra-power-plants-outline',
+    type: 'line',
+    source: 'gpkg_power_plants-source',
+    'source-layer': 'gpkg_power_plants',
+    minzoom: 7,
+    paint: {
+      'line-color': [
+        'match', ['coalesce', ['get', 'source'], 'unknown'],
+        'solar', '#f9a825',
+        'wind', '#0288d1',
+        'hydro', '#0d47a1',
+        'gas', '#e65100',
+        'coal', '#424242',
+        'nuclear', '#b71c1c',
+        'battery', '#512da8',
+        'oil', '#4e342e',
+        'biomass', '#2e7d32',
+        '#616161',
+      ] as unknown as ExpressionSpecification,
+      'line-width': 1.5,
+      'line-opacity': 0.8,
+    },
+    layout: {
+      visibility: mapStore.showInfraPowerPlants ? 'visible' : 'none',
+    },
+  })
+
+  // --- Infrastructure power plant labels (zoom 10+) ---
+  map.addLayer({
+    id: 'infra-power-plants-label',
+    type: 'symbol',
+    source: 'gpkg_power_plants-source',
+    'source-layer': 'gpkg_power_plants',
+    minzoom: 10,
+    layout: {
+      'text-field': ['coalesce', ['get', 'name'], ''] as unknown as ExpressionSpecification,
+      'text-size': 11,
+      'text-font': ['Open Sans Regular'],
+      'text-offset': [0, 1.2],
+      'text-max-width': 10,
+      visibility: mapStore.showInfraPowerPlants ? 'visible' : 'none',
+    },
+    paint: {
+      'text-color': '#1b5e20',
+      'text-halo-color': '#ffffff',
+      'text-halo-width': 1,
+    },
+  })
 }
 
 function setupInteractivity() {
@@ -475,6 +713,7 @@ function setupInteractivity() {
   const interactiveLayers = [
     'zones-fill', 'substations', 'pnodes', 'data-centers', 'der-locations',
     'transmission-lines', 'feeders', 'hosting-capacity',
+    'infra-power-lines', 'infra-substations-fill', 'infra-power-plants-fill',
   ]
 
   for (const layerId of interactiveLayers) {
@@ -623,6 +862,72 @@ function setupInteractivity() {
       .addTo(map)
   })
 
+  // Hover highlight for infrastructure power lines
+  let hoveredInfraLineId: number | string | null = null
+  map.on('mousemove', 'infra-power-lines', (e) => {
+    if (!map || !e.features || e.features.length === 0) return
+    if (hoveredInfraLineId !== null) {
+      map.setFeatureState({ source: 'gpkg_power_lines-source', sourceLayer: 'gpkg_power_lines', id: hoveredInfraLineId }, { hover: false })
+    }
+    hoveredInfraLineId = e.features[0].id ?? null
+    if (hoveredInfraLineId !== null) {
+      map.setFeatureState({ source: 'gpkg_power_lines-source', sourceLayer: 'gpkg_power_lines', id: hoveredInfraLineId }, { hover: true })
+    }
+  })
+  map.on('mouseleave', 'infra-power-lines', () => {
+    if (map && hoveredInfraLineId !== null) {
+      map.setFeatureState({ source: 'gpkg_power_lines-source', sourceLayer: 'gpkg_power_lines', id: hoveredInfraLineId }, { hover: false })
+      hoveredInfraLineId = null
+    }
+  })
+
+  // Click on infrastructure power line
+  map.on('click', 'infra-power-lines', (e) => {
+    if (!map || !e.features || e.features.length === 0) return
+    const props = e.features[0].properties
+    new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+      .setLngLat(e.lngLat)
+      .setHTML(`
+        <strong>${props.name || 'Power Line'}</strong><br/>
+        Voltage: ${props.max_voltage_kv ? props.max_voltage_kv + ' kV' : 'N/A'}<br/>
+        Operator: ${props.operator || 'N/A'}<br/>
+        Circuits: ${props.circuits || 'N/A'}<br/>
+        Location: ${props.location || 'N/A'}
+      `)
+      .addTo(map)
+  })
+
+  // Click on infrastructure substation
+  map.on('click', 'infra-substations-fill', (e) => {
+    if (!map || !e.features || e.features.length === 0) return
+    const props = e.features[0].properties
+    new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+      .setLngLat(e.lngLat)
+      .setHTML(`
+        <strong>${props.name || 'Substation'}</strong><br/>
+        Type: ${props.substation_type || 'N/A'}<br/>
+        Voltage: ${props.max_voltage_kv ? props.max_voltage_kv + ' kV' : 'N/A'}<br/>
+        Operator: ${props.operator || 'N/A'}
+      `)
+      .addTo(map)
+  })
+
+  // Click on infrastructure power plant
+  map.on('click', 'infra-power-plants-fill', (e) => {
+    if (!map || !e.features || e.features.length === 0) return
+    const props = e.features[0].properties
+    new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+      .setLngLat(e.lngLat)
+      .setHTML(`
+        <strong>${props.name || 'Power Plant'}</strong><br/>
+        Source: ${props.source || 'N/A'}<br/>
+        Method: ${props.method || 'N/A'}<br/>
+        Output: ${props.output_mw ? props.output_mw + ' MW' : 'N/A'}<br/>
+        Operator: ${props.operator || 'N/A'}
+      `)
+      .addTo(map)
+  })
+
   // Click on map background (for siting)
   map.on('click', (e) => {
     // Only trigger if no feature was clicked
@@ -690,6 +995,21 @@ watch(() => mapStore.showAssets, (v) => {
 })
 watch(() => mapStore.showHostingCapacity, (v) => {
   setLayerVisibility('hosting-capacity', v)
+})
+// Infrastructure layers (GeoPackage/OSM)
+watch(() => mapStore.showInfraLines, (v) => {
+  setLayerVisibility('infra-power-lines', v)
+  setLayerVisibility('infra-power-lines-label', v)
+})
+watch(() => mapStore.showInfraSubstations, (v) => {
+  setLayerVisibility('infra-substations-fill', v)
+  setLayerVisibility('infra-substations-outline', v)
+  setLayerVisibility('infra-substations-label', v)
+})
+watch(() => mapStore.showInfraPowerPlants, (v) => {
+  setLayerVisibility('infra-power-plants-fill', v)
+  setLayerVisibility('infra-power-plants-outline', v)
+  setLayerVisibility('infra-power-plants-label', v)
 })
 
 // Update HC GeoJSON source when feeders are loaded in the store

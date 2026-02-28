@@ -26,6 +26,11 @@ export const useMapStore = defineStore('map', () => {
   const showAssets = ref(false)
   const showHostingCapacity = ref(false)
 
+  // GeoPackage infrastructure layers (OSM data)
+  const showInfraLines = ref(false)
+  const showInfraSubstations = ref(false)
+  const showInfraPowerPlants = ref(false)
+
   // Zone color mode
   const zoneColorMode = ref<ZoneColorMode>('classification')
 
@@ -69,6 +74,9 @@ export const useMapStore = defineStore('map', () => {
     showFeeders,
     showAssets,
     showHostingCapacity,
+    showInfraLines,
+    showInfraSubstations,
+    showInfraPowerPlants,
     zoneColorMode,
     filterClassifications,
     filterTiers,

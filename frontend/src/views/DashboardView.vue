@@ -94,6 +94,29 @@
             color="purple"
           />
           <v-divider class="my-1" />
+          <div class="text-caption text-medium-emphasis mb-1">Infrastructure (OSM)</div>
+          <v-checkbox
+            v-model="mapStore.showInfraLines"
+            label="Power Lines"
+            density="compact"
+            hide-details
+            color="deep-purple"
+          />
+          <v-checkbox
+            v-model="mapStore.showInfraSubstations"
+            label="Substations (OSM)"
+            density="compact"
+            hide-details
+            color="amber"
+          />
+          <v-checkbox
+            v-model="mapStore.showInfraPowerPlants"
+            label="Power Plants"
+            density="compact"
+            hide-details
+            color="green"
+          />
+          <v-divider class="my-1" />
           <v-btn-toggle
             :model-value="mapStore.mapEngine"
             @update:model-value="(v: any) => { if (v) mapStore.mapEngine = v }"
