@@ -2,7 +2,8 @@
   <div style="height: calc(100vh - 48px); display: flex;">
     <!-- Map -->
     <div style="flex: 1; position: relative;">
-      <GridMap />
+      <GridMapGL v-if="mapStore.mapEngine === 'maplibre'" />
+      <GridMap v-else />
 
       <!-- Layer controls (floating) -->
       <div style="position: absolute; top: 12px; left: 12px; z-index: 1000;">
@@ -56,6 +57,19 @@
             hide-details
             color="purple"
           />
+          <v-divider class="my-1" />
+          <v-btn-toggle
+            :model-value="mapStore.mapEngine"
+            @update:model-value="(v: any) => { if (v) mapStore.mapEngine = v }"
+            mandatory
+            density="compact"
+            color="primary"
+            variant="outlined"
+            divided
+          >
+            <v-btn value="maplibre" size="x-small">WebGL</v-btn>
+            <v-btn value="leaflet" size="x-small">Leaflet</v-btn>
+          </v-btn-toggle>
         </v-card>
       </div>
 
@@ -108,6 +122,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import GridMap from '@/components/map/GridMap.vue'
+import GridMapGL from '@/components/map/GridMapGL.vue'
 import ValuationResult from '@/components/panels/ValuationResult.vue'
 import ZoneDetail from '@/components/panels/ZoneDetail.vue'
 import SubstationDetail from '@/components/panels/SubstationDetail.vue'

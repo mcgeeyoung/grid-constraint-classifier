@@ -7,8 +7,10 @@ export interface LatLng {
 }
 
 export type ZoneColorMode = 'classification' | 'value'
+export type MapEngine = 'leaflet' | 'maplibre'
 
 export const useMapStore = defineStore('map', () => {
+  const mapEngine = ref<MapEngine>('maplibre')
   const center = ref<LatLng>({ lat: 39.8, lng: -98.5 })
   const zoom = ref(5)
   const clickedPoint = ref<LatLng | null>(null)
@@ -51,6 +53,7 @@ export const useMapStore = defineStore('map', () => {
   }
 
   return {
+    mapEngine,
     center,
     zoom,
     clickedPoint,
