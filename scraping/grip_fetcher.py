@@ -5,16 +5,17 @@ Pulls distribution substation loading data from PG&E's DRP Compliance
 ArcGIS FeatureServer with point geometry for geographic matching.
 Also fetches division boundary polygons from the GNASubAreaView layer.
 
+Uses the shared ArcGISClient for pagination, retry, and coordinate conversion.
 Follows the same cache-first pattern as scraping/hifld.py.
 """
 
 import json
 import logging
-import math
 from pathlib import Path
 
 import pandas as pd
-import requests
+
+from adapters.arcgis_client import ArcGISClient
 
 logger = logging.getLogger(__name__)
 
@@ -44,14 +45,8 @@ GRIP_FIELDS = [
     "facilitytype",
 ]
 
-PAGE_SIZE = 2000
-
-
-def _web_mercator_to_wgs84(x: float, y: float) -> tuple[float, float]:
-    """Convert Web Mercator (EPSG:3857) coordinates to WGS84 lat/lon."""
-    lon = x / 20037508.34 * 180.0
-    lat = math.atan(math.exp(y / 20037508.34 * math.pi)) * 360.0 / math.pi - 90.0
-    return lat, lon
+# Shared client instance
+_client = ArcGISClient(timeout=120)
 
 
 def fetch_grip_substations(
@@ -75,40 +70,10 @@ def fetch_grip_substations(
         return df
 
     logger.info("Fetching PG&E GRIP substation data from ArcGIS...")
-    session = requests.Session()
-    session.headers.update({"User-Agent": "grid-constraint-classifier/1.0"})
-
-    all_features = []
-    offset = 0
-
-    while True:
-        params = {
-            "where": "1=1",
-            "outFields": ",".join(GRIP_FIELDS),
-            "returnGeometry": "true",
-            "f": "json",
-            "resultRecordCount": PAGE_SIZE,
-            "resultOffset": offset,
-        }
-
-        try:
-            resp = session.get(GRIP_URL, params=params, timeout=60)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            logger.error(f"GRIP fetch failed at offset {offset}: {e}")
-            break
-
-        features = data.get("features", [])
-        if not features:
-            break
-
-        all_features.extend(features)
-        logger.info(f"  Fetched {len(all_features)} features (offset {offset})...")
-
-        if len(features) < PAGE_SIZE:
-            break
-        offset += PAGE_SIZE
+    all_features = _client.query_features(
+        GRIP_URL,
+        out_fields=",".join(GRIP_FIELDS),
+    )
 
     if not all_features:
         logger.warning("No GRIP features returned")
@@ -121,13 +86,12 @@ def fetch_grip_substations(
         geom = feat.get("geometry", {})
         row = {k: attrs.get(k) for k in GRIP_FIELDS}
 
-        # Convert Web Mercator to WGS84
+        # Geometry is already WGS84 (outSR=4326 default)
         x = geom.get("x")
         y = geom.get("y")
         if x is not None and y is not None:
-            lat, lon = _web_mercator_to_wgs84(x, y)
-            row["lat"] = round(lat, 6)
-            row["lon"] = round(lon, 6)
+            row["lat"] = round(y, 6)
+            row["lon"] = round(x, 6)
         else:
             row["lat"] = None
             row["lon"] = None
@@ -178,39 +142,11 @@ def fetch_substation_load_profiles(
         return pd.read_csv(cache_path)
 
     logger.info("Fetching PG&E GRIP substation load profiles from ArcGIS...")
-    session = requests.Session()
-    session.headers.update({"User-Agent": "grid-constraint-classifier/1.0"})
-
-    all_features = []
-    offset = 0
-
-    while True:
-        params = {
-            "where": "1=1",
-            "outFields": "subname,subid,monthhour,low,high",
-            "f": "json",
-            "resultRecordCount": PAGE_SIZE,
-            "resultOffset": offset,
-        }
-
-        try:
-            resp = session.get(LOAD_PROFILE_URL, params=params, timeout=120)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            logger.error(f"Load profile fetch failed at offset {offset}: {e}")
-            break
-
-        features = data.get("features", [])
-        if not features:
-            break
-
-        all_features.extend(features)
-        logger.info(f"  Fetched {len(all_features)} load profile records (offset {offset})...")
-
-        if len(features) < PAGE_SIZE:
-            break
-        offset += PAGE_SIZE
+    all_features = _client.query_features(
+        LOAD_PROFILE_URL,
+        out_fields="subname,subid,monthhour,low,high",
+        return_geometry=False,
+    )
 
     if not all_features:
         logger.warning("No load profile features returned")
@@ -250,16 +186,6 @@ def fetch_substation_load_profiles(
     return df
 
 
-def _convert_ring(ring: list[list[float]]) -> list[list[float]]:
-    """Convert a polygon ring from Web Mercator to WGS84 [lon, lat] pairs."""
-    converted = []
-    for pt in ring:
-        if len(pt) >= 2:
-            lat, lon = _web_mercator_to_wgs84(pt[0], pt[1])
-            converted.append([round(lon, 6), round(lat, 6)])
-    return converted
-
-
 def fetch_division_boundaries(
     cache_path: Path,
     force: bool = False,
@@ -285,40 +211,10 @@ def fetch_division_boundaries(
             return json.load(f)
 
     logger.info("Fetching PG&E division boundary polygons from ArcGIS...")
-    session = requests.Session()
-    session.headers.update({"User-Agent": "grid-constraint-classifier/1.0"})
-
-    all_features = []
-    offset = 0
-
-    while True:
-        params = {
-            "where": "1=1",
-            "outFields": "division",
-            "returnGeometry": "true",
-            "f": "json",
-            "resultRecordCount": PAGE_SIZE,
-            "resultOffset": offset,
-        }
-
-        try:
-            resp = session.get(GNA_SUBAREA_URL, params=params, timeout=120)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            logger.error(f"GNA SubArea fetch failed at offset {offset}: {e}")
-            break
-
-        features = data.get("features", [])
-        if not features:
-            break
-
-        all_features.extend(features)
-        logger.info(f"  Fetched {len(all_features)} sub-area polygons (offset {offset})...")
-
-        if len(features) < PAGE_SIZE:
-            break
-        offset += PAGE_SIZE
+    all_features = _client.query_features(
+        GNA_SUBAREA_URL,
+        out_fields="division",
+    )
 
     if not all_features:
         logger.warning("No GNA SubArea features returned")
@@ -338,19 +234,16 @@ def fetch_division_boundaries(
             skipped += 1
             continue
 
-        rings = feat.get("geometry", {}).get("rings", [])
+        geom = feat.get("geometry", {})
+        rings = geom.get("rings", [])
         if not rings:
             skipped += 1
             continue
 
-        # Convert rings from Web Mercator to WGS84
-        wgs_rings = [_convert_ring(ring) for ring in rings]
-
-        # Build a shapely polygon from the converted rings
+        # Geometry is already WGS84 (outSR=4326 default), no conversion needed
         try:
-            # First ring is exterior, remaining are holes
-            exterior = wgs_rings[0]
-            holes = wgs_rings[1:] if len(wgs_rings) > 1 else []
+            exterior = rings[0]
+            holes = rings[1:] if len(rings) > 1 else []
             poly = shape({
                 "type": "Polygon",
                 "coordinates": [exterior] + holes,
