@@ -21,6 +21,8 @@ export const useMapStore = defineStore('map', () => {
   const showDERs = ref(true)
   const showSubstations = ref(false)
   const showDataCenters = ref(false)
+  const showTransmissionLines = ref(true)
+  const showFeeders = ref(true)
   const showAssets = ref(false)
 
   // Zone color mode
@@ -62,6 +64,8 @@ export const useMapStore = defineStore('map', () => {
     showDERs,
     showSubstations,
     showDataCenters,
+    showTransmissionLines,
+    showFeeders,
     showAssets,
     zoneColorMode,
     filterClassifications,

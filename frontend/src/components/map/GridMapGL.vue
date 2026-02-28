@@ -189,11 +189,21 @@ function addLayers() {
     'source-layer': 'transmission_lines',
     paint: {
       'line-color': voltageColor,
-      'line-width': voltageWidth,
-      'line-opacity': 0.7,
+      'line-width': [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        ['*', voltageWidth, 2.5],
+        voltageWidth,
+      ] as unknown as ExpressionSpecification,
+      'line-opacity': [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        1,
+        0.7,
+      ] as unknown as ExpressionSpecification,
     },
     layout: {
-      visibility: 'visible',
+      visibility: mapStore.showTransmissionLines ? 'visible' : 'none',
     },
   })
 
@@ -345,20 +355,65 @@ function addLayers() {
     },
   })
 
-  // --- Feeders ---
+  // --- Feeders (colored by loading) ---
   map.addLayer({
     id: 'feeders',
     type: 'line',
     source: 'feeders-source',
     'source-layer': 'feeders',
     paint: {
-      'line-color': '#78909c',
-      'line-width': 1,
-      'line-opacity': 0.5,
+      'line-color': [
+        'interpolate', ['linear'],
+        ['coalesce', ['get', 'peak_loading_pct'], 0],
+        0, '#43a047',
+        60, '#fdd835',
+        80, '#ff9800',
+        100, '#e53935',
+      ] as unknown as ExpressionSpecification,
+      'line-width': [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        3,
+        1.5,
+      ] as unknown as ExpressionSpecification,
+      'line-opacity': [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        1,
+        0.6,
+      ] as unknown as ExpressionSpecification,
     },
     minzoom: 10,
     layout: {
-      visibility: 'visible',
+      visibility: mapStore.showFeeders ? 'visible' : 'none',
+    },
+  })
+
+  // --- Transmission line voltage labels (zoom 9+) ---
+  map.addLayer({
+    id: 'transmission-lines-label',
+    type: 'symbol',
+    source: 'transmission_lines-source',
+    'source-layer': 'transmission_lines',
+    minzoom: 9,
+    layout: {
+      'symbol-placement': 'line',
+      'text-field': [
+        'case',
+        ['has', 'voltage_kv'],
+        ['concat', ['to-string', ['get', 'voltage_kv']], ' kV'],
+        '',
+      ] as unknown as ExpressionSpecification,
+      'text-size': 11,
+      'text-font': ['Open Sans Regular'],
+      'text-offset': [0, -0.8],
+      'text-max-angle': 30,
+      visibility: mapStore.showTransmissionLines ? 'visible' : 'none',
+    },
+    paint: {
+      'text-color': '#333333',
+      'text-halo-color': '#ffffff',
+      'text-halo-width': 1.5,
     },
   })
 }
@@ -369,6 +424,7 @@ function setupInteractivity() {
   // Cursor changes on hover for interactive layers
   const interactiveLayers = [
     'zones-fill', 'substations', 'pnodes', 'data-centers', 'der-locations',
+    'transmission-lines', 'feeders',
   ]
 
   for (const layerId of interactiveLayers) {
@@ -379,6 +435,44 @@ function setupInteractivity() {
       if (map) map.getCanvas().style.cursor = ''
     })
   }
+
+  // Hover highlight for transmission lines
+  let hoveredTxLineId: number | string | null = null
+  map.on('mousemove', 'transmission-lines', (e) => {
+    if (!map || !e.features || e.features.length === 0) return
+    if (hoveredTxLineId !== null) {
+      map.setFeatureState({ source: 'transmission_lines-source', sourceLayer: 'transmission_lines', id: hoveredTxLineId }, { hover: false })
+    }
+    hoveredTxLineId = e.features[0].id ?? null
+    if (hoveredTxLineId !== null) {
+      map.setFeatureState({ source: 'transmission_lines-source', sourceLayer: 'transmission_lines', id: hoveredTxLineId }, { hover: true })
+    }
+  })
+  map.on('mouseleave', 'transmission-lines', () => {
+    if (map && hoveredTxLineId !== null) {
+      map.setFeatureState({ source: 'transmission_lines-source', sourceLayer: 'transmission_lines', id: hoveredTxLineId }, { hover: false })
+      hoveredTxLineId = null
+    }
+  })
+
+  // Hover highlight for feeders
+  let hoveredFeederId: number | string | null = null
+  map.on('mousemove', 'feeders', (e) => {
+    if (!map || !e.features || e.features.length === 0) return
+    if (hoveredFeederId !== null) {
+      map.setFeatureState({ source: 'feeders-source', sourceLayer: 'feeders', id: hoveredFeederId }, { hover: false })
+    }
+    hoveredFeederId = e.features[0].id ?? null
+    if (hoveredFeederId !== null) {
+      map.setFeatureState({ source: 'feeders-source', sourceLayer: 'feeders', id: hoveredFeederId }, { hover: true })
+    }
+  })
+  map.on('mouseleave', 'feeders', () => {
+    if (map && hoveredFeederId !== null) {
+      map.setFeatureState({ source: 'feeders-source', sourceLayer: 'feeders', id: hoveredFeederId }, { hover: false })
+      hoveredFeederId = null
+    }
+  })
 
   // Click on zone
   map.on('click', 'zones-fill', (e) => {
@@ -427,6 +521,37 @@ function setupInteractivity() {
       .addTo(map)
   })
 
+  // Click on transmission line — show popup
+  map.on('click', 'transmission-lines', (e) => {
+    if (!map || !e.features || e.features.length === 0) return
+    const props = e.features[0].properties
+    new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+      .setLngLat(e.lngLat)
+      .setHTML(`
+        <strong>Transmission Line</strong><br/>
+        Voltage: ${props.voltage_kv ? props.voltage_kv + ' kV' : 'N/A'}<br/>
+        Owner: ${props.owner || 'N/A'}<br/>
+        From: ${props.sub_1 || 'N/A'}<br/>
+        To: ${props.sub_2 || 'N/A'}
+      `)
+      .addTo(map)
+  })
+
+  // Click on feeder — show popup
+  map.on('click', 'feeders', (e) => {
+    if (!map || !e.features || e.features.length === 0) return
+    const props = e.features[0].properties
+    new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
+      .setLngLat(e.lngLat)
+      .setHTML(`
+        <strong>Feeder ${props.feeder_id_external || ''}</strong><br/>
+        Capacity: ${props.capacity_mw ? props.capacity_mw + ' MW' : 'N/A'}<br/>
+        Loading: ${props.peak_loading_pct != null ? props.peak_loading_pct.toFixed(1) + '%' : 'N/A'}<br/>
+        Voltage: ${props.voltage_kv ? props.voltage_kv + ' kV' : 'N/A'}
+      `)
+      .addTo(map)
+  })
+
   // Click on map background (for siting)
   map.on('click', (e) => {
     // Only trigger if no feature was clicked
@@ -461,6 +586,33 @@ watch(() => mapStore.showDataCenters, (v) => {
 watch(() => mapStore.showDERs, (v) => {
   setLayerVisibility('der-locations', v)
   setLayerVisibility('der-locations-count', v)
+})
+// Switch zone color mode between classification and value (transmission_score)
+watch(() => mapStore.zoneColorMode, (mode) => {
+  if (!map) return
+  const color = mode === 'value'
+    ? [
+        'interpolate', ['linear'],
+        ['coalesce', ['get', 'transmission_score'], 0],
+        0, '#43a047',
+        30, '#fdd835',
+        60, '#ff9800',
+        100, '#e53935',
+      ] as unknown as ExpressionSpecification
+    : classificationColor
+  if (map.getLayer('zones-fill')) {
+    map.setPaintProperty('zones-fill', 'fill-color', color)
+  }
+  if (map.getLayer('zones-outline')) {
+    map.setPaintProperty('zones-outline', 'line-color', color)
+  }
+})
+watch(() => mapStore.showTransmissionLines, (v) => {
+  setLayerVisibility('transmission-lines', v)
+  setLayerVisibility('transmission-lines-label', v)
+})
+watch(() => mapStore.showFeeders, (v) => {
+  setLayerVisibility('feeders', v)
 })
 watch(() => mapStore.showAssets, (v) => {
   // Assets not yet a vector tile layer; will be handled when HC integration lands

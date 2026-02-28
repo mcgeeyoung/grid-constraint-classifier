@@ -51,6 +51,20 @@
             color="info"
           />
           <v-checkbox
+            v-model="mapStore.showTransmissionLines"
+            label="Transmission Lines"
+            density="compact"
+            hide-details
+            color="red"
+          />
+          <v-checkbox
+            v-model="mapStore.showFeeders"
+            label="Feeders"
+            density="compact"
+            hide-details
+            color="blue-grey"
+          />
+          <v-checkbox
             v-model="mapStore.showAssets"
             label="WattCarbon Assets"
             density="compact"
