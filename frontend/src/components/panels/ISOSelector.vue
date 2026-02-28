@@ -3,10 +3,10 @@
     <v-chip
       v-for="iso in isoStore.isos"
       :key="iso.iso_code"
-      :color="iso.iso_code === isoStore.selectedISO ? 'primary' : undefined"
-      :variant="iso.iso_code === isoStore.selectedISO ? 'flat' : 'outlined'"
+      :color="isoStore.selectedISOs.includes(iso.iso_code) ? 'primary' : undefined"
+      :variant="isoStore.selectedISOs.includes(iso.iso_code) ? 'flat' : 'outlined'"
       size="small"
-      @click="isoStore.selectISO(iso.iso_code)"
+      @click="onClick(iso.iso_code, $event)"
     >
       {{ iso.iso_code.toUpperCase() }}
     </v-chip>
@@ -24,4 +24,14 @@ onMounted(() => {
     isoStore.loadISOs()
   }
 })
+
+function onClick(isoCode: string, event: MouseEvent | KeyboardEvent) {
+  if ('metaKey' in event && (event.metaKey || event.ctrlKey)) {
+    // Multi-select: Cmd/Ctrl+click toggles individual ISO
+    isoStore.toggleISO(isoCode)
+  } else {
+    // Single click: exclusive select
+    isoStore.selectISO(isoCode)
+  }
+}
 </script>

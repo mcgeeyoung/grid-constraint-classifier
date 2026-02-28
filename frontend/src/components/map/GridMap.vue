@@ -32,7 +32,7 @@
 import { ref, watch } from 'vue'
 import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet'
 import { useMapStore } from '@/stores/mapStore'
-import { useIsoStore } from '@/stores/isoStore'
+import { useIsoStore, ISO_VIEW } from '@/stores/isoStore'
 import ZoneLayer from './ZoneLayer.vue'
 import DERMarkers from './DERMarkers.vue'
 import SubstationMarkers from './SubstationMarkers.vue'
@@ -66,13 +66,7 @@ function getLeafletMap() {
   return (mapRef.value as any)?.leafletObject
 }
 
-const ISO_VIEW: Record<string, { lat: number; lng: number; zoom: number }> = {
-  caiso: { lat: 37.0, lng: -119.5, zoom: 6 },
-  miso:  { lat: 42.0, lng: -90.0, zoom: 5 },
-  nyiso: { lat: 43.0, lng: -75.5, zoom: 7 },
-  pjm:   { lat: 39.5, lng: -78.0, zoom: 6 },
-  spp:   { lat: 37.5, lng: -97.0, zoom: 5 },
-}
+// ISO_VIEW imported from isoStore
 
 // Pan to ISO region when selected
 watch(() => isoStore.selectedISO, (iso) => {

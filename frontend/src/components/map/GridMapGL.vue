@@ -8,7 +8,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import maplibregl, { type ExpressionSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useMapStore } from '@/stores/mapStore'
-import { useIsoStore } from '@/stores/isoStore'
+import { useIsoStore, ISO_VIEW } from '@/stores/isoStore'
 import MapLegend from './MapLegend.vue'
 
 const mapStore = useMapStore()
@@ -19,14 +19,6 @@ let map: maplibregl.Map | null = null
 let skipCenterSync = false
 
 const TILE_BASE = '/api/v1/tiles'
-
-const ISO_VIEW: Record<string, { lat: number; lng: number; zoom: number }> = {
-  caiso: { lat: 37.0, lng: -119.5, zoom: 6 },
-  miso:  { lat: 42.0, lng: -90.0, zoom: 5 },
-  nyiso: { lat: 43.0, lng: -75.5, zoom: 7 },
-  pjm:   { lat: 39.5, lng: -78.0, zoom: 6 },
-  spp:   { lat: 37.5, lng: -97.0, zoom: 5 },
-}
 
 // Data-driven style expressions (cast to avoid MapLibre TS strictness with spread)
 const classificationColor = [
@@ -130,21 +122,39 @@ function initMap() {
   })
 }
 
+const TILE_LAYERS = [
+  'zones', 'transmission_lines', 'substations',
+  'pnodes', 'data_centers', 'der_locations', 'feeders',
+]
+
+function tileUrl(layer: string): string {
+  const base = `${window.location.origin}${TILE_BASE}/${layer}/{z}/{x}/{y}.mvt`
+  if (isoStore.selectedISOs.length > 0) {
+    return `${base}?iso_id=${isoStore.selectedISOs.join(',')}`
+  }
+  return base
+}
+
 function addTileSources() {
   if (!map) return
 
-  const layers = [
-    'zones', 'transmission_lines', 'substations',
-    'pnodes', 'data_centers', 'der_locations', 'feeders',
-  ]
-
-  for (const layer of layers) {
+  for (const layer of TILE_LAYERS) {
     map.addSource(`${layer}-source`, {
       type: 'vector',
-      tiles: [`${window.location.origin}${TILE_BASE}/${layer}/{z}/{x}/{y}.mvt`],
+      tiles: [tileUrl(layer)],
       minzoom: 0,
       maxzoom: 14,
     })
+  }
+}
+
+function updateTileSourceUrls() {
+  if (!map) return
+  for (const layer of TILE_LAYERS) {
+    const source = map.getSource(`${layer}-source`) as maplibregl.VectorTileSource | undefined
+    if (source) {
+      source.setTiles([tileUrl(layer)])
+    }
   }
 }
 
@@ -618,14 +628,23 @@ watch(() => mapStore.showAssets, (v) => {
   // Assets not yet a vector tile layer; will be handled when HC integration lands
 })
 
-// Pan to ISO region when selected
-watch(() => isoStore.selectedISO, (iso) => {
-  if (!iso || !map) return
-  const view = ISO_VIEW[iso]
-  if (!view) return
-  skipCenterSync = true
-  map.flyTo({ center: [view.lng, view.lat], zoom: view.zoom, duration: 1200 })
-  setTimeout(() => { skipCenterSync = false }, 1500)
+// Update tile sources and pan when ISO selection changes
+watch(() => [...isoStore.selectedISOs], (isos, oldIsos) => {
+  if (!map) return
+
+  // Refresh tile source URLs with new ISO filter
+  updateTileSourceUrls()
+
+  // Pan to the most recently added ISO
+  const newIso = isos.find(iso => !oldIsos?.includes(iso))
+  if (newIso) {
+    const view = ISO_VIEW[newIso]
+    if (view) {
+      skipCenterSync = true
+      map.flyTo({ center: [view.lng, view.lat], zoom: view.zoom, duration: 1200 })
+      setTimeout(() => { skipCenterSync = false }, 1500)
+    }
+  }
 })
 
 onMounted(() => {

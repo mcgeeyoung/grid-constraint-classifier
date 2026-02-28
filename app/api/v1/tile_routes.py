@@ -6,7 +6,9 @@ Each layer returns geometry + key attributes for data-driven styling.
 
 import hashlib
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Response
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, Response
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -18,6 +20,7 @@ router = APIRouter(prefix="/api/v1/tiles")
 _etag_cache: dict[str, str] = {}
 
 # Valid layer names and their configurations
+# iso_filter: how to filter by ISO. "direct" = t.iso_id, "join:table" = join through another table
 LAYER_CONFIG = {
     "zones": {
         "table": "zones",
@@ -25,6 +28,7 @@ LAYER_CONFIG = {
         "srid": 4326,
         "attributes": "zone_code, zone_name",
         "id_col": "id",
+        "iso_filter": "direct",
     },
     "pnodes": {
         "table": "pnodes",
@@ -32,6 +36,7 @@ LAYER_CONFIG = {
         "srid": 4326,
         "attributes": "node_id_external, node_name",
         "id_col": "id",
+        "iso_filter": "direct",
     },
     "data_centers": {
         "table": "data_centers",
@@ -39,6 +44,7 @@ LAYER_CONFIG = {
         "srid": 4326,
         "attributes": "facility_name, status, capacity_mw, operator, state_code",
         "id_col": "id",
+        "iso_filter": "direct",
     },
     "substations": {
         "table": "substations",
@@ -49,6 +55,7 @@ LAYER_CONFIG = {
             "facility_loading_mw, peak_loading_pct, facility_type"
         ),
         "id_col": "id",
+        "iso_filter": "direct",
     },
     "transmission_lines": {
         "table": "transmission_lines",
@@ -56,6 +63,7 @@ LAYER_CONFIG = {
         "srid": 4326,
         "attributes": "voltage_kv, owner, sub_1, sub_2",
         "id_col": "id",
+        "iso_filter": "direct",
     },
     "feeders": {
         "table": "feeders",
@@ -63,6 +71,7 @@ LAYER_CONFIG = {
         "srid": 4326,
         "attributes": "feeder_id_external, capacity_mw, peak_loading_pct, voltage_kv",
         "id_col": "id",
+        "iso_filter": "join:substations",
     },
     "der_locations": {
         "table": "der_locations",
@@ -70,6 +79,7 @@ LAYER_CONFIG = {
         "srid": 4326,
         "attributes": "der_type, eac_category, capacity_mw, source",
         "id_col": "id",
+        "iso_filter": "direct",
     },
 }
 
@@ -145,11 +155,27 @@ ZONE_JOIN_SQL = """
 """
 
 
+def _build_iso_where(layer: str, iso_ids: list[int] | None) -> str:
+    """Build an ISO filter WHERE clause for a layer."""
+    if not iso_ids:
+        return ""
+    id_list = ", ".join(str(i) for i in iso_ids)
+    iso_filter = LAYER_CONFIG[layer].get("iso_filter", "direct")
+    if iso_filter == "direct":
+        return f"AND t.iso_id IN ({id_list})"
+    elif iso_filter.startswith("join:"):
+        # Feeders: join through substations
+        join_table = iso_filter.split(":")[1]
+        return f"AND t.substation_id IN (SELECT id FROM {join_table} WHERE iso_id IN ({id_list}))"
+    return ""
+
+
 def _build_tile_query(
     layer: str,
     z: int,
     x: int,
     y: int,
+    iso_ids: list[int] | None = None,
 ) -> str:
     """Build the SQL query for a vector tile."""
     config = LAYER_CONFIG[layer]
@@ -171,6 +197,9 @@ def _build_tile_query(
                 if tolerance is not None:
                     geom_expr = f"ST_Simplify(t.{geom_col}, {tolerance})"
                 break
+
+    # ISO filter
+    iso_where = _build_iso_where(layer, iso_ids)
 
     # Build MVT geometry expression
     mvt_geom = (
@@ -206,6 +235,7 @@ def _build_tile_query(
                   ST_TileEnvelope(:z, :x, :y)
               )
               {extra_where}
+              {iso_where}
         )
         SELECT ST_AsMVT(tile_data, :layer_name, 4096, 'geom', '{id_col}')
         FROM tile_data
@@ -218,6 +248,7 @@ def _build_clustered_tile_query(
     z: int,
     x: int,
     y: int,
+    iso_ids: list[int] | None = None,
 ) -> str:
     """Build a clustered MVT query using ST_ClusterDBSCAN for point layers at low zoom.
 
@@ -250,6 +281,9 @@ def _build_clustered_tile_query(
 
     agg_fn = "SUM" if agg_col == "total_value" else "AVG"
 
+    # ISO filter
+    iso_where = _build_iso_where(layer, iso_ids)
+
     sql = f"""
         WITH filtered AS (
             SELECT
@@ -264,6 +298,7 @@ def _build_clustered_tile_query(
                   ST_Transform(t.{geom_col}, 3857),
                   ST_TileEnvelope(:z, :x, :y)
               )
+              {iso_where}
         ),
         merged AS (
             SELECT
@@ -339,6 +374,10 @@ def get_vector_tile(
     z: int,
     x: int,
     y: int,
+    iso_id: Optional[str] = Query(
+        None,
+        description="Comma-separated ISO codes to filter by (e.g. 'pjm,miso')",
+    ),
     if_none_match: str = Header(None),
     db: Session = Depends(get_db),
 ):
@@ -347,14 +386,25 @@ def get_vector_tile(
     Layers: zones, pnodes, data_centers, substations, transmission_lines,
     feeders, der_locations.
 
-    Supports ETag/If-None-Match for conditional requests. Returns 304
-    when the client's cached tile is still valid.
+    Supports optional iso_id filter (comma-separated ISO codes) and
+    ETag/If-None-Match for conditional requests.
     """
     if layer not in LAYER_CONFIG:
         raise HTTPException(
             404,
             f"Unknown layer '{layer}'. Valid layers: {', '.join(LAYER_CONFIG.keys())}",
         )
+
+    # Resolve ISO codes to numeric IDs for SQL filtering
+    iso_ids: list[int] | None = None
+    if iso_id:
+        codes = [c.strip().lower() for c in iso_id.split(",") if c.strip()]
+        if codes:
+            rows = db.execute(
+                text("SELECT id FROM isos WHERE iso_code IN :codes"),
+                {"codes": tuple(codes)},
+            ).fetchall()
+            iso_ids = [row[0] for row in rows] if rows else []
 
     etag = _get_etag(db)
 
@@ -365,9 +415,9 @@ def get_vector_tile(
     # Use clustered query for point layers at low zoom
     cluster_cfg = CLUSTER_CONFIG.get(layer)
     if cluster_cfg and z < cluster_cfg["cluster_below_zoom"]:
-        sql = _build_clustered_tile_query(layer, z, x, y)
+        sql = _build_clustered_tile_query(layer, z, x, y, iso_ids)
     else:
-        sql = _build_tile_query(layer, z, x, y)
+        sql = _build_tile_query(layer, z, x, y, iso_ids)
 
     result = db.execute(
         text(sql),
