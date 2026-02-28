@@ -1,0 +1,25 @@
+utility_code: pge
+utility_name: "Pacific Gas & Electric"
+parent_company: null
+iso_id: caiso
+states: [CA]
+data_source_type: arcgis_feature
+requires_auth: false
+
+service_url: "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer"
+layer_index: 7  # ICAEstimatedCapacitySummary
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+field_map:
+  FeederId: feeder_id_external
+  FeederName: feeder_name
+  SubstationName: substation_name
+  ICA_kW: hosting_capacity_mw
+  Existing_Gen_kW: installed_dg_mw
+  Queued_Gen_kW: queued_dg_mw
+  Limiting_Factor: constraining_metric
+  Voltage: voltage_kv

@@ -1,0 +1,28 @@
+utility_code: ace
+utility_name: "Atlantic City Electric"
+parent_company: "Exelon"
+iso_id: pjm
+states: [NJ]
+data_source_type: arcgis_feature
+requires_auth: false
+
+service_url: "https://services3.arcgis.com/agWTKEK7X5K1Bx7o/arcgis/rest/services/PHI_Hosting_Capacity/FeatureServer"
+layer_index: 4  # ACE
+page_size: 3500
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+field_map:
+  FEEDER_ID: feeder_id_external
+  FEEDER_NAME: feeder_name
+  SUBSTATION: substation_name
+  HC_KW: hosting_capacity_mw
+  MIN_HC_KW: hosting_capacity_min_mw
+  MAX_HC_KW: hosting_capacity_max_mw
+  EXISTING_DG_KW: installed_dg_mw
+  QUEUED_DG_KW: queued_dg_mw
+  LIMITING_FACTOR: constraining_metric
+  VOLTAGE_KV: voltage_kv
+  PHASE: phase_config

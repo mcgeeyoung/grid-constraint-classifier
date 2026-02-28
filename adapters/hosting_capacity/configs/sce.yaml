@@ -1,0 +1,27 @@
+utility_code: sce
+utility_name: "Southern California Edison"
+parent_company: "Edison International"
+iso_id: caiso
+states: [CA]
+data_source_type: arcgis_feature
+requires_auth: false
+
+service_url: "https://drpep.sce.com/arcgis/rest/services/DRP/ICA_Layer/FeatureServer"
+layer_index: 0
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+field_map:
+  CircuitName: feeder_id_external
+  CircuitDisplayName: feeder_name
+  SubstationName: substation_name
+  UniformGenerationCapacity_kW: hosting_capacity_mw
+  MinGenerationCapacity_kW: hosting_capacity_min_mw
+  MaxGenerationCapacity_kW: hosting_capacity_max_mw
+  ExistingGeneration_kW: installed_dg_mw
+  QueuedGeneration_kW: queued_dg_mw
+  LimitingCriteria: constraining_metric
+  NominalVoltage_kV: voltage_kv

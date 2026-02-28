@@ -1,0 +1,28 @@
+utility_code: comed
+utility_name: "Commonwealth Edison"
+parent_company: "Exelon"
+iso_id: pjm
+states: [IL]
+data_source_type: exelon
+requires_auth: false
+
+service_url: "https://services3.arcgis.com/agWTKEK7X5K1Bx7o/arcgis/rest/services/ComEd_PV_Hosting_Capacity_MAR2026/FeatureServer"
+layer_index: 0
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: quarterly_name
+url_pattern: "ComEd_PV_Hosting_Capacity_{month}{year}"
+
+field_map:
+  FEEDER_ID: feeder_id_external
+  FEEDER_NAME: feeder_name
+  SUBSTATION: substation_name
+  HC_KW: hosting_capacity_mw
+  MIN_HC_KW: hosting_capacity_min_mw
+  MAX_HC_KW: hosting_capacity_max_mw
+  EXISTING_DG_KW: installed_dg_mw
+  QUEUED_DG_KW: queued_dg_mw
+  LIMITING_FACTOR: constraining_metric
+  VOLTAGE_KV: voltage_kv
