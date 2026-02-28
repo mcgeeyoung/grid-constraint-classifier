@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey, UniqueConstraint
+from sqlalchemy import Index, String, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -12,6 +12,8 @@ class ZoneClassification(Base):
     __tablename__ = "zone_classifications"
     __table_args__ = (
         UniqueConstraint("pipeline_run_id", "zone_id", name="uq_zone_cls"),
+        Index("ix_zone_classifications_pipeline_run_id", "pipeline_run_id"),
+        Index("ix_zone_classifications_zone_id", "zone_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

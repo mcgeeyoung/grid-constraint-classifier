@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, Integer, ForeignKey, JSON
+from sqlalchemy import Index, String, Float, Integer, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -10,6 +10,10 @@ from .base import Base
 
 class TransmissionLine(Base):
     __tablename__ = "transmission_lines"
+    __table_args__ = (
+        Index("ix_transmission_lines_iso_id", "iso_id"),
+        Index("ix_transmission_lines_voltage_kv", "voltage_kv"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iso_id: Mapped[int] = mapped_column(ForeignKey("isos.id"), nullable=False)

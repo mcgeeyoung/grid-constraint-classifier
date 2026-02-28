@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, Integer, ForeignKey, UniqueConstraint
+from sqlalchemy import Index, String, Float, Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -12,6 +12,9 @@ class Substation(Base):
     __tablename__ = "substations"
     __table_args__ = (
         UniqueConstraint("iso_id", "substation_name", "bank_name", name="uq_substations"),
+        Index("ix_substations_iso_id", "iso_id"),
+        Index("ix_substations_zone_id", "zone_id"),
+        Index("ix_substations_peak_loading_pct", "peak_loading_pct"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -33,9 +33,17 @@ const zonesWithGeo = computed<ZoneGeo[]>(() => {
     })
   }
 
+  // Build a map from zone_code to boundary_geojson (loaded separately)
+  const geoMap = new Map<string, Record<string, any>>()
+  for (const g of isoStore.zoneGeometries) {
+    if (g.boundary_geojson) {
+      geoMap.set(g.zone_code, g.boundary_geojson)
+    }
+  }
+
   const filters = mapStore.filterClassifications
   return isoStore.zones
-    .filter(z => z.boundary_geojson)
+    .filter(z => geoMap.has(z.zone_code))
     .map(z => ({
       zone_code: z.zone_code,
       classification: clsMap.get(z.zone_code)?.classification ?? 'unconstrained',
@@ -43,7 +51,7 @@ const zonesWithGeo = computed<ZoneGeo[]>(() => {
       geojson: {
         type: 'Feature' as const,
         properties: { zone_code: z.zone_code },
-        geometry: z.boundary_geojson,
+        geometry: geoMap.get(z.zone_code),
       },
     }))
     .filter(z => filters.length === 0 || filters.includes(z.classification))

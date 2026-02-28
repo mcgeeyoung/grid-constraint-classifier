@@ -3,10 +3,12 @@ import { ref } from 'vue'
 import {
   fetchISOs,
   fetchZones,
+  fetchZoneGeometries,
   fetchClassifications,
   fetchRecommendations,
   type ISO,
   type Zone,
+  type ZoneGeometry,
   type ZoneClassification,
   type DERRecommendation,
 } from '@/api/isos'
@@ -25,6 +27,7 @@ export const useIsoStore = defineStore('iso', () => {
   const isos = ref<ISO[]>([])
   const selectedISO = ref<string | null>(null)
   const zones = ref<Zone[]>([])
+  const zoneGeometries = ref<ZoneGeometry[]>([])
   const classifications = ref<ZoneClassification[]>([])
   const derLocations = ref<DERLocation[]>([])
   const recommendations = ref<DERRecommendation[]>([])
@@ -45,6 +48,8 @@ export const useIsoStore = defineStore('iso', () => {
     }
 
     try {
+      // Fetch zone metadata + classifications + DERs + recommendations in parallel
+      // Zone geometries are loaded separately (heavy) and non-blocking
       const [z, c, d, r] = await Promise.all([
         fetchZones(isoCode),
         fetchClassifications(isoCode),
@@ -55,6 +60,13 @@ export const useIsoStore = defineStore('iso', () => {
       classifications.value = c
       derLocations.value = d
       recommendations.value = r
+
+      // Load zone geometries in background (non-blocking)
+      fetchZoneGeometries(isoCode).then(g => {
+        zoneGeometries.value = g
+      }).catch(() => {
+        zoneGeometries.value = []
+      })
     } finally {
       isLoading.value = false
     }
@@ -68,6 +80,7 @@ export const useIsoStore = defineStore('iso', () => {
     isos,
     selectedISO,
     zones,
+    zoneGeometries,
     classifications,
     derLocations,
     recommendations,

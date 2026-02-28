@@ -18,11 +18,20 @@ class ISOResponse(BaseModel):
 
 
 class ZoneResponse(BaseModel):
+    """Zone metadata without boundary geometry (lightweight)."""
     zone_code: str
     zone_name: Optional[str] = None
     centroid_lat: Optional[float] = None
     centroid_lon: Optional[float] = None
     states: Optional[list] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ZoneGeometryResponse(BaseModel):
+    """Zone boundary GeoJSON (heavy, fetched separately)."""
+    zone_code: str
     boundary_geojson: Optional[dict] = None
 
     class Config:

@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Float, SmallInteger, ForeignKey, UniqueConstraint, DateTime, Integer
+from sqlalchemy import Float, SmallInteger, ForeignKey, UniqueConstraint, DateTime, Index, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -13,6 +13,12 @@ class ZoneLMP(Base):
     __tablename__ = "zone_lmps"
     __table_args__ = (
         UniqueConstraint("iso_id", "zone_id", "timestamp_utc", name="uq_zone_lmps"),
+        Index("ix_zone_lmps_iso_id", "iso_id"),
+        Index("ix_zone_lmps_zone_id", "zone_id"),
+        Index("ix_zone_lmps_timestamp_utc", "timestamp_utc"),
+        Index("ix_zone_lmps_iso_zone_ts", "iso_id", "zone_id", "timestamp_utc"),
+        Index("ix_zone_lmps_hour_local", "hour_local"),
+        Index("ix_zone_lmps_month", "month"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -14,6 +14,10 @@ export interface Zone {
   centroid_lat: number | null
   centroid_lon: number | null
   states: string[] | null
+}
+
+export interface ZoneGeometry {
+  zone_code: string
   boundary_geojson: Record<string, any> | null
 }
 
@@ -71,6 +75,11 @@ export async function fetchISOs(): Promise<ISO[]> {
 
 export async function fetchZones(isoCode: string): Promise<Zone[]> {
   const { data } = await client.get<Zone[]>(`/isos/${isoCode}/zones`)
+  return data
+}
+
+export async function fetchZoneGeometries(isoCode: string): Promise<ZoneGeometry[]> {
+  const { data } = await client.get<ZoneGeometry[]>(`/isos/${isoCode}/zones/geometry`)
   return data
 }
 

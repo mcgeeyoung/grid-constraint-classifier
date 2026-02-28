@@ -28,6 +28,7 @@ def list_wattcarbon_assets(
     iso_code: Optional[str] = None,
     der_type: Optional[str] = None,
     limit: int = Query(default=100, le=5000),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
     """List synced WattCarbon assets (DERLocations with source=wattcarbon)."""
@@ -44,7 +45,7 @@ def list_wattcarbon_assets(
     if der_type:
         query = query.filter(DERLocation.der_type == der_type)
 
-    results = query.limit(limit).all()
+    results = query.offset(offset).limit(limit).all()
 
     return [
         WattCarbonAssetResponse(

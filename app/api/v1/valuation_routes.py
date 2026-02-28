@@ -143,6 +143,7 @@ def list_der_locations(
     der_type: Optional[str] = None,
     source: Optional[str] = None,
     limit: int = Query(default=100, le=5000),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
     """List DER locations with optional filters. Includes latest value_tier."""
@@ -163,7 +164,7 @@ def list_der_locations(
     if source:
         query = query.filter(DERLocation.source == source)
 
-    results = query.limit(limit).all()
+    results = query.offset(offset).limit(limit).all()
 
     return [
         DERLocationResponse(

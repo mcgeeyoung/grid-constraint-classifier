@@ -32,24 +32,35 @@ import { fetchAllPnodeScores, type PnodeScore } from '@/api/isos'
 const isoStore = useIsoStore()
 const mapStore = useMapStore()
 const pnodes = ref<PnodeScore[]>([])
+let fetchController: AbortController | null = null
 
 const visiblePnodes = computed(() => {
-  if (mapStore.zoom < 7) return []
+  if (!mapStore.showSubstations && pnodes.value.length === 0) return []
   return pnodes.value.filter(p => p.lat != null && p.lon != null)
 })
 
-// Load all pnodes when ISO is selected
+// Load all pnodes when ISO is selected, abort previous request
 watch(
   () => isoStore.selectedISO,
   async (iso) => {
+    // Abort any in-flight request
+    if (fetchController) {
+      fetchController.abort()
+      fetchController = null
+    }
+
     if (!iso) {
       pnodes.value = []
       return
     }
+
+    fetchController = new AbortController()
     try {
       pnodes.value = await fetchAllPnodeScores(iso)
     } catch {
       pnodes.value = []
+    } finally {
+      fetchController = null
     }
   },
   { immediate: true },

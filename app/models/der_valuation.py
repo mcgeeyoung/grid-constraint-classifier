@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey, UniqueConstraint, JSON, DateTime
+from sqlalchemy import Index, String, Float, ForeignKey, UniqueConstraint, JSON, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -13,6 +13,9 @@ class DERValuation(Base):
     __tablename__ = "der_valuations"
     __table_args__ = (
         UniqueConstraint("pipeline_run_id", "der_location_id", name="uq_der_valuations"),
+        Index("ix_der_valuations_der_location_id", "der_location_id"),
+        Index("ix_der_valuations_pipeline_run_id", "pipeline_run_id"),
+        Index("ix_der_valuations_value_tier", "value_tier"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

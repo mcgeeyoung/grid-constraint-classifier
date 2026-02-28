@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, Integer, ForeignKey, UniqueConstraint, JSON
+from sqlalchemy import Index, String, Float, Integer, ForeignKey, UniqueConstraint, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -15,6 +15,9 @@ class HierarchyScore(Base):
             "pipeline_run_id", "level", "entity_id",
             name="uq_hierarchy_scores",
         ),
+        Index("ix_hierarchy_scores_pipeline_run_id", "pipeline_run_id"),
+        Index("ix_hierarchy_scores_level", "level"),
+        Index("ix_hierarchy_scores_combined_score", "combined_score"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

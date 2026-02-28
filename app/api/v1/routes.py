@@ -15,7 +15,7 @@ from app.models import (
     Substation, DERLocation, DERValuation,
 )
 from app.schemas.responses import (
-    ISOResponse, ZoneResponse, ZoneClassificationResponse,
+    ISOResponse, ZoneResponse, ZoneGeometryResponse, ZoneClassificationResponse,
     PnodeScoreResponse, ZoneLMPResponse, LoadshapeHourResponse,
     DataCenterResponse,
     DERRecommendationResponse, PipelineRunResponse, OverviewResponse,
@@ -34,12 +34,62 @@ def list_isos(db: Session = Depends(get_db)):
 
 @router.get("/isos/{iso_id}/zones", response_model=list[ZoneResponse])
 def list_zones(iso_id: str, db: Session = Depends(get_db)):
-    """List zones for an ISO."""
+    """List zones for an ISO (without boundary geometry for performance)."""
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
         raise HTTPException(404, f"ISO '{iso_id}' not found")
-    zones = db.query(Zone).filter(Zone.iso_id == iso.id).order_by(Zone.zone_code).all()
-    return zones
+    # Exclude boundary_geojson to avoid loading 12MB+ per query
+    zones = (
+        db.query(
+            Zone.zone_code, Zone.zone_name,
+            Zone.centroid_lat, Zone.centroid_lon, Zone.states,
+        )
+        .filter(Zone.iso_id == iso.id)
+        .order_by(Zone.zone_code)
+        .all()
+    )
+    return [
+        ZoneResponse(
+            zone_code=z.zone_code,
+            zone_name=z.zone_name,
+            centroid_lat=z.centroid_lat,
+            centroid_lon=z.centroid_lon,
+            states=z.states,
+        )
+        for z in zones
+    ]
+
+
+@router.get("/isos/{iso_id}/zones/geometry", response_model=list[ZoneGeometryResponse])
+def list_zone_geometries(iso_id: str, db: Session = Depends(get_db)):
+    """Get boundary GeoJSON for all zones in an ISO (heavy, use sparingly)."""
+    iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
+    if not iso:
+        raise HTTPException(404, f"ISO '{iso_id}' not found")
+    zones = (
+        db.query(Zone.zone_code, Zone.boundary_geojson)
+        .filter(Zone.iso_id == iso.id)
+        .order_by(Zone.zone_code)
+        .all()
+    )
+    return [
+        ZoneGeometryResponse(zone_code=z.zone_code, boundary_geojson=z.boundary_geojson)
+        for z in zones
+    ]
+
+
+@router.get("/isos/{iso_id}/zones/{zone_code}/geometry", response_model=ZoneGeometryResponse)
+def get_zone_geometry(iso_id: str, zone_code: str, db: Session = Depends(get_db)):
+    """Get boundary GeoJSON for a single zone."""
+    iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
+    if not iso:
+        raise HTTPException(404, f"ISO '{iso_id}' not found")
+    zone = db.query(Zone.zone_code, Zone.boundary_geojson).filter(
+        Zone.iso_id == iso.id, Zone.zone_code == zone_code,
+    ).first()
+    if not zone:
+        raise HTTPException(404, f"Zone '{zone_code}' not found in {iso_id}")
+    return ZoneGeometryResponse(zone_code=zone.zone_code, boundary_geojson=zone.boundary_geojson)
 
 
 @router.get("/isos/{iso_id}/classifications", response_model=list[ZoneClassificationResponse])
@@ -83,7 +133,13 @@ def get_classifications(iso_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/isos/{iso_id}/zones/{zone_code}/pnodes", response_model=list[PnodeScoreResponse])
-def get_pnode_scores(iso_id: str, zone_code: str, db: Session = Depends(get_db)):
+def get_pnode_scores(
+    iso_id: str,
+    zone_code: str,
+    limit: int = Query(default=500, le=5000),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
     """Get pnode severity scores for a zone."""
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
@@ -110,6 +166,8 @@ def get_pnode_scores(iso_id: str, zone_code: str, db: Session = Depends(get_db))
             Pnode.zone_id == zone.id,
         )
         .order_by(PnodeScore.severity_score.desc())
+        .offset(offset)
+        .limit(limit)
         .all()
     )
 
@@ -130,7 +188,12 @@ def get_pnode_scores(iso_id: str, zone_code: str, db: Session = Depends(get_db))
 
 
 @router.get("/isos/{iso_id}/pnodes", response_model=list[PnodeScoreResponse])
-def get_all_pnode_scores(iso_id: str, db: Session = Depends(get_db)):
+def get_all_pnode_scores(
+    iso_id: str,
+    limit: int = Query(default=1000, le=10000),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
     """Get all pnode severity scores for an ISO (all zones)."""
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
@@ -153,6 +216,8 @@ def get_all_pnode_scores(iso_id: str, db: Session = Depends(get_db)):
             Pnode.iso_id == iso.id,
         )
         .order_by(PnodeScore.severity_score.desc())
+        .offset(offset)
+        .limit(limit)
         .all()
     )
 
@@ -177,6 +242,7 @@ def get_zone_lmps(
     iso_id: str,
     zone_code: str,
     limit: int = Query(default=500, le=10000),
+    offset: int = Query(default=0, ge=0),
     month: Optional[int] = Query(default=None, ge=1, le=12),
     db: Session = Depends(get_db),
 ):
@@ -197,7 +263,7 @@ def get_zone_lmps(
     if month is not None:
         query = query.filter(ZoneLMP.month == month)
 
-    lmps = query.order_by(ZoneLMP.timestamp_utc.desc()).limit(limit).all()
+    lmps = query.order_by(ZoneLMP.timestamp_utc.desc()).offset(offset).limit(limit).all()
     return lmps
 
 
@@ -242,11 +308,24 @@ def list_data_centers(
     zone_code: Optional[str] = None,
     status: Optional[str] = None,
     limit: int = Query(default=100, le=5000),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
     """List data centers, filterable by ISO, zone, status."""
     query = (
-        db.query(DataCenter, ISO, Zone)
+        db.query(
+            DataCenter.external_slug,
+            DataCenter.facility_name,
+            DataCenter.status,
+            DataCenter.capacity_mw,
+            DataCenter.lat,
+            DataCenter.lon,
+            DataCenter.state_code,
+            DataCenter.county,
+            DataCenter.operator,
+            ISO.iso_code,
+            Zone.zone_code,
+        )
         .join(ISO, DataCenter.iso_id == ISO.id)
         .outerjoin(Zone, DataCenter.zone_id == Zone.id)
     )
@@ -258,23 +337,23 @@ def list_data_centers(
     if status:
         query = query.filter(DataCenter.status == status.lower())
 
-    results = query.limit(limit).all()
+    results = query.offset(offset).limit(limit).all()
 
     return [
         DataCenterResponse(
-            external_slug=dc.external_slug,
-            facility_name=dc.facility_name,
-            status=dc.status,
-            capacity_mw=dc.capacity_mw,
-            lat=dc.lat,
-            lon=dc.lon,
-            state_code=dc.state_code,
-            county=dc.county,
-            operator=dc.operator,
-            iso_code=iso.iso_code,
-            zone_code=zone.zone_code if zone else None,
+            external_slug=row.external_slug,
+            facility_name=row.facility_name,
+            status=row.status,
+            capacity_mw=row.capacity_mw,
+            lat=row.lat,
+            lon=row.lon,
+            state_code=row.state_code,
+            county=row.county,
+            operator=row.operator,
+            iso_code=row.iso_code,
+            zone_code=row.zone_code,
         )
-        for dc, iso, zone in results
+        for row in results
     ]
 
 

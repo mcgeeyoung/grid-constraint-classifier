@@ -29,6 +29,7 @@ def list_substations(
     min_loading_pct: Optional[float] = Query(None, ge=0, description="Minimum peak loading %"),
     division: Optional[str] = Query(None, description="Filter by division"),
     limit: int = Query(default=200, le=5000),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
     """List substations for an ISO with optional filters."""
@@ -51,7 +52,7 @@ def list_substations(
         query = query.filter(Substation.division == division)
 
     query = query.order_by(Substation.peak_loading_pct.desc().nullslast())
-    results = query.limit(limit).all()
+    results = query.offset(offset).limit(limit).all()
 
     return [
         SubstationResponse(
@@ -185,6 +186,7 @@ def list_hierarchy_scores(
     min_combined_score: Optional[float] = Query(None, ge=0.0, le=1.0),
     constraint_tier: Optional[str] = Query(None, description="CRITICAL, ELEVATED, MODERATE, LOW"),
     limit: int = Query(default=200, le=5000),
+    offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ):
     """
@@ -223,7 +225,7 @@ def list_hierarchy_scores(
         query = query.filter(HierarchyScore.constraint_tier == constraint_tier.upper())
 
     query = query.order_by(HierarchyScore.combined_score.desc().nullslast())
-    results = query.limit(limit).all()
+    results = query.offset(offset).limit(limit).all()
 
     # Resolve entity names for display
     entity_names = _resolve_entity_names(db, results)

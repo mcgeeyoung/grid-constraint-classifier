@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey
+from sqlalchemy import Index, String, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -10,6 +10,12 @@ from .base import Base
 
 class DERLocation(Base):
     __tablename__ = "der_locations"
+    __table_args__ = (
+        Index("ix_der_locations_iso_id", "iso_id"),
+        Index("ix_der_locations_zone_id", "zone_id"),
+        Index("ix_der_locations_source", "source"),
+        Index("ix_der_locations_wattcarbon_asset_id", "wattcarbon_asset_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iso_id: Mapped[int] = mapped_column(ForeignKey("isos.id"), nullable=False)

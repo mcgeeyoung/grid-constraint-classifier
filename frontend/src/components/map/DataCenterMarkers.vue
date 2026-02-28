@@ -26,21 +26,34 @@
 import { ref, computed, watch } from 'vue'
 import { LCircleMarker, LPopup } from '@vue-leaflet/vue-leaflet'
 import { useIsoStore } from '@/stores/isoStore'
+import { useMapStore } from '@/stores/mapStore'
 import { fetchDataCenters, type DataCenter } from '@/api/isos'
 
 const isoStore = useIsoStore()
+const mapStore = useMapStore()
 const dataCenters = ref<DataCenter[]>([])
+let fetchController: AbortController | null = null
 
 const visibleDCs = computed(() => {
+  if (!mapStore.showDataCenters) return []
   return dataCenters.value.filter(d => d.lat != null && d.lon != null)
 })
 
 watch(() => isoStore.selectedISO, async (iso) => {
+  // Abort any in-flight request
+  if (fetchController) {
+    fetchController.abort()
+    fetchController = null
+  }
+
   if (iso) {
+    fetchController = new AbortController()
     try {
       dataCenters.value = await fetchDataCenters(iso)
     } catch {
       dataCenters.value = []
+    } finally {
+      fetchController = null
     }
   } else {
     dataCenters.value = []

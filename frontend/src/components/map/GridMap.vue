@@ -1,13 +1,14 @@
 <template>
   <l-map
     ref="mapRef"
-    :zoom="mapStore.zoom"
-    :center="[mapStore.center.lat, mapStore.center.lng]"
+    :zoom="5"
+    :center="[39.8, -98.5]"
     :use-global-leaflet="false"
     style="height: 100%; width: 100%;"
     @click="onMapClick"
     @update:zoom="mapStore.zoom = $event"
     @update:center="onCenterUpdate"
+    @ready="onMapReady"
   >
     <l-tile-layer
       url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
@@ -18,7 +19,7 @@
     <ZoneLayer v-if="mapStore.showZones" />
     <DERMarkers v-if="mapStore.showDERs" />
     <SubstationMarkers v-if="mapStore.showSubstations" />
-    <DataCenterMarkers v-if="mapStore.showDataCenters" />
+    <DataCenterMarkers />
     <AssetMarkers v-if="mapStore.showAssets" />
     <PnodeMarkers />
     <ComparisonMarkers />
@@ -28,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch } from 'vue'
 import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet'
 import { useMapStore } from '@/stores/mapStore'
 import { useIsoStore } from '@/stores/isoStore'
@@ -46,29 +47,61 @@ const mapStore = useMapStore()
 const isoStore = useIsoStore()
 const mapRef = ref<InstanceType<typeof LMap> | null>(null)
 const skipCenterSync = ref(false)
+const mapReady = ref(false)
 
-// Pan to ISO region when selected, using Leaflet API directly
-watch(() => isoStore.selectedISO, () => {
-  // Suppress onCenterUpdate feedback while we programmatically pan
+// Debounce helper
+function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  return ((...args: any[]) => {
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => fn(...args), ms)
+  }) as unknown as T
+}
+
+function onMapReady() {
+  mapReady.value = true
+}
+
+function getLeafletMap() {
+  return (mapRef.value as any)?.leafletObject
+}
+
+const ISO_VIEW: Record<string, { lat: number; lng: number; zoom: number }> = {
+  caiso: { lat: 37.0, lng: -119.5, zoom: 6 },
+  miso:  { lat: 42.0, lng: -90.0, zoom: 5 },
+  nyiso: { lat: 43.0, lng: -75.5, zoom: 7 },
+  pjm:   { lat: 39.5, lng: -78.0, zoom: 6 },
+  spp:   { lat: 37.5, lng: -97.0, zoom: 5 },
+}
+
+// Pan to ISO region when selected
+watch(() => isoStore.selectedISO, (iso) => {
+  if (!iso) return
+  const view = ISO_VIEW[iso]
+  if (!view) return
   skipCenterSync.value = true
-  nextTick(() => {
-    const map = (mapRef.value as any)?.leafletObject
+  const tryPan = () => {
+    const map = getLeafletMap()
     if (map) {
-      map.setView([mapStore.center.lat, mapStore.center.lng], mapStore.zoom)
+      map.setView([view.lat, view.lng], view.zoom)
+      setTimeout(() => { skipCenterSync.value = false }, 1000)
+    } else {
+      // Map not ready yet, retry
+      setTimeout(tryPan, 100)
     }
-    // Re-enable center sync after Leaflet settles
-    setTimeout(() => { skipCenterSync.value = false }, 500)
-  })
+  }
+  tryPan()
 })
 
 function onMapClick(e: any) {
   mapStore.setClickedPoint({ lat: e.latlng.lat, lng: e.latlng.lng })
 }
 
-function onCenterUpdate(center: any) {
+// Debounce center updates to prevent overlapping fetches during pan/zoom
+const onCenterUpdate = debounce((center: any) => {
   if (skipCenterSync.value) return
   if (center && typeof center.lat === 'number') {
     mapStore.center = { lat: center.lat, lng: center.lng }
   }
-}
+}, 150)
 </script>

@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey, DateTime
+from sqlalchemy import Index, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -11,6 +11,11 @@ from .base import Base
 
 class DataCenter(Base):
     __tablename__ = "data_centers"
+    __table_args__ = (
+        Index("ix_data_centers_iso_id", "iso_id"),
+        Index("ix_data_centers_zone_id", "zone_id"),
+        Index("ix_data_centers_status", "status"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iso_id: Mapped[int] = mapped_column(ForeignKey("isos.id"))

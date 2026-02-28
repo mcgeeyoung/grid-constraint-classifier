@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey, UniqueConstraint
+from sqlalchemy import Index, String, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -12,6 +12,8 @@ class Pnode(Base):
     __tablename__ = "pnodes"
     __table_args__ = (
         UniqueConstraint("iso_id", "node_id_external", name="uq_pnodes_iso_node"),
+        Index("ix_pnodes_iso_id", "iso_id"),
+        Index("ix_pnodes_zone_id", "zone_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
