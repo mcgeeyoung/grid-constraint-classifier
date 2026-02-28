@@ -73,6 +73,45 @@ LAYER_CONFIG = {
     },
 }
 
+# Clustering config for point layers: which layers cluster, and at what zoom threshold
+# eps is the DBSCAN distance in degrees (approximate; 0.1 deg ~ 11km at equator)
+CLUSTER_CONFIG = {
+    "pnodes": {
+        "cluster_below_zoom": 10,
+        "eps_by_zoom": {0: 0.5, 3: 0.2, 5: 0.1, 7: 0.05, 9: 0.02},
+        "aggregate_attrs": "COUNT(*) AS point_count, AVG(scores.severity_score) AS avg_severity",
+        "extra_join": "pnode_scores",  # signals we need the pnode join
+    },
+    "data_centers": {
+        "cluster_below_zoom": 9,
+        "eps_by_zoom": {0: 0.5, 3: 0.2, 5: 0.1, 7: 0.05},
+        "aggregate_attrs": "COUNT(*) AS point_count, SUM(t.capacity_mw) AS total_capacity_mw",
+        "extra_join": None,
+    },
+    "substations": {
+        "cluster_below_zoom": 10,
+        "eps_by_zoom": {0: 0.5, 3: 0.2, 5: 0.1, 7: 0.05, 9: 0.02},
+        "aggregate_attrs": "COUNT(*) AS point_count, AVG(t.peak_loading_pct) AS avg_loading_pct",
+        "extra_join": None,
+    },
+    "der_locations": {
+        "cluster_below_zoom": 10,
+        "eps_by_zoom": {0: 0.5, 3: 0.2, 5: 0.1, 7: 0.05, 9: 0.02},
+        "aggregate_attrs": "COUNT(*) AS point_count, SUM(t.capacity_mw) AS total_capacity_mw",
+        "extra_join": None,
+    },
+}
+
+
+def _get_cluster_eps(eps_by_zoom: dict, z: int) -> float:
+    """Get the DBSCAN epsilon for a given zoom level."""
+    eps = 0.5
+    for threshold_z in sorted(eps_by_zoom.keys()):
+        if z >= threshold_z:
+            eps = eps_by_zoom[threshold_z]
+    return eps
+
+
 # Transmission line zoom-level rules: (min_zoom, max_zoom, min_voltage_kv, simplify_tolerance)
 TX_LINE_ZOOM_RULES = [
     (0, 6, 345, 0.05),
@@ -174,6 +213,95 @@ def _build_tile_query(
     return sql
 
 
+def _build_clustered_tile_query(
+    layer: str,
+    z: int,
+    x: int,
+    y: int,
+) -> str:
+    """Build a clustered MVT query using ST_ClusterDBSCAN for point layers at low zoom.
+
+    Clusters nearby points and returns centroids with aggregate attributes.
+    Unclustered points (noise) are returned individually.
+    """
+    config = LAYER_CONFIG[layer]
+    cluster_config = CLUSTER_CONFIG[layer]
+    table = config["table"]
+    geom_col = config["geom_col"]
+    eps = _get_cluster_eps(cluster_config["eps_by_zoom"], z)
+
+    # Per-layer: define the value column to aggregate and any extra joins
+    if layer == "pnodes":
+        value_col = "scores.severity_score"
+        agg_col = "avg_value"
+        extra_join = PNODE_JOIN_SQL
+    elif layer == "substations":
+        value_col = "t.peak_loading_pct"
+        agg_col = "avg_value"
+        extra_join = ""
+    elif layer in ("data_centers", "der_locations"):
+        value_col = "t.capacity_mw"
+        agg_col = "total_value"
+        extra_join = ""
+    else:
+        value_col = "1"
+        agg_col = "avg_value"
+        extra_join = ""
+
+    agg_fn = "SUM" if agg_col == "total_value" else "AVG"
+
+    sql = f"""
+        WITH filtered AS (
+            SELECT
+                t.{geom_col} AS geom,
+                COALESCE({value_col}, 0) AS val,
+                ST_ClusterDBSCAN(t.{geom_col}, eps := {eps}, minpoints := 2)
+                    OVER () AS cid
+            FROM {table} t
+            {extra_join}
+            WHERE t.{geom_col} IS NOT NULL
+              AND ST_Intersects(
+                  ST_Transform(t.{geom_col}, 3857),
+                  ST_TileEnvelope(:z, :x, :y)
+              )
+        ),
+        merged AS (
+            SELECT
+                ST_Centroid(ST_Collect(geom)) AS geom,
+                COUNT(*) AS point_count,
+                {agg_fn}(val) AS {agg_col},
+                true AS is_cluster
+            FROM filtered
+            WHERE cid IS NOT NULL
+            GROUP BY cid
+          UNION ALL
+            SELECT
+                geom,
+                1 AS point_count,
+                val AS {agg_col},
+                false AS is_cluster
+            FROM filtered
+            WHERE cid IS NULL
+        ),
+        tile_data AS (
+            SELECT
+                ST_AsMVTGeom(
+                    ST_Transform(geom, 3857),
+                    ST_TileEnvelope(:z, :x, :y),
+                    4096, 64, true
+                ) AS geom,
+                point_count,
+                {agg_col},
+                is_cluster
+            FROM merged
+            WHERE geom IS NOT NULL
+        )
+        SELECT ST_AsMVT(tile_data, :layer_name, 4096, 'geom')
+        FROM tile_data
+    """
+    return sql
+
+
 def _get_etag(db: Session) -> str:
     """Compute an ETag based on the latest pipeline run completion time.
 
@@ -234,7 +362,13 @@ def get_vector_tile(
     if if_none_match and if_none_match.strip('"') == etag:
         return Response(status_code=304)
 
-    sql = _build_tile_query(layer, z, x, y)
+    # Use clustered query for point layers at low zoom
+    cluster_cfg = CLUSTER_CONFIG.get(layer)
+    if cluster_cfg and z < cluster_cfg["cluster_below_zoom"]:
+        sql = _build_clustered_tile_query(layer, z, x, y)
+    else:
+        sql = _build_tile_query(layer, z, x, y)
+
     result = db.execute(
         text(sql),
         {"z": z, "x": x, "y": y, "layer_name": layer},

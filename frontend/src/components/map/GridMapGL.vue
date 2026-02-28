@@ -86,6 +86,24 @@ const voltageWidth = [
   765, 4,
 ] as unknown as ExpressionSpecification
 
+// Cluster-aware radius: scales by point_count when clustered, uses base sizing for individuals
+function clusterAwareRadius(minR: number, midR: number, maxR: number): ExpressionSpecification {
+  return [
+    'case',
+    ['>', ['coalesce', ['get', 'point_count'], 1], 1],
+    // Clustered: size by point count
+    ['interpolate', ['linear'],
+      ['get', 'point_count'],
+      2, midR + 2,
+      10, maxR + 4,
+      50, maxR + 8,
+      200, maxR + 12,
+    ],
+    // Individual: base size
+    midR,
+  ] as unknown as ExpressionSpecification
+}
+
 function initMap() {
   if (!mapContainer.value) return
 
@@ -179,19 +197,14 @@ function addLayers() {
     },
   })
 
-  // --- Substations ---
+  // --- Substations (cluster-aware) ---
   map.addLayer({
     id: 'substations',
     type: 'circle',
     source: 'substations-source',
     'source-layer': 'substations',
     paint: {
-      'circle-radius': [
-        'interpolate', ['linear'], ['zoom'],
-        5, 3,
-        10, 6,
-        14, 10,
-      ] as unknown as ExpressionSpecification,
+      'circle-radius': clusterAwareRadius(3, 6, 10),
       'circle-color': loadingColor,
       'circle-stroke-color': '#ffffff',
       'circle-stroke-width': 1,
@@ -202,20 +215,33 @@ function addLayers() {
     },
   })
 
-  // --- Pnodes ---
+  // Cluster count labels for substations
+  map.addLayer({
+    id: 'substations-count',
+    type: 'symbol',
+    source: 'substations-source',
+    'source-layer': 'substations',
+    filter: ['>', ['coalesce', ['get', 'point_count'], 1], 1],
+    layout: {
+      'text-field': ['to-string', ['get', 'point_count']],
+      'text-size': 11,
+      'text-font': ['Open Sans Bold'],
+      'text-allow-overlap': true,
+      visibility: mapStore.showSubstations ? 'visible' : 'none',
+    },
+    paint: {
+      'text-color': '#ffffff',
+    },
+  })
+
+  // --- Pnodes (cluster-aware) ---
   map.addLayer({
     id: 'pnodes',
     type: 'circle',
     source: 'pnodes-source',
     'source-layer': 'pnodes',
     paint: {
-      'circle-radius': [
-        'interpolate', ['linear'],
-        ['coalesce', ['get', 'severity_score'], 0],
-        0, 3,
-        50, 6,
-        100, 10,
-      ] as unknown as ExpressionSpecification,
+      'circle-radius': clusterAwareRadius(3, 6, 10),
       'circle-color': tierColor,
       'circle-stroke-color': '#ffffff',
       'circle-stroke-width': 0.5,
@@ -226,20 +252,33 @@ function addLayers() {
     },
   })
 
-  // --- Data centers ---
+  // Cluster count labels for pnodes
+  map.addLayer({
+    id: 'pnodes-count',
+    type: 'symbol',
+    source: 'pnodes-source',
+    'source-layer': 'pnodes',
+    filter: ['>', ['coalesce', ['get', 'point_count'], 1], 1],
+    layout: {
+      'text-field': ['to-string', ['get', 'point_count']],
+      'text-size': 10,
+      'text-font': ['Open Sans Bold'],
+      'text-allow-overlap': true,
+      visibility: 'visible',
+    },
+    paint: {
+      'text-color': '#ffffff',
+    },
+  })
+
+  // --- Data centers (cluster-aware) ---
   map.addLayer({
     id: 'data-centers',
     type: 'circle',
     source: 'data_centers-source',
     'source-layer': 'data_centers',
     paint: {
-      'circle-radius': [
-        'interpolate', ['linear'],
-        ['coalesce', ['get', 'capacity_mw'], 10],
-        0, 4,
-        100, 8,
-        500, 14,
-      ] as unknown as ExpressionSpecification,
+      'circle-radius': clusterAwareRadius(4, 8, 14),
       'circle-color': dcStatusColor,
       'circle-stroke-color': '#ffffff',
       'circle-stroke-width': 1,
@@ -250,20 +289,33 @@ function addLayers() {
     },
   })
 
-  // --- DER locations ---
+  // Cluster count labels for data centers
+  map.addLayer({
+    id: 'data-centers-count',
+    type: 'symbol',
+    source: 'data_centers-source',
+    'source-layer': 'data_centers',
+    filter: ['>', ['coalesce', ['get', 'point_count'], 1], 1],
+    layout: {
+      'text-field': ['to-string', ['get', 'point_count']],
+      'text-size': 11,
+      'text-font': ['Open Sans Bold'],
+      'text-allow-overlap': true,
+      visibility: mapStore.showDataCenters ? 'visible' : 'none',
+    },
+    paint: {
+      'text-color': '#ffffff',
+    },
+  })
+
+  // --- DER locations (cluster-aware) ---
   map.addLayer({
     id: 'der-locations',
     type: 'circle',
     source: 'der_locations-source',
     'source-layer': 'der_locations',
     paint: {
-      'circle-radius': [
-        'interpolate', ['linear'],
-        ['coalesce', ['get', 'capacity_mw'], 0.1],
-        0, 3,
-        1, 5,
-        10, 9,
-      ] as unknown as ExpressionSpecification,
+      'circle-radius': clusterAwareRadius(3, 5, 9),
       'circle-color': '#ff7043',
       'circle-stroke-color': '#ffffff',
       'circle-stroke-width': 0.5,
@@ -271,6 +323,25 @@ function addLayers() {
     },
     layout: {
       visibility: mapStore.showDERs ? 'visible' : 'none',
+    },
+  })
+
+  // Cluster count labels for DER locations
+  map.addLayer({
+    id: 'der-locations-count',
+    type: 'symbol',
+    source: 'der_locations-source',
+    'source-layer': 'der_locations',
+    filter: ['>', ['coalesce', ['get', 'point_count'], 1], 1],
+    layout: {
+      'text-field': ['to-string', ['get', 'point_count']],
+      'text-size': 10,
+      'text-font': ['Open Sans Bold'],
+      'text-allow-overlap': true,
+      visibility: mapStore.showDERs ? 'visible' : 'none',
+    },
+    paint: {
+      'text-color': '#ffffff',
     },
   })
 
@@ -379,9 +450,18 @@ watch(() => mapStore.showZones, (v) => {
   setLayerVisibility('zones-fill', v)
   setLayerVisibility('zones-outline', v)
 })
-watch(() => mapStore.showSubstations, (v) => setLayerVisibility('substations', v))
-watch(() => mapStore.showDataCenters, (v) => setLayerVisibility('data-centers', v))
-watch(() => mapStore.showDERs, (v) => setLayerVisibility('der-locations', v))
+watch(() => mapStore.showSubstations, (v) => {
+  setLayerVisibility('substations', v)
+  setLayerVisibility('substations-count', v)
+})
+watch(() => mapStore.showDataCenters, (v) => {
+  setLayerVisibility('data-centers', v)
+  setLayerVisibility('data-centers-count', v)
+})
+watch(() => mapStore.showDERs, (v) => {
+  setLayerVisibility('der-locations', v)
+  setLayerVisibility('der-locations-count', v)
+})
 watch(() => mapStore.showAssets, (v) => {
   // Assets not yet a vector tile layer; will be handled when HC integration lands
 })
