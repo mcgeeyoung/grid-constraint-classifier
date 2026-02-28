@@ -9,10 +9,12 @@ import maplibregl, { type ExpressionSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useMapStore } from '@/stores/mapStore'
 import { useIsoStore, ISO_VIEW } from '@/stores/isoStore'
+import { useHostingCapacityStore } from '@/stores/hostingCapacityStore'
 import MapLegend from './MapLegend.vue'
 
 const mapStore = useMapStore()
 const isoStore = useIsoStore()
+const hcStore = useHostingCapacityStore()
 
 const mapContainer = ref<HTMLElement | null>(null)
 let map: maplibregl.Map | null = null
@@ -76,6 +78,16 @@ const voltageWidth = [
   230, 1.5,
   500, 3,
   765, 4,
+] as unknown as ExpressionSpecification
+
+// Hosting capacity: remaining MW -> green/yellow/orange/red
+const hcRemainingColor = [
+  'interpolate', ['linear'],
+  ['coalesce', ['get', 'remaining_capacity_mw'], 0],
+  0, '#e53935',
+  0.5, '#ff9800',
+  2, '#fdd835',
+  5, '#43a047',
 ] as unknown as ExpressionSpecification
 
 // Cluster-aware radius: scales by point_count when clustered, uses base sizing for individuals
@@ -146,6 +158,12 @@ function addTileSources() {
       maxzoom: 14,
     })
   }
+
+  // Hosting capacity GeoJSON source (loaded on demand per utility)
+  map.addSource('hosting-capacity-source', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] },
+  })
 }
 
 function updateTileSourceUrls() {
@@ -426,6 +444,28 @@ function addLayers() {
       'text-halo-width': 1.5,
     },
   })
+
+  // --- Hosting capacity feeders (GeoJSON, loaded per utility) ---
+  map.addLayer({
+    id: 'hosting-capacity',
+    type: 'circle',
+    source: 'hosting-capacity-source',
+    paint: {
+      'circle-radius': [
+        'interpolate', ['linear'], ['zoom'],
+        4, 3,
+        8, 5,
+        12, 8,
+      ] as unknown as ExpressionSpecification,
+      'circle-color': hcRemainingColor,
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-width': 0.5,
+      'circle-opacity': 0.8,
+    },
+    layout: {
+      visibility: mapStore.showHostingCapacity ? 'visible' : 'none',
+    },
+  })
 }
 
 function setupInteractivity() {
@@ -434,7 +474,7 @@ function setupInteractivity() {
   // Cursor changes on hover for interactive layers
   const interactiveLayers = [
     'zones-fill', 'substations', 'pnodes', 'data-centers', 'der-locations',
-    'transmission-lines', 'feeders',
+    'transmission-lines', 'feeders', 'hosting-capacity',
   ]
 
   for (const layerId of interactiveLayers) {
@@ -562,6 +602,27 @@ function setupInteractivity() {
       .addTo(map)
   })
 
+  // Click on hosting capacity feeder — show popup
+  map.on('click', 'hosting-capacity', (e) => {
+    if (!map || !e.features || e.features.length === 0) return
+    const props = e.features[0].properties
+    const coords = (e.features[0].geometry as any).coordinates.slice()
+    const hc = props.hosting_capacity_mw != null ? Number(props.hosting_capacity_mw).toFixed(1) : '?'
+    const rem = props.remaining_capacity_mw != null ? Number(props.remaining_capacity_mw).toFixed(1) : '?'
+    const dg = props.installed_dg_mw != null ? Number(props.installed_dg_mw).toFixed(1) : '?'
+    new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+      .setLngLat(coords)
+      .setHTML(`
+        <strong>${props.feeder_name || props.feeder_id_external}</strong><br/>
+        Hosting: ${hc} MW<br/>
+        Remaining: ${rem} MW<br/>
+        Installed DG: ${dg} MW<br/>
+        Constraint: ${props.constraining_metric || 'N/A'}<br/>
+        Voltage: ${props.voltage_kv ? props.voltage_kv + ' kV' : 'N/A'}
+      `)
+      .addTo(map)
+  })
+
   // Click on map background (for siting)
   map.on('click', (e) => {
     // Only trigger if no feature was clicked
@@ -625,7 +686,36 @@ watch(() => mapStore.showFeeders, (v) => {
   setLayerVisibility('feeders', v)
 })
 watch(() => mapStore.showAssets, (v) => {
-  // Assets not yet a vector tile layer; will be handled when HC integration lands
+  // Assets not yet a vector tile layer
+})
+watch(() => mapStore.showHostingCapacity, (v) => {
+  setLayerVisibility('hosting-capacity', v)
+})
+
+// Update HC GeoJSON source when feeders are loaded in the store
+watch(() => hcStore.feeders, (feeders) => {
+  if (!map || !map.getSource('hosting-capacity-source')) return
+  const features = feeders
+    .filter(f => f.centroid_lat != null && f.centroid_lon != null)
+    .map(f => ({
+      type: 'Feature' as const,
+      geometry: {
+        type: 'Point' as const,
+        coordinates: [f.centroid_lon!, f.centroid_lat!],
+      },
+      properties: {
+        id: f.id,
+        feeder_id_external: f.feeder_id_external,
+        feeder_name: f.feeder_name,
+        hosting_capacity_mw: f.hosting_capacity_mw,
+        remaining_capacity_mw: f.remaining_capacity_mw,
+        installed_dg_mw: f.installed_dg_mw,
+        constraining_metric: f.constraining_metric,
+        voltage_kv: f.voltage_kv,
+      },
+    }))
+  const source = map.getSource('hosting-capacity-source') as maplibregl.GeoJSONSource
+  source.setData({ type: 'FeatureCollection', features })
 })
 
 // Update tile sources and pan when ISO selection changes

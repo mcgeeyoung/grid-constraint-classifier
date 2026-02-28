@@ -65,6 +65,28 @@
             color="blue-grey"
           />
           <v-checkbox
+            v-model="mapStore.showHostingCapacity"
+            label="Hosting Capacity"
+            density="compact"
+            hide-details
+            color="teal"
+            @update:model-value="(v: any) => onHCToggle(!!v)"
+          />
+          <div v-if="mapStore.showHostingCapacity" class="ml-6 mb-1">
+            <v-select
+              v-model="hcStore.selectedUtility"
+              :items="hcStore.utilities"
+              item-title="utility_name"
+              item-value="utility_code"
+              label="Utility"
+              density="compact"
+              hide-details
+              variant="outlined"
+              style="max-width: 200px;"
+              @update:model-value="onUtilitySelect"
+            />
+          </div>
+          <v-checkbox
             v-model="mapStore.showAssets"
             label="WattCarbon Assets"
             density="compact"
@@ -148,11 +170,13 @@ import { useIsoStore } from '@/stores/isoStore'
 import { useMapStore } from '@/stores/mapStore'
 import { useHierarchyStore } from '@/stores/hierarchyStore'
 import { useValuationStore } from '@/stores/valuationStore'
+import { useHostingCapacityStore } from '@/stores/hostingCapacityStore'
 
 const isoStore = useIsoStore()
 const mapStore = useMapStore()
 const hierarchyStore = useHierarchyStore()
 const valuationStore = useValuationStore()
+const hcStore = useHostingCapacityStore()
 
 const showPanel = ref(true)
 const activeTab = ref('valuation')
@@ -190,4 +214,23 @@ watch(() => isoStore.selectedISO, (iso) => {
     hierarchyStore.loadSubstations(iso)
   }
 })
+
+// Load HC utilities when layer toggled on
+function onHCToggle(val: boolean) {
+  if (val && hcStore.utilities.length === 0) {
+    hcStore.loadUtilities()
+  }
+  if (!val) {
+    hcStore.clear()
+  }
+}
+
+// Load feeders when a utility is selected
+function onUtilitySelect(code: string | null) {
+  if (code) {
+    hcStore.loadFeeders(code)
+  } else {
+    hcStore.clear()
+  }
+}
 </script>
