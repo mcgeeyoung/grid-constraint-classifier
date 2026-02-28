@@ -1,0 +1,26 @@
+utility_code: oru
+utility_name: "Orange & Rockland Utilities"
+parent_company: "Consolidated Edison"
+iso_id: nyiso
+states: [NY, NJ]
+data_source_type: arcgis_feature
+requires_auth: false
+
+# O&R EV Capacity Summer/Winter (load headroom, not DG HC)
+# Layer 75: OrangeRocklandE_PairwiseClip (polylines)
+service_url: "https://services3.arcgis.com/p04uQpu9ausDBOAh/arcgis/rest/services/Orange_Rockland_EV_Capacity_Summer_Winter/FeatureServer"
+layer_index: 75  # OrangeRocklandE_PairwiseClip
+page_size: 2000
+out_sr: 4326
+capacity_unit: mw  # headroom/rating in MW
+
+url_discovery_method: static
+
+field_map:
+  CIRCUIT: feeder_id_external
+  SUBSTATION: substation_name
+  VOLTAGE_KV: voltage_kv
+  TOTAL_XFMR_CAPACITY: hosting_capacity_mw
+  SUBST_PEAK: installed_dg_mw
+  EV_HEADROOM: remaining_capacity_mw
+  CONSTRUCTIONTYPE: is_overhead

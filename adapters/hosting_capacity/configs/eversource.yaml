@@ -1,0 +1,23 @@
+utility_code: eversource
+utility_name: "Eversource Energy"
+parent_company: null
+iso_id: isone
+states: [CT, MA, NH]
+data_source_type: arcgis_map
+requires_auth: false
+
+# Self-hosted MapServer (response times can be slow)
+# DG_Hosting/GenerationCapacityExternalMapProd
+# Layers TBD pending field schema discovery (server was unresponsive)
+service_url: "https://epochprodgasdist.eversource.com/wamgasgis/rest/services/DG_Hosting/GenerationCapacityExternalMapProd/MapServer"
+layer_index: 0
+page_size: 1000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+# Field map TBD - server unresponsive during config creation
+# Run: python -m cli.ingest_hosting_capacity --utility eversource --discover
+# to populate field_map once server is accessible
+field_map: {}

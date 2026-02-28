@@ -15,6 +15,7 @@ from adapters.arcgis_client import ArcGISClient
 from .base import HostingCapacityAdapter, UtilityHCConfig
 from .arcgis_adapter import ArcGISHostingCapacityAdapter
 from .exelon_adapter import ExelonHostingCapacityAdapter
+from .xcel_adapter import XcelHostingCapacityAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ _ADAPTER_MAP: dict[str, type[HostingCapacityAdapter]] = {
     "arcgis_feature": ArcGISHostingCapacityAdapter,
     "arcgis_map": ArcGISHostingCapacityAdapter,
     "exelon": ExelonHostingCapacityAdapter,
+    "xcel": XcelHostingCapacityAdapter,
 }
 
 

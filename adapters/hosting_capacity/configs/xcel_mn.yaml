@@ -1,0 +1,34 @@
+utility_code: xcel_mn
+utility_name: "Xcel Energy - Northern States Power (MN)"
+parent_company: "Xcel Energy"
+iso_id: miso
+states: [MN, WI, ND, SD]
+data_source_type: xcel
+requires_auth: false
+
+# NSPM = Northern States Power Minnesota
+# Service names rotate monthly: NSP_HCA_Popup_Layer_March_2026, HCA_NSP_Popup_Layer_February_2026, etc.
+# All fields are esriFieldTypeString (parsed as text, need numeric coercion)
+service_url: "https://services1.arcgis.com/eM84fwjsSggLQk61/arcgis/rest/services/NSP_HCA_Popup_Layer_March_2026/FeatureServer"
+layer_index: 0  # NSP_Blurred
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw  # Values appear to be in kW
+
+url_discovery_method: catalog_scan
+url_pattern: "NSP_HCA"
+
+field_map:
+  Feeder: feeder_id_external
+  Substation: substation_name
+  Transformer: feeder_name
+  HostingCapacity: hosting_capacity_mw
+  MinHostingCap: hosting_capacity_min_mw
+  MaxHostingCap: hosting_capacity_max_mw
+  ConstrainingMetric: constraining_metric
+  MinConstrainingMetric: min_constraining_metric
+  MaxConstrainingMetric: max_constraining_metric
+  SubsTransInstalledDG: installed_dg_mw
+  SubsTransQueuedDG: queued_dg_mw
+  PlanningRegion: planning_region
+  NetworkOrRadial: is_network

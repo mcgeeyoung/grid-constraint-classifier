@@ -1,0 +1,30 @@
+utility_code: xcel_co
+utility_name: "Xcel Energy - Public Service Company of Colorado"
+parent_company: "Xcel Energy"
+iso_id: null
+states: [CO]
+data_source_type: xcel
+requires_auth: false
+
+# PSCO = Public Service Company of Colorado
+service_url: "https://services1.arcgis.com/eM84fwjsSggLQk61/arcgis/rest/services/PSCO_GEN_Popup_Layer_Feb_2026/FeatureServer"
+layer_index: 0  # PSCO_Blurred_Raster_Final_with_Exclusions
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: catalog_scan
+url_pattern: "PSCO"
+
+field_map:
+  Feeder: feeder_id_external
+  Substation: substation_name
+  Transformer: feeder_name
+  HostingCapacity: hosting_capacity_mw
+  MinHostingCap: hosting_capacity_min_mw
+  MaxHostingCap: hosting_capacity_max_mw
+  ConstrainingMetric: constraining_metric
+  NominalVoltage: voltage_kv
+  Phase: phase_config
+  OH_UG: is_overhead
+  PlanningRegion: planning_region

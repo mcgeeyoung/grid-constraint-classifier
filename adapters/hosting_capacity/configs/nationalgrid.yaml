@@ -1,0 +1,25 @@
+utility_code: nationalgrid
+utility_name: "National Grid"
+parent_company: null
+iso_id: isone
+states: [NY, MA, RI]
+data_source_type: arcgis_map
+requires_auth: false
+
+# Self-hosted MapServer at systemdataportal.nationalgrid.com
+# Layer 0: feeder_summer_load_capacity_data (polyline feeders with headroom)
+service_url: "https://systemdataportal.nationalgrid.com/arcgis/rest/services/Electrification_Data_TEST/MapServer"
+layer_index: 0  # feeder_summer_load_capacity_data
+page_size: 2000
+out_sr: 4326
+capacity_unit: mw  # headroom values appear to be in MW
+
+url_discovery_method: static
+
+field_map:
+  feeder_cdf: feeder_id_external
+  substation_bank_name: substation_name
+  feeder_rating: hosting_capacity_mw
+  feeder_peak: installed_dg_mw
+  feeder_load_capacity_headroom: remaining_capacity_mw
+  feeder_voltage: voltage_kv

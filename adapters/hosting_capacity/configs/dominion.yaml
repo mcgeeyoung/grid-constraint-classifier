@@ -6,8 +6,11 @@ states: [VA, NC]
 data_source_type: arcgis_feature
 requires_auth: false
 
+# NOTE: Endpoint unverified - ArcGIS org does not expose public service listing.
+# Dominion publishes HC via their website but the ArcGIS FS URL needs network inspection.
+# Run --discover to verify once correct URL is found.
 service_url: "https://services1.arcgis.com/JrAaMMksMPSYLfV0/arcgis/rest/services/Dominion_Hosting_Capacity/FeatureServer"
-layer_index: 6  # Primary_HostingCapacity_Final
+layer_index: 6  # Primary_HostingCapacity_Final (speculative)
 page_size: 2000
 out_sr: 4326
 capacity_unit: kw

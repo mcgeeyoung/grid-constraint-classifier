@@ -1,0 +1,24 @@
+utility_code: peco
+utility_name: "PECO Energy"
+parent_company: "Exelon"
+iso_id: pjm
+states: [PA]
+data_source_type: arcgis_feature
+requires_auth: false
+
+# PECO uses grid-based quads, not feeder-level data
+# Layer 1 (Minor Quad) has finer granularity with GRID_NAME and lat/lon
+service_url: "https://services3.arcgis.com/agWTKEK7X5K1Bx7o/arcgis/rest/services/PECO_Available_Distribution_Capacity_Map/FeatureServer"
+layer_index: 1  # Minor_Quad_Available_Capacity_Service_Territory
+page_size: 2000
+out_sr: 4326
+capacity_unit: mw  # NET_AVAILABLE_CAPACITY appears to be in MW
+
+url_discovery_method: static
+
+field_map:
+  GRID_NAME: feeder_id_external
+  MAJORQUAD: substation_name
+  NET_AVAILABLE_CAPACITY: remaining_capacity_mw
+  LAT: centroid_lat
+  LON: centroid_lon

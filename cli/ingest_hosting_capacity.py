@@ -168,9 +168,10 @@ def _print_utility_list():
     for code in codes:
         cfg = UtilityHCConfig.from_yaml(configs_dir / f"{code}.yaml")
         states = ", ".join(cfg.states) if cfg.states else ""
+        iso = cfg.iso_id or "-"
         print(
             f"{cfg.utility_code:<12} {cfg.utility_name:<30} "
-            f"{cfg.data_source_type:<16} {cfg.iso_id:<8} {states}"
+            f"{cfg.data_source_type:<16} {iso:<8} {states}"
         )
     print(f"\nTotal: {len(codes)} utilities configured\n")
 

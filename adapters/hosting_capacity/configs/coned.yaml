@@ -1,0 +1,26 @@
+utility_code: coned
+utility_name: "Consolidated Edison"
+parent_company: null
+iso_id: nyiso
+states: [NY]
+data_source_type: arcgis_feature
+requires_auth: false
+
+# FeatureServer on ncPPFeyaIhDBQq2X org (also hosts O&R)
+# Layer 1: FeederHostingCapacity (polylines, detailed feeder segments)
+service_url: "https://services8.arcgis.com/ncPPFeyaIhDBQq2X/arcgis/rest/services/Feeder_Hosting_Capacity_Layers/FeatureServer"
+layer_index: 1  # FeederHostingCapacity (detailed segments)
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+field_map:
+  FEEDERNUM: feeder_id_external
+  DistributionZone: substation_name
+  FeederPV: hosting_capacity_mw
+  DistZonePV: hosting_capacity_max_mw
+  VoltageKV: voltage_kv
+  Phase: phase_config
+  Type: is_overhead

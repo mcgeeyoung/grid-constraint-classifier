@@ -1,0 +1,30 @@
+utility_code: nyseg_rge
+utility_name: "NYSEG & Rochester Gas & Electric"
+parent_company: "Avangrid"
+iso_id: nyiso
+states: [NY]
+data_source_type: arcgis_feature
+requires_auth: false
+
+# Combined NYSEG/RGE hosting capacity
+# Layer 0: 3PH Overhead, Layer 1: 3PH Underground, Layer 2: 1PH OH, Layer 3: 1PH UG
+# Data is in MW already
+service_url: "https://services.arcgis.com/c0HK6TaWF3mGiNhc/arcgis/rest/services/HostingCapacity_DCirc_NYSEG_RGE_APR272018/FeatureServer"
+layer_index: 0  # 3PH Overhead Conductors (primary)
+page_size: 2000
+out_sr: 4326
+capacity_unit: mw  # Fields labeled MW
+
+url_discovery_method: static
+
+field_map:
+  CIRCUIT: feeder_id_external
+  SUBSTATION: substation_name
+  FIRST_COMPANY: feeder_name
+  MAX_HC_MVA_2: hosting_capacity_mw
+  MAX_HC_MVA_1: hosting_capacity_min_mw
+  CONN_IPP_MVA_1: installed_dg_mw
+  QUEUED_IPP_MVA_2: queued_dg_mw
+  kv: voltage_kv
+  NUMPHASES: phase_config
+  circ_peakload: peak_loading_mw

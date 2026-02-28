@@ -1,0 +1,26 @@
+utility_code: dte
+utility_name: "DTE Energy"
+parent_company: null
+iso_id: miso
+states: [MI]
+data_source_type: arcgis_feature
+requires_auth: false
+
+# DTE Circuit Data includes EV hosting capacity and circuit reliability data
+# Layer 10: DTE_CircuitData (polylines)
+# Note: limited HC data, primarily EV_Hosting field
+service_url: "https://services1.arcgis.com/b6rkZNtCd6Mx2gvB/arcgis/rest/services/DTE_CircuitData/FeatureServer"
+layer_index: 10  # DTE_CircuitData
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+field_map:
+  FEEDERID: feeder_id_external
+  Circuit: feeder_name
+  EV_Hosting: hosting_capacity_mw
+  Circuit_De: remaining_capacity_mw
+  Voltage: voltage_kv
+  Category_D: constraining_metric
