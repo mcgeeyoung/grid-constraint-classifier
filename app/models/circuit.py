@@ -2,7 +2,8 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey
+from geoalchemy2 import Geometry
+from sqlalchemy import Index, String, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -10,6 +11,9 @@ from .base import Base
 
 class Circuit(Base):
     __tablename__ = "circuits"
+    __table_args__ = (
+        Index("ix_circuits_geom", "geom", postgresql_using="gist"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     feeder_id: Mapped[int] = mapped_column(ForeignKey("feeders.id"), nullable=False)
@@ -18,6 +22,7 @@ class Circuit(Base):
     peak_loading_mw: Mapped[Optional[float]] = mapped_column(Float)
     lat: Mapped[Optional[float]] = mapped_column(Float)
     lon: Mapped[Optional[float]] = mapped_column(Float)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
 
     # Relationships
     feeder: Mapped["Feeder"] = relationship(back_populates="circuits")

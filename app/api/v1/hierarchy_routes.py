@@ -11,6 +11,7 @@ from app.models import (
     ISO, Zone, Substation, Feeder, Pnode,
     PipelineRun, HierarchyScore, SubstationLoadProfile,
 )
+from app.api.v1.spatial import BBox, parse_bbox
 from app.schemas.hierarchy_schemas import (
     SubstationResponse,
     SubstationDetailResponse,
@@ -30,9 +31,13 @@ def list_substations(
     division: Optional[str] = Query(None, description="Filter by division"),
     limit: int = Query(default=200, le=5000),
     offset: int = Query(default=0, ge=0),
+    bbox: Optional[BBox] = Depends(parse_bbox),
     db: Session = Depends(get_db),
 ):
-    """List substations for an ISO with optional filters."""
+    """List substations for an ISO with optional filters.
+
+    Supports bbox filtering: ?bbox=west,south,east,north
+    """
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
         raise HTTPException(404, f"ISO '{iso_id}' not found")
@@ -50,6 +55,8 @@ def list_substations(
         query = query.filter(Substation.peak_loading_pct >= min_loading_pct)
     if division:
         query = query.filter(Substation.division == division)
+    if bbox:
+        query = query.filter(bbox.filter_column(Substation.geom))
 
     query = query.order_by(Substation.peak_loading_pct.desc().nullslast())
     results = query.offset(offset).limit(limit).all()

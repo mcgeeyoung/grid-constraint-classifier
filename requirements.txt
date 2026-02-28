@@ -10,6 +10,7 @@ gridstatus>=0.27
 pyyaml>=6.0
 # Database & API
 sqlalchemy>=2.0
+geoalchemy2>=0.14
 alembic>=1.13
 psycopg2-binary>=2.9
 fastapi>=0.110

@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+from geoalchemy2 import Geometry
 from sqlalchemy import Index, String, Float, Integer, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,6 +16,7 @@ class Substation(Base):
         Index("ix_substations_iso_id", "iso_id"),
         Index("ix_substations_zone_id", "zone_id"),
         Index("ix_substations_peak_loading_pct", "peak_loading_pct"),
+        Index("ix_substations_geom", "geom", postgresql_using="gist"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -30,6 +32,7 @@ class Substation(Base):
     facility_type: Mapped[Optional[str]] = mapped_column(String(50))
     lat: Mapped[Optional[float]] = mapped_column(Float)
     lon: Mapped[Optional[float]] = mapped_column(Float)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
 
     # Relationships
     iso: Mapped["ISO"] = relationship(back_populates="substations")

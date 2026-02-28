@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+from geoalchemy2 import Geometry
 from sqlalchemy import Index, String, Float, Integer, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -13,6 +14,7 @@ class TransmissionLine(Base):
     __table_args__ = (
         Index("ix_transmission_lines_iso_id", "iso_id"),
         Index("ix_transmission_lines_voltage_kv", "voltage_kv"),
+        Index("ix_transmission_lines_geom", "geom", postgresql_using="gist"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -23,6 +25,7 @@ class TransmissionLine(Base):
     sub_2: Mapped[Optional[str]] = mapped_column(String(200))
     shape_length: Mapped[Optional[float]] = mapped_column(Float)
     geometry_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    geom = mapped_column(Geometry("MULTILINESTRING", srid=4326), nullable=True)
 
     # Relationships
     iso: Mapped["ISO"] = relationship(back_populates="transmission_lines")

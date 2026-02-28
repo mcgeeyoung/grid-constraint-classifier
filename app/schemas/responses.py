@@ -82,6 +82,16 @@ class SubstationLoadshapeHourResponse(BaseModel):
     load_high_kw: float
 
 
+class TransmissionLineResponse(BaseModel):
+    id: int
+    voltage_kv: Optional[int] = None
+    owner: Optional[str] = None
+    sub_1: Optional[str] = None
+    sub_2: Optional[str] = None
+    shape_length: Optional[float] = None
+    iso_code: Optional[str] = None
+
+
 class DataCenterResponse(BaseModel):
     external_slug: Optional[str] = None
     facility_name: Optional[str] = None

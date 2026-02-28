@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
+from geoalchemy2 import Geometry
 from sqlalchemy import Index, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,6 +16,7 @@ class DataCenter(Base):
         Index("ix_data_centers_iso_id", "iso_id"),
         Index("ix_data_centers_zone_id", "zone_id"),
         Index("ix_data_centers_status", "status"),
+        Index("ix_data_centers_geom", "geom", postgresql_using="gist"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -26,6 +28,7 @@ class DataCenter(Base):
     capacity_mw: Mapped[Optional[float]] = mapped_column(Float)
     lat: Mapped[Optional[float]] = mapped_column(Float)
     lon: Mapped[Optional[float]] = mapped_column(Float)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
     state_code: Mapped[Optional[str]] = mapped_column(String(5))
     county: Mapped[Optional[str]] = mapped_column(String(100))
     operator: Mapped[Optional[str]] = mapped_column(String(200))

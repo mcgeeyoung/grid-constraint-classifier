@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+from geoalchemy2 import Geometry
 from sqlalchemy import Index, String, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,6 +15,7 @@ class Pnode(Base):
         UniqueConstraint("iso_id", "node_id_external", name="uq_pnodes_iso_node"),
         Index("ix_pnodes_iso_id", "iso_id"),
         Index("ix_pnodes_zone_id", "zone_id"),
+        Index("ix_pnodes_geom", "geom", postgresql_using="gist"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -23,6 +25,7 @@ class Pnode(Base):
     node_name: Mapped[Optional[str]] = mapped_column(String(100))
     lat: Mapped[Optional[float]] = mapped_column(Float)
     lon: Mapped[Optional[float]] = mapped_column(Float)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
 
     # Relationships
     iso: Mapped["ISO"] = relationship(back_populates="pnodes")

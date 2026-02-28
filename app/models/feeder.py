@@ -2,7 +2,8 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, Integer, ForeignKey, JSON
+from geoalchemy2 import Geometry
+from sqlalchemy import Index, String, Float, Integer, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -10,6 +11,9 @@ from .base import Base
 
 class Feeder(Base):
     __tablename__ = "feeders"
+    __table_args__ = (
+        Index("ix_feeders_geom", "geom", postgresql_using="gist"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     substation_id: Mapped[int] = mapped_column(ForeignKey("substations.id"), nullable=False)
@@ -19,6 +23,7 @@ class Feeder(Base):
     peak_loading_pct: Mapped[Optional[float]] = mapped_column(Float)
     voltage_kv: Mapped[Optional[float]] = mapped_column(Float)
     geometry_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    geom = mapped_column(Geometry("LINESTRING", srid=4326), nullable=True)
 
     # Relationships
     substation: Mapped["Substation"] = relationship(back_populates="feeders")

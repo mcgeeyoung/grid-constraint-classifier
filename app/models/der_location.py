@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+from geoalchemy2 import Geometry
 from sqlalchemy import Index, String, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,6 +16,7 @@ class DERLocation(Base):
         Index("ix_der_locations_zone_id", "zone_id"),
         Index("ix_der_locations_source", "source"),
         Index("ix_der_locations_wattcarbon_asset_id", "wattcarbon_asset_id"),
+        Index("ix_der_locations_geom", "geom", postgresql_using="gist"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -29,6 +31,7 @@ class DERLocation(Base):
     capacity_mw: Mapped[float] = mapped_column(Float, nullable=False)
     lat: Mapped[Optional[float]] = mapped_column(Float)
     lon: Mapped[Optional[float]] = mapped_column(Float)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
     wattcarbon_asset_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     source: Mapped[str] = mapped_column(String(30), nullable=False, default="hypothetical")
 

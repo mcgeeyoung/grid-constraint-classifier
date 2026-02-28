@@ -2,7 +2,8 @@
 
 from typing import Optional
 
-from sqlalchemy import String, Float, ForeignKey, UniqueConstraint, ARRAY, JSON
+from geoalchemy2 import Geometry
+from sqlalchemy import Index, String, Float, ForeignKey, UniqueConstraint, ARRAY, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
@@ -12,6 +13,7 @@ class Zone(Base):
     __tablename__ = "zones"
     __table_args__ = (
         UniqueConstraint("iso_id", "zone_code", name="uq_zones_iso_zone"),
+        Index("ix_zones_boundary_geom", "boundary_geom", postgresql_using="gist"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -22,6 +24,7 @@ class Zone(Base):
     centroid_lon: Mapped[Optional[float]] = mapped_column(Float)
     states: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
     boundary_geojson: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    boundary_geom = mapped_column(Geometry("MULTIPOLYGON", srid=4326), nullable=True)
 
     # Relationships
     iso: Mapped["ISO"] = relationship(back_populates="zones")

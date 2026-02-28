@@ -12,12 +12,13 @@ from app.limiter import limiter
 from app.models import (
     ISO, Zone, ZoneLMP, PipelineRun, ZoneClassification,
     Pnode, PnodeScore, DataCenter, DERRecommendation,
-    Substation, DERLocation, DERValuation,
+    Substation, DERLocation, DERValuation, TransmissionLine,
 )
+from app.api.v1.spatial import BBox, parse_bbox
 from app.schemas.responses import (
     ISOResponse, ZoneResponse, ZoneGeometryResponse, ZoneClassificationResponse,
     PnodeScoreResponse, ZoneLMPResponse, LoadshapeHourResponse,
-    DataCenterResponse,
+    DataCenterResponse, TransmissionLineResponse,
     DERRecommendationResponse, PipelineRunResponse, OverviewResponse,
     ValueSummaryResponse, TopZone,
 )
@@ -192,9 +193,13 @@ def get_all_pnode_scores(
     iso_id: str,
     limit: int = Query(default=1000, le=10000),
     offset: int = Query(default=0, ge=0),
+    bbox: Optional[BBox] = Depends(parse_bbox),
     db: Session = Depends(get_db),
 ):
-    """Get all pnode severity scores for an ISO (all zones)."""
+    """Get all pnode severity scores for an ISO (all zones).
+
+    Supports bbox filtering: ?bbox=west,south,east,north
+    """
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
         raise HTTPException(404, f"ISO '{iso_id}' not found")
@@ -208,13 +213,20 @@ def get_all_pnode_scores(
     if not latest_run:
         return []
 
-    results = (
+    query = (
         db.query(PnodeScore, Pnode)
         .join(Pnode, PnodeScore.pnode_id == Pnode.id)
         .filter(
             PnodeScore.pipeline_run_id == latest_run.id,
             Pnode.iso_id == iso.id,
         )
+    )
+
+    if bbox:
+        query = query.filter(bbox.filter_column(Pnode.geom))
+
+    results = (
+        query
         .order_by(PnodeScore.severity_score.desc())
         .offset(offset)
         .limit(limit)
@@ -309,9 +321,13 @@ def list_data_centers(
     status: Optional[str] = None,
     limit: int = Query(default=100, le=5000),
     offset: int = Query(default=0, ge=0),
+    bbox: Optional[BBox] = Depends(parse_bbox),
     db: Session = Depends(get_db),
 ):
-    """List data centers, filterable by ISO, zone, status."""
+    """List data centers, filterable by ISO, zone, status, bbox.
+
+    Supports bbox filtering: ?bbox=west,south,east,north
+    """
     query = (
         db.query(
             DataCenter.external_slug,
@@ -336,6 +352,8 @@ def list_data_centers(
         query = query.filter(Zone.zone_code == zone_code)
     if status:
         query = query.filter(DataCenter.status == status.lower())
+    if bbox:
+        query = query.filter(bbox.filter_column(DataCenter.geom))
 
     results = query.offset(offset).limit(limit).all()
 
@@ -503,6 +521,55 @@ def get_value_summary(
     if not iso:
         raise HTTPException(404, f"ISO '{iso_id}' not found")
     return _build_value_summary(db, iso)
+
+
+@router.get("/transmission-lines", response_model=list[TransmissionLineResponse])
+def list_transmission_lines(
+    iso_id: Optional[str] = None,
+    min_voltage_kv: Optional[int] = Query(None, ge=0, description="Minimum voltage in kV"),
+    limit: int = Query(default=500, le=10000),
+    offset: int = Query(default=0, ge=0),
+    bbox: Optional[BBox] = Depends(parse_bbox),
+    db: Session = Depends(get_db),
+):
+    """List transmission lines with optional ISO, voltage, and bbox filters.
+
+    Supports bbox filtering: ?bbox=west,south,east,north
+    """
+    query = (
+        db.query(
+            TransmissionLine.id,
+            TransmissionLine.voltage_kv,
+            TransmissionLine.owner,
+            TransmissionLine.sub_1,
+            TransmissionLine.sub_2,
+            TransmissionLine.shape_length,
+            ISO.iso_code,
+        )
+        .join(ISO, TransmissionLine.iso_id == ISO.id)
+    )
+
+    if iso_id:
+        query = query.filter(ISO.iso_code == iso_id.lower())
+    if min_voltage_kv is not None:
+        query = query.filter(TransmissionLine.voltage_kv >= min_voltage_kv)
+    if bbox:
+        query = query.filter(bbox.filter_column(TransmissionLine.geom))
+
+    results = query.offset(offset).limit(limit).all()
+
+    return [
+        TransmissionLineResponse(
+            id=row.id,
+            voltage_kv=row.voltage_kv,
+            owner=row.owner,
+            sub_1=row.sub_1,
+            sub_2=row.sub_2,
+            shape_length=row.shape_length,
+            iso_code=row.iso_code,
+        )
+        for row in results
+    ]
 
 
 def _build_value_summary(db: Session, iso: ISO) -> ValueSummaryResponse:

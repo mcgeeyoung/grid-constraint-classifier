@@ -20,6 +20,7 @@ from app.api.v1.valuation_routes import router as valuation_router
 from app.api.v1.hierarchy_routes import router as hierarchy_router
 from app.api.v1.wattcarbon_routes import router as wattcarbon_router
 from app.api.v1.batch_routes import router as batch_router
+from app.spatial_sync import register_spatial_sync
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -43,6 +44,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register PostGIS geometry sync (lat/lon -> geom on insert/update)
+register_spatial_sync()
 
 # Include API routes
 app.include_router(v1_router)

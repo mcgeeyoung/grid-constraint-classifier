@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import ISO, Zone, Substation, DERLocation, DERValuation
+from app.api.v1.spatial import BBox, parse_bbox
 from app.schemas.valuation_schemas import (
     ProspectiveValuationRequest,
     CreateDERLocationRequest,
@@ -144,9 +145,13 @@ def list_der_locations(
     source: Optional[str] = None,
     limit: int = Query(default=100, le=5000),
     offset: int = Query(default=0, ge=0),
+    bbox: Optional[BBox] = Depends(parse_bbox),
     db: Session = Depends(get_db),
 ):
-    """List DER locations with optional filters. Includes latest value_tier."""
+    """List DER locations with optional filters. Includes latest value_tier.
+
+    Supports bbox filtering: ?bbox=west,south,east,north
+    """
     query = (
         db.query(DERLocation, ISO, Zone, Substation, DERValuation)
         .join(ISO, DERLocation.iso_id == ISO.id)
@@ -163,6 +168,8 @@ def list_der_locations(
         query = query.filter(DERLocation.der_type == der_type)
     if source:
         query = query.filter(DERLocation.source == source)
+    if bbox:
+        query = query.filter(bbox.filter_column(DERLocation.geom))
 
     results = query.offset(offset).limit(limit).all()
 
