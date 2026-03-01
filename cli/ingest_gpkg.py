@@ -28,12 +28,22 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from geoalchemy2.shape import from_shape
 from shapely import wkb
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 
-from app.database import SessionLocal
+from app.database import SessionLocal, engine
 from app.models.gpkg import GPKGPowerLine, GPKGSubstation, GPKGPowerPlant
+
+# Check if PostGIS geom columns exist in the DB
+_inspector = inspect(engine)
+_has_geom = {
+    "gpkg_power_lines": "geom" in [c["name"] for c in _inspector.get_columns("gpkg_power_lines")],
+    "gpkg_substations": "geom" in [c["name"] for c in _inspector.get_columns("gpkg_substations")],
+    "gpkg_power_plants": "geom" in [c["name"] for c in _inspector.get_columns("gpkg_power_plants")],
+}
+
+if any(_has_geom.values()):
+    from geoalchemy2.shape import from_shape
 
 logging.basicConfig(
     level=logging.INFO,
@@ -130,7 +140,7 @@ def load_power_lines(gpkg_path: str, session, clear: bool = False):
             skipped += 1
             continue
 
-        record = GPKGPowerLine(
+        kwargs = dict(
             osm_id=osm_id,
             name=name[:300] if name else None,
             ref=ref[:100] if ref else None,
@@ -144,8 +154,10 @@ def load_power_lines(gpkg_path: str, session, clear: bool = False):
             disused=bool(disused) if disused is not None else None,
             frequency=frequency[:50] if frequency else None,
             start_date=start_date[:50] if start_date else None,
-            geom=from_shape(geom, srid=4326),
         )
+        if _has_geom["gpkg_power_lines"]:
+            kwargs["geom"] = from_shape(geom, srid=4326)
+        record = GPKGPowerLine(**kwargs)
         batch.append(record)
 
         if len(batch) >= BATCH_SIZE:
@@ -212,7 +224,7 @@ def load_substations(gpkg_path: str, session, clear: bool = False):
         centroid_lat = round(centroid.y, 6) if centroid else None
         centroid_lon = round(centroid.x, 6) if centroid else None
 
-        record = GPKGSubstation(
+        kwargs = dict(
             osm_id=osm_id,
             name=name[:300] if name else None,
             ref=ref[:100] if ref else None,
@@ -225,8 +237,10 @@ def load_substations(gpkg_path: str, session, clear: bool = False):
             start_date=start_date[:50] if start_date else None,
             centroid_lat=centroid_lat,
             centroid_lon=centroid_lon,
-            geom=from_shape(geom, srid=4326),
         )
+        if _has_geom["gpkg_substations"]:
+            kwargs["geom"] = from_shape(geom, srid=4326)
+        record = GPKGSubstation(**kwargs)
         batch.append(record)
 
         if len(batch) >= BATCH_SIZE:
@@ -290,7 +304,7 @@ def load_power_plants(gpkg_path: str, session, clear: bool = False):
         centroid_lat = round(centroid.y, 6) if centroid else None
         centroid_lon = round(centroid.x, 6) if centroid else None
 
-        record = GPKGPowerPlant(
+        kwargs = dict(
             osm_id=osm_id,
             name=name[:300] if name else None,
             wikidata=wikidata[:50] if wikidata else None,
@@ -302,8 +316,10 @@ def load_power_plants(gpkg_path: str, session, clear: bool = False):
             start_date=start_date[:50] if start_date else None,
             centroid_lat=centroid_lat,
             centroid_lon=centroid_lon,
-            geom=from_shape(geom, srid=4326),
         )
+        if _has_geom["gpkg_power_plants"]:
+            kwargs["geom"] = from_shape(geom, srid=4326)
+        record = GPKGPowerPlant(**kwargs)
         batch.append(record)
 
         if len(batch) >= BATCH_SIZE:
