@@ -50,10 +50,6 @@ class HostingCapacityRecord(Base):
 
     __tablename__ = "hosting_capacity_records"
     __table_args__ = (
-        UniqueConstraint(
-            "utility_id", "feeder_id_external", "ingestion_run_id",
-            name="uq_hc_record",
-        ),
         Index("ix_hc_utility", "utility_id"),
         Index("ix_hc_ingestion_run", "ingestion_run_id"),
         Index("ix_hc_geom", "geom", postgresql_using="gist"),

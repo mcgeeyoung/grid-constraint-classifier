@@ -113,8 +113,8 @@ class HostingCapacityWriter:
                 utility_id=utility.id,
                 ingestion_run_id=run.id,
                 feeder_id_external=row["feeder_id_external"],
-                feeder_name=row.get("feeder_name"),
-                substation_name=row.get("substation_name"),
+                feeder_name=_safe_str(row.get("feeder_name")),
+                substation_name=_safe_str(row.get("substation_name")),
                 hosting_capacity_mw=_safe_float(row.get("hosting_capacity_mw")),
                 hosting_capacity_min_mw=_safe_float(row.get("hosting_capacity_min_mw")),
                 hosting_capacity_max_mw=_safe_float(row.get("hosting_capacity_max_mw")),
@@ -124,8 +124,8 @@ class HostingCapacityWriter:
                 constraining_metric=row.get("constraining_metric"),
                 voltage_kv=_safe_float(row.get("voltage_kv")),
                 phase_config=row.get("phase_config"),
-                is_overhead=row.get("is_overhead"),
-                is_network=row.get("is_network"),
+                is_overhead=_safe_bool(row.get("is_overhead")),
+                is_network=_safe_bool(row.get("is_network")),
                 centroid_lat=_safe_float(row.get("centroid_lat")),
                 centroid_lon=_safe_float(row.get("centroid_lon")),
                 geometry_json=row.get("geometry_json"),
@@ -214,12 +214,26 @@ class HostingCapacityWriter:
         self, run: HCIngestionRun, error: Optional[str] = None,
     ):
         """Mark ingestion run as completed or failed."""
+        try:
+            self.db.rollback()  # Clear any pending failed transaction
+        except Exception:
+            pass
         run.completed_at = datetime.now(timezone.utc)
         run.status = "failed" if error else "completed"
         if error:
             run.error_message = str(error)[:1000]
         self.db.commit()
         logger.info(f"Ingestion run #{run.id} -> {run.status}")
+
+
+def _safe_str(val) -> Optional[str]:
+    """Convert to string, returning None for NaN/None/'None'."""
+    if val is None:
+        return None
+    if isinstance(val, float) and val != val:  # NaN
+        return None
+    s = str(val)
+    return None if s in ("None", "nan", "") else s
 
 
 def _safe_float(val) -> Optional[float]:
@@ -233,3 +247,21 @@ def _safe_float(val) -> Optional[float]:
         return f
     except (ValueError, TypeError):
         return None
+
+
+def _safe_bool(val) -> Optional[bool]:
+    """Convert to bool, returning None for non-boolean values."""
+    if val is None:
+        return None
+    if isinstance(val, bool):
+        return val
+    if isinstance(val, (int, float)):
+        if val != val:  # NaN
+            return None
+        return bool(val)
+    if isinstance(val, str):
+        if val.lower() in ("true", "yes", "1", "y"):
+            return True
+        if val.lower() in ("false", "no", "0", "n"):
+            return False
+    return None

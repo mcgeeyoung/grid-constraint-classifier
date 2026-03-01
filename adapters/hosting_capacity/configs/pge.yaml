@@ -15,11 +15,9 @@ capacity_unit: kw
 url_discovery_method: static
 
 field_map:
-  FeederId: feeder_id_external
-  FeederName: feeder_name
-  SubstationName: substation_name
-  ICA_kW: hosting_capacity_mw
-  Existing_Gen_kW: installed_dg_mw
-  Queued_Gen_kW: queued_dg_mw
-  Limiting_Factor: constraining_metric
-  Voltage: voltage_kv
+  feederid: feeder_id_external
+  csv_linesection: feeder_name
+  loadica: hosting_capacity_mw
+  loadapplications: installed_dg_mw
+  plannedprojects: queued_dg_mw
+  expectedcapacity: remaining_capacity_mw

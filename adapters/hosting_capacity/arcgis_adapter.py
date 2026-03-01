@@ -6,6 +6,7 @@ standard ArcGIS FeatureServer endpoints with no special auth or
 URL rotation.
 """
 
+import json
 import logging
 from pathlib import Path
 from typing import Optional
@@ -27,7 +28,14 @@ class ArcGISHostingCapacityAdapter(HostingCapacityAdapter):
         cache = self.get_cache_path()
         if cache.exists() and not force:
             logger.info(f"Loading cached HC data for {self.config.utility_code}")
-            return pd.read_parquet(cache)
+            df = pd.read_parquet(cache)
+            # Deserialize JSON string columns back to dicts
+            for col in ("geometry_json", "raw_attributes"):
+                if col in df.columns:
+                    df[col] = df[col].apply(
+                        lambda v: json.loads(v) if isinstance(v, str) else v
+                    )
+            return df
 
         url = self.resolve_current_url()
         logger.info(
@@ -47,8 +55,15 @@ class ArcGISHostingCapacityAdapter(HostingCapacityAdapter):
         df = self._features_to_dataframe(features)
         df = normalize_hosting_capacity(df, self.config)
 
+        # Serialize dict/list columns to JSON strings for parquet compatibility
         cache.parent.mkdir(parents=True, exist_ok=True)
-        df.to_parquet(cache, index=False)
+        df_cache = df.copy()
+        for col in ("geometry_json", "raw_attributes"):
+            if col in df_cache.columns:
+                df_cache[col] = df_cache[col].apply(
+                    lambda v: json.dumps(v) if isinstance(v, (dict, list)) else v
+                )
+        df_cache.to_parquet(cache, index=False)
         logger.info(
             f"Cached {len(df)} HC records for {self.config.utility_code}"
         )
