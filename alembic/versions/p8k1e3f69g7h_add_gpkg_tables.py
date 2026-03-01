@@ -1,11 +1,12 @@
 """Add GeoPackage infrastructure tables (power lines, substations, plants).
+Geometry columns omitted (PostGIS not available on PG 16.6); add via
+a future migration once PostGIS is installed.
 
 Revision ID: p8k1e3f69g7h
 Revises: o7j0e4f58g6h
 Create Date: 2026-02-28
 """
 
-import geoalchemy2
 from alembic import op
 import sqlalchemy as sa
 
@@ -34,18 +35,9 @@ def upgrade():
         sa.Column("disused", sa.Boolean(), nullable=True),
         sa.Column("frequency", sa.String(50), nullable=True),
         sa.Column("start_date", sa.String(50), nullable=True),
-        sa.Column(
-            "geom",
-            geoalchemy2.types.Geometry(
-                geometry_type="LINESTRING", srid=4326,
-                from_text="ST_GeomFromEWKT", name="geometry",
-            ),
-            nullable=True,
-        ),
     )
     op.create_index("ix_gpkg_power_lines_max_voltage_kv", "gpkg_power_lines", ["max_voltage_kv"])
     op.create_index("ix_gpkg_power_lines_operator", "gpkg_power_lines", ["operator"])
-    op.create_index("ix_gpkg_power_lines_geom", "gpkg_power_lines", ["geom"], postgresql_using="gist")
 
     # --- gpkg_substations ---
     op.create_table(
@@ -63,19 +55,10 @@ def upgrade():
         sa.Column("start_date", sa.String(50), nullable=True),
         sa.Column("centroid_lat", sa.Float(), nullable=True),
         sa.Column("centroid_lon", sa.Float(), nullable=True),
-        sa.Column(
-            "geom",
-            geoalchemy2.types.Geometry(
-                geometry_type="GEOMETRY", srid=4326,
-                from_text="ST_GeomFromEWKT", name="geometry",
-            ),
-            nullable=True,
-        ),
     )
     op.create_index("ix_gpkg_substations_substation_type", "gpkg_substations", ["substation_type"])
     op.create_index("ix_gpkg_substations_max_voltage_kv", "gpkg_substations", ["max_voltage_kv"])
     op.create_index("ix_gpkg_substations_operator", "gpkg_substations", ["operator"])
-    op.create_index("ix_gpkg_substations_geom", "gpkg_substations", ["geom"], postgresql_using="gist")
 
     # --- gpkg_power_plants ---
     op.create_table(
@@ -92,35 +75,23 @@ def upgrade():
         sa.Column("start_date", sa.String(50), nullable=True),
         sa.Column("centroid_lat", sa.Float(), nullable=True),
         sa.Column("centroid_lon", sa.Float(), nullable=True),
-        sa.Column(
-            "geom",
-            geoalchemy2.types.Geometry(
-                geometry_type="GEOMETRY", srid=4326,
-                from_text="ST_GeomFromEWKT", name="geometry",
-            ),
-            nullable=True,
-        ),
     )
     op.create_index("ix_gpkg_power_plants_source", "gpkg_power_plants", ["source"])
     op.create_index("ix_gpkg_power_plants_output_mw", "gpkg_power_plants", ["output_mw"])
     op.create_index("ix_gpkg_power_plants_operator", "gpkg_power_plants", ["operator"])
-    op.create_index("ix_gpkg_power_plants_geom", "gpkg_power_plants", ["geom"], postgresql_using="gist")
 
 
 def downgrade():
-    op.drop_index("ix_gpkg_power_plants_geom", table_name="gpkg_power_plants")
     op.drop_index("ix_gpkg_power_plants_operator", table_name="gpkg_power_plants")
     op.drop_index("ix_gpkg_power_plants_output_mw", table_name="gpkg_power_plants")
     op.drop_index("ix_gpkg_power_plants_source", table_name="gpkg_power_plants")
     op.drop_table("gpkg_power_plants")
 
-    op.drop_index("ix_gpkg_substations_geom", table_name="gpkg_substations")
     op.drop_index("ix_gpkg_substations_operator", table_name="gpkg_substations")
     op.drop_index("ix_gpkg_substations_max_voltage_kv", table_name="gpkg_substations")
     op.drop_index("ix_gpkg_substations_substation_type", table_name="gpkg_substations")
     op.drop_table("gpkg_substations")
 
-    op.drop_index("ix_gpkg_power_lines_geom", table_name="gpkg_power_lines")
     op.drop_index("ix_gpkg_power_lines_operator", table_name="gpkg_power_lines")
     op.drop_index("ix_gpkg_power_lines_max_voltage_kv", table_name="gpkg_power_lines")
     op.drop_table("gpkg_power_lines")

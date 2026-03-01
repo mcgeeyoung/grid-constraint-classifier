@@ -3,6 +3,11 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load .env from project root
+load_dotenv(Path(__file__).parent.parent / ".env")
+
 
 class Settings:
     """Application settings loaded from environment variables."""
@@ -43,6 +48,9 @@ class Settings:
     PJM_GIS_PASSWORD: str = os.environ.get("PJM_GIS_PASSWORD", "")
     ISONE_USERNAME: str = os.environ.get("ISONE_USERNAME", "")
     ISONE_PASSWORD: str = os.environ.get("ISONE_PASSWORD", "")
+
+    # EIA API credentials
+    EIA_API_KEY: str = os.environ.get("EIA_API_KEY", "")
 
     # WattCarbon API credentials
     WATTCARBON_EMAIL: str = os.environ.get("WATTCARBON_EMAIL", "")

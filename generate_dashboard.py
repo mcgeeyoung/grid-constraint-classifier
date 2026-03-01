@@ -602,6 +602,172 @@ def build_dc_section(data: dict, iso_name: str = "PJM") -> str:
     """
 
 
+GRIP_RISK_COLORS = {
+    "CRITICAL": "#c0392b",
+    "ELEVATED": "#e67e22",
+    "MODERATE": "#f1c40f",
+    "LOW": "#27ae60",
+}
+
+
+def build_grip_section(data: dict) -> str:
+    """Build GRIP Distribution Overlay section with division risk table and hotspots."""
+    grip = data.get("grip_overlay", {})
+    if not grip:
+        return ""
+
+    division_overlay = grip.get("division_overlay", [])
+    substation_hotspots = grip.get("substation_hotspots", [])
+    meta = grip.get("metadata", {})
+
+    total_banks = meta.get("total_grip_banks", 0)
+    total_pnodes = meta.get("total_pnodes", 0)
+    name_matches = meta.get("name_matches", 0)
+    prox_matches = meta.get("proximity_matches", 0)
+    critical_count = sum(1 for d in division_overlay if d.get("risk") == "CRITICAL")
+
+    # Stat cards
+    stat_cards = f"""
+    <div class="stat-cards">
+      <div class="stat-card">
+        <div class="stat-value">{total_pnodes:,}</div>
+        <div class="stat-label">PG&E PNodes Analyzed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{total_banks:,}</div>
+        <div class="stat-label">GRIP Distribution Banks</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{name_matches + prox_matches:,}</div>
+        <div class="stat-label">Matched Substations</div>
+        <div style="font-size:0.72rem;color:#7f8c8d;margin-top:0.15rem">{name_matches} name, {prox_matches} proximity</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color:#c0392b">{critical_count}</div>
+        <div class="stat-label">CRITICAL Divisions</div>
+      </div>
+    </div>
+    """
+
+    # Division risk table (with centroid coords for map linking)
+    centroids = meta.get("division_centroids", {})
+    div_rows = []
+    for d in division_overlay:
+        risk = d.get("risk", "LOW")
+        risk_color = GRIP_RISK_COLORS.get(risk, "#27ae60")
+        div_name = d.get("division", "")
+        centroid = centroids.get(div_name, {})
+        lat = centroid.get("lat", "")
+        lon = centroid.get("lon", "")
+        map_attrs = f'data-lat="{lat}" data-lon="{lon}"' if lat and lon else ""
+        div_rows.append(
+            f'<tr class="map-link" {map_attrs} style="cursor:pointer">'
+            f"<td>{html.escape(str(div_name))}</td>"
+            f"<td>{d.get('tx_risk', 0):.4f}</td>"
+            f"<td>{d.get('dx_risk', 0):.4f}</td>"
+            f"<td><b>{d.get('combined_risk', 0):.4f}</b></td>"
+            f"<td>${d.get('avg_congestion', 0):.2f}</td>"
+            f"<td>{d.get('n_banks', 0)}</td>"
+            f"<td>{d.get('avg_loading', 0):.1f}%</td>"
+            f"<td>{d.get('banks_over_80', 0)}</td>"
+            f"<td>{d.get('banks_over_100', 0)}</td>"
+            f'<td><span class="cls-badge" style="background:{risk_color}">{risk}</span></td>'
+            f"</tr>"
+        )
+    div_rows_html = "\n".join(div_rows)
+
+    div_table = f"""
+    <div class="table-wrap">
+      <table class="zone-table" id="gripDivTable">
+        <thead>
+          <tr>
+            <th data-col="0" data-type="str">Division <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="1" data-type="num">Tx Risk <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="2" data-type="num">Dx Risk <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="3" data-type="num">Combined <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="4" data-type="num">Avg Congestion <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="5" data-type="num">Banks <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="6" data-type="num">Avg Load% <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="7" data-type="num">&ge;80% <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="8" data-type="num">&ge;100% <span class="sort-arrow">&udarr;</span></th>
+            <th data-col="9" data-type="str">Risk <span class="sort-arrow">&udarr;</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {div_rows_html}
+        </tbody>
+      </table>
+    </div>
+    """
+
+    # Substation hotspots table
+    hotspot_html = ""
+    if substation_hotspots:
+        hs_rows = []
+        for hs in substation_hotspots:
+            low_conf = hs.get("low_confidence", False)
+            opacity = 'style="opacity:0.55"' if low_conf else ""
+            match_type = hs.get("match_type", "name")
+            dist = hs.get("distance_km", 0)
+            match_display = "name" if match_type == "name" else f"proximity ({dist:.0f}km)"
+            hs_rows.append(
+                f"<tr {opacity}>"
+                f"<td>{html.escape(str(hs.get('substation', '')))}</td>"
+                f"<td>{html.escape(str(hs.get('division', '')))}</td>"
+                f"<td>{html.escape(str(hs.get('nearest_pnode', '')))}</td>"
+                f"<td>{match_display}</td>"
+                f"<td>${hs.get('avg_congestion', 0):.2f}</td>"
+                f"<td>{hs.get('loading_pct', 0):.1f}%</td>"
+                f"<td>{hs.get('rating_mw', 0):.1f}</td>"
+                f"<td><b>{hs.get('combined_risk', 0):.2f}</b></td>"
+                f"</tr>"
+            )
+        hs_rows_html = "\n".join(hs_rows)
+
+        hotspot_html = f"""
+        <h3 style="font-size:1rem;margin:1.5rem 0 0.75rem;color:#34495e">Substation Hotspots (Top 25)</h3>
+        <p style="font-size:0.82rem;color:#7f8c8d;margin-bottom:0.75rem">
+          Substations where both transmission congestion AND distribution loading are high.
+          Rows with lower opacity indicate proximity matches &gt;20km (lower confidence).
+        </p>
+        <div class="table-wrap">
+          <table class="zone-table" id="gripHotspotTable">
+            <thead>
+              <tr>
+                <th data-col="0" data-type="str">Substation <span class="sort-arrow">&udarr;</span></th>
+                <th data-col="1" data-type="str">Division <span class="sort-arrow">&udarr;</span></th>
+                <th data-col="2" data-type="str">Nearest PNode <span class="sort-arrow">&udarr;</span></th>
+                <th data-col="3" data-type="str">Match Type <span class="sort-arrow">&udarr;</span></th>
+                <th data-col="4" data-type="num">Avg Congestion <span class="sort-arrow">&udarr;</span></th>
+                <th data-col="5" data-type="num">GRIP Load% <span class="sort-arrow">&udarr;</span></th>
+                <th data-col="6" data-type="num">Rating MW <span class="sort-arrow">&udarr;</span></th>
+                <th data-col="7" data-type="num">Risk Score <span class="sort-arrow">&udarr;</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {hs_rows_html}
+            </tbody>
+          </table>
+        </div>
+        """
+
+    map_hint = ""
+    if centroids:
+        map_hint = '<p style="font-size:0.78rem;color:#3498db;margin-top:0.4rem">Click a row to locate on map.</p>'
+
+    return f"""
+    {stat_cards}
+    <h3 style="font-size:1rem;margin:0 0 0.75rem;color:#34495e">Division Risk Assessment</h3>
+    <p style="font-size:0.82rem;color:#7f8c8d;margin-bottom:0.75rem">
+      Combined transmission congestion (Tx) and distribution loading (Dx) risk per PG&E division.
+      CRITICAL = both Tx and Dx risk &ge; 0.5.
+    </p>
+    {div_table}
+    {map_hint}
+    {hotspot_html}
+    """
+
+
 def build_html(data: dict, charts: dict[str, str], map_html: str, iso_name: str = "PJM") -> str:
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     year = data["metadata"]["year"]
@@ -610,6 +776,7 @@ def build_html(data: dict, charts: dict[str, str], map_html: str, iso_name: str 
     chart_section = build_charts(charts)
     methodology = build_methodology()
     dc_section = build_dc_section(data, iso_name=iso_name)
+    grip_section = build_grip_section(data)
     escaped_map = html.escape(map_html)
 
     return f"""<!DOCTYPE html>
@@ -1057,6 +1224,7 @@ tr.dc-pressure-row:hover {{
   <a href="#map">Map</a>
   <a href="#zones">Zone Data</a>
   <a href="#datacenters">Data Centers</a>
+  {"" if not grip_section else '<a href="#grip">Distribution Overlay</a>'}
   <a href="#charts">Charts</a>
   <a href="#methodology">Methodology</a>
 </nav>
@@ -1099,6 +1267,12 @@ tr.dc-pressure-row:hover {{
   <h2 class="section-title">Data Center Overlay</h2>
   {dc_section}
 </div>
+
+<!-- GRIP Distribution Overlay Section -->
+{"" if not grip_section else f'''<div class="section" id="grip">
+  <h2 class="section-title">PG&amp;E Distribution Overlay</h2>
+  {grip_section}
+</div>'''}
 
 <!-- Charts Section -->
 <div class="section" id="charts">
@@ -1251,6 +1425,53 @@ document.querySelectorAll('table.pnode-table').forEach(function(table) {{
   }});
 }});
 
+// ── Sortable GRIP tables ──
+['gripDivTable', 'gripHotspotTable'].forEach(function(tableId) {{
+  var table = document.getElementById(tableId);
+  if (!table) return;
+  var thead = table.querySelector('thead');
+  var tbody = table.querySelector('tbody');
+  var headers = thead.querySelectorAll('th');
+  var sortState = {{ col: -1, asc: true }};
+
+  function parseVal(td, type) {{
+    var txt = td.textContent.trim().replace(/[$,%,]/g, '');
+    if (type === 'num') {{
+      var n = parseFloat(txt);
+      return isNaN(n) ? 0 : n;
+    }}
+    return txt.toLowerCase();
+  }}
+
+  headers.forEach(function(th) {{
+    th.addEventListener('click', function() {{
+      var col = parseInt(this.getAttribute('data-col'));
+      var type = this.getAttribute('data-type');
+      var asc = (sortState.col === col) ? !sortState.asc : true;
+      sortState = {{ col: col, asc: asc }};
+
+      headers.forEach(function(h) {{
+        var arrow = h.querySelector('.sort-arrow');
+        arrow.classList.remove('active');
+        arrow.textContent = '\u21C5';
+      }});
+      var activeArrow = this.querySelector('.sort-arrow');
+      activeArrow.classList.add('active');
+      activeArrow.textContent = asc ? '\u2191' : '\u2193';
+
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort(function(a, b) {{
+        var va = parseVal(a.children[col], type);
+        var vb = parseVal(b.children[col], type);
+        if (va < vb) return asc ? -1 : 1;
+        if (va > vb) return asc ? 1 : -1;
+        return 0;
+      }});
+      rows.forEach(function(row) {{ tbody.appendChild(row); }});
+    }});
+  }});
+}});
+
 // ── Sortable DC zone table ──
 (function() {{
   var table = document.getElementById('dcZoneTable');
@@ -1297,6 +1518,27 @@ document.querySelectorAll('table.pnode-table').forEach(function(table) {{
     }});
   }});
 }})();
+
+// ── GRIP division table -> map linking ──
+document.querySelectorAll('.map-link').forEach(function(row) {{
+  row.addEventListener('click', function() {{
+    var lat = parseFloat(this.dataset.lat);
+    var lon = parseFloat(this.dataset.lon);
+    if (isNaN(lat) || isNaN(lon)) return;
+    var mapSection = document.getElementById('map');
+    if (mapSection) {{
+      mapSection.scrollIntoView({{behavior: 'smooth'}});
+      setTimeout(function() {{
+        var iframe = mapSection.querySelector('iframe');
+        if (iframe && iframe.contentWindow) {{
+          iframe.contentWindow.postMessage(
+            {{type: 'panTo', lat: lat, lng: lon, zoom: 9}}, '*'
+          );
+        }}
+      }}, 500);
+    }}
+  }});
+}});
 </script>
 </body>
 </html>"""

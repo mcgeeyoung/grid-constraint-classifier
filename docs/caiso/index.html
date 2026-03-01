@@ -419,7 +419,9 @@ table.pnode-table tbody tr:hover {
           <span>Classifies all <b>22</b> California ISO pricing zones as
           transmission-constrained, generation-constrained, both, or unconstrained using weighted
           multi-factor scoring</span></li>
-        
+        <li><span class="bullet"></span>
+          <span>Drills down to <b>856</b> individual pricing nodes (pnodes) with
+          severity scoring and 12x24 constraint loadshapes showing monthly/hourly congestion patterns</span></li>
         <li><span class="bullet"></span>
           <span>Scrapes <b>634</b> data center records from interconnection queues and
           maps them to California ISO zones, identifying growth pressure areas</span></li>
@@ -453,7 +455,17 @@ table.pnode-table tbody tr:hover {
         <div class="stat-detail">1,142 MW estimated capacity,
         20 proposed</div>
       </div>
-      
+      <div class="stat-card">
+        <div class="stat-value">856</div>
+        <div class="stat-label">Pnodes Analyzed</div>
+        <div class="stat-detail">0 critical hotspots across
+        1 zones</div>
+      </div>
+      <div class="stat-card highlight">
+        <div class="stat-value">8</div>
+        <div class="stat-label">CRITICAL PG&amp;E Divisions</div>
+        <div class="stat-detail">Los Padres, Fresno, Mission ...</div>
+      </div>
       
     </div>
   </div>
@@ -480,7 +492,7 @@ table.pnode-table tbody tr:hover {
       <div class="pipeline-step">
         <div class="pipeline-phase">Phase 2.5</div>
         <div class="pipeline-name">Pnode Drill-Down</div>
-        <div class="pipeline-desc">0 individual nodes with severity tiers and 12x24 constraint loadshapes</div>
+        <div class="pipeline-desc">856 individual nodes with severity tiers and 12x24 constraint loadshapes</div>
       </div>
       <div class="pipeline-step">
         <div class="pipeline-phase">Phase 3</div>
@@ -561,6 +573,47 @@ table.pnode-table tbody tr:hover {
     hotspots per constrained zone, ranked by severity score. Full pnode tables with
     12x24 loadshapes are available in the interactive dashboard.</p>
     
+        <div class="pnode-zone-card">
+          <div class="pnode-zone-header">
+            <span class="pnode-zone-name">PGE_ALL</span>
+            <span class="cls-badge" style="background:#2ecc71">unconstrained</span>
+            <span class="pnode-zone-count">856 pnodes</span>
+          </div>
+          <div class="pnode-tier-row"><span class="tier-badge" style="background:#e67e22">elevated: 11</span> <span class="tier-badge" style="background:#f1c40f">moderate: 468</span> <span class="tier-badge" style="background:#27ae60">low: 377</span></div>
+          <table class="pnode-table">
+            <thead>
+              <tr>
+                <th>Pnode</th>
+                <th>Severity</th>
+                <th>Avg $/MWh</th>
+                <th>Max $/MWh</th>
+                <th>Constrained %</th>
+                <th>Tier</th>
+              </tr>
+            </thead>
+            <tbody><tr><td>KRNSNST_7_N001</td><td>0.7319</td><td>$45.14</td><td>$1398.80</td><td>45.5%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>KRNCNYN_6_N001</td><td>0.6054</td><td>$29.89</td><td>$943.63</td><td>43.7%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr>
+<tr><td>RIOBRVQF_6_N001</td><td>0.6023</td><td>$29.65</td><td>$943.63</td><td>43.5%</td><td><span class="tier-badge" style="background:#e67e22">elevated</span></td></tr></tbody>
+          </table>
+        </div>
+        
+  </div>
+
+  <!-- GRIP Distribution Overlay -->
+  <div class="section">
+    <h2 class="section-title">PG&amp;E Distribution Overlay</h2>
+    
+    <div class="pressure-section" style="border-color:#c0392b;background:#fdedec">
+      <h3 style="color:#922b21">Distribution Overlay: Convergence Zones</h3>
+      <p class="pressure-desc" style="color:#922b21">
+        PG&E divisions where both CAISO transmission congestion AND distribution substation
+        overloading converge. Analysis combines 856 PNode congestion scores with
+        1,236 GRIP distribution bank loading records.
+        See full details in the interactive dashboard.
+      </p>
+      <div class="pressure-grid"><div class="pressure-card"><div class="pressure-zone">Los Padres <span class="cls-badge" style="background:#c0392b">CRITICAL</span></div><div class="pressure-stats"><span>Tx Risk: <b>1.000</b></span><span>Dx Risk: <b>0.550</b></span><span><b>38</b> banks</span><span>Avg Load: <b>44%</b></span><span>&ge;100%: <b>5</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Fresno <span class="cls-badge" style="background:#c0392b">CRITICAL</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.838</b></span><span>Dx Risk: <b>0.624</b></span><span><b>110</b> banks</span><span>Avg Load: <b>48%</b></span><span>&ge;100%: <b>19</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Mission <span class="cls-badge" style="background:#c0392b">CRITICAL</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.510</b></span><span>Dx Risk: <b>0.884</b></span><span><b>53</b> banks</span><span>Avg Load: <b>61%</b></span><span>&ge;100%: <b>3</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Sierra <span class="cls-badge" style="background:#c0392b">CRITICAL</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.539</b></span><span>Dx Risk: <b>0.828</b></span><span><b>55</b> banks</span><span>Avg Load: <b>58%</b></span><span>&ge;100%: <b>5</b></span></div></div><div class="pressure-card"><div class="pressure-zone">North Bay <span class="cls-badge" style="background:#c0392b">CRITICAL</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.509</b></span><span>Dx Risk: <b>0.856</b></span><span><b>49</b> banks</span><span>Avg Load: <b>60%</b></span><span>&ge;100%: <b>4</b></span></div></div><div class="pressure-card"><div class="pressure-zone">De Anza <span class="cls-badge" style="background:#c0392b">CRITICAL</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.503</b></span><span>Dx Risk: <b>0.695</b></span><span><b>39</b> banks</span><span>Avg Load: <b>51%</b></span><span>&ge;100%: <b>7</b></span></div></div><div class="pressure-card"><div class="pressure-zone">San Jose <span class="cls-badge" style="background:#c0392b">CRITICAL</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.532</b></span><span>Dx Risk: <b>0.583</b></span><span><b>54</b> banks</span><span>Avg Load: <b>45%</b></span><span>&ge;100%: <b>5</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Sonoma <span class="cls-badge" style="background:#c0392b">CRITICAL</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.503</b></span><span>Dx Risk: <b>0.547</b></span><span><b>41</b> banks</span><span>Avg Load: <b>43%</b></span><span>&ge;100%: <b>4</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Diablo <span class="cls-badge" style="background:#e67e22">ELEVATED</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.445</b></span><span>Dx Risk: <b>1.000</b></span><span><b>48</b> banks</span><span>Avg Load: <b>68%</b></span><span>&ge;100%: <b>1</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Yosemite <span class="cls-badge" style="background:#e67e22">ELEVATED</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.780</b></span><span>Dx Risk: <b>0.491</b></span><span><b>78</b> banks</span><span>Avg Load: <b>40%</b></span><span>&ge;100%: <b>11</b></span></div></div><div class="pressure-card"><div class="pressure-zone">East Bay <span class="cls-badge" style="background:#e67e22">ELEVATED</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.498</b></span><span>Dx Risk: <b>0.696</b></span><span><b>61</b> banks</span><span>Avg Load: <b>51%</b></span><span>&ge;100%: <b>4</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Peninsula <span class="cls-badge" style="background:#e67e22">ELEVATED</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.408</b></span><span>Dx Risk: <b>0.738</b></span><span><b>97</b> banks</span><span>Avg Load: <b>54%</b></span><span>&ge;100%: <b>11</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Stockton <span class="cls-badge" style="background:#e67e22">ELEVATED</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.442</b></span><span>Dx Risk: <b>0.664</b></span><span><b>88</b> banks</span><span>Avg Load: <b>50%</b></span><span>&ge;100%: <b>14</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Sacramento <span class="cls-badge" style="background:#e67e22">ELEVATED</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.388</b></span><span>Dx Risk: <b>0.587</b></span><span><b>87</b> banks</span><span>Avg Load: <b>46%</b></span><span>&ge;100%: <b>8</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Central Coast <span class="cls-badge" style="background:#e67e22">ELEVATED</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.749</b></span><span>Dx Risk: <b>0.000</b></span><span><b>66</b> banks</span><span>Avg Load: <b>14%</b></span><span>&ge;100%: <b>8</b></span></div></div><div class="pressure-card"><div class="pressure-zone">Humboldt <span class="cls-badge" style="background:#e67e22">ELEVATED</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.716</b></span><span>Dx Risk: <b>0.029</b></span><span><b>60</b> banks</span><span>Avg Load: <b>16%</b></span><span>&ge;100%: <b>4</b></span></div></div><div class="pressure-card"><div class="pressure-zone">San Francisco <span class="cls-badge" style="background:#e67e22">ELEVATED</span></div><div class="pressure-stats"><span>Tx Risk: <b>0.000</b></span><span>Dx Risk: <b>0.596</b></span><span><b>32</b> banks</span><span>Avg Load: <b>46%</b></span><span>&ge;100%: <b>0</b></span></div></div></div>
+    </div>
+    
   </div>
 
   <!-- CTA: View Dashboard -->
@@ -613,7 +666,7 @@ table.pnode-table tbody tr:hover {
           <b>Transmission:</b> HIFLD transmission line data<br>
           <b>Zone boundaries:</b> HIFLD territory boundaries<br>
           <b>Data centers:</b> interconnection queue listings<br>
-          
+          <b>Pnode coordinates:</b> pnode metadata + geocoding
         </p>
       </div>
     </div>
@@ -622,7 +675,7 @@ table.pnode-table tbody tr:hover {
 </div>
 
 <div class="footer">
-  Generated 2026-02-23 | California ISO Grid Constraint Classifier |
+  Generated 2026-02-25 | California ISO Grid Constraint Classifier |
   Data: California ISO day-ahead hourly LMPs (2025)
 </div>
 

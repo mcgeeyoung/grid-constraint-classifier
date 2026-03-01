@@ -188,6 +188,16 @@ def upsert_lmp_rows(db, rto: str, df) -> int:
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Fetch PJM DA LMPs for interface nodes")
+    parser.add_argument("--year", type=int, default=2024,
+                        help="Year to fetch (default: 2024)")
+    parser.add_argument("--start", type=str, default=None,
+                        help="Override start date (YYYY-MM-DD)")
+    parser.add_argument("--end", type=str, default=None,
+                        help="Override end date (YYYY-MM-DD)")
+    args = parser.parse_args()
+
     if not PJM_API_KEY:
         logger.error("PJM_API_KEY not set in .env")
         sys.exit(1)
@@ -196,11 +206,16 @@ def main():
     from app.models.congestion import InterfaceLMP
 
     db = SessionLocal()
-    # PJM archive boundary: pnode_id filter only works for non-archived data
-    # (~March 2024+). Jan-Feb 2024 archived data doesn't support server-side
-    # pnode_id filtering, so we start from March.
-    start_date = date(2024, 3, 1)
-    end_date = date(2025, 1, 1)
+    if args.start:
+        start_date = date.fromisoformat(args.start)
+    else:
+        start_date = date(args.year, 1, 1)
+    if args.end:
+        end_date = date.fromisoformat(args.end)
+    else:
+        end_date = date(args.year + 1, 1, 1)
+
+    logger.info(f"Fetching PJM LMPs from {start_date} to {end_date}")
 
     try:
         for pnode_id, node_label in NODES.items():

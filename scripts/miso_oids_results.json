@@ -1,0 +1,404 @@
+{
+  "ALTE": {
+    "oids": [
+      1671
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1671,
+        "NAME": "WISCONSIN POWER & LIGHT CO",
+        "STATE": "WI"
+      }
+    ]
+  },
+  "MGE": {
+    "oids": [
+      246
+    ],
+    "matches": [
+      {
+        "OBJECTID": 246,
+        "NAME": "MADISON GAS & ELECTRIC CO",
+        "STATE": "WI"
+      }
+    ]
+  },
+  "WEC": {
+    "oids": [
+      1669
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1669,
+        "NAME": "WISCONSIN ELECTRIC POWER CO",
+        "STATE": "WI"
+      }
+    ]
+  },
+  "WPS": {
+    "oids": [
+      1674
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1674,
+        "NAME": "WISCONSIN PUBLIC SERVICE CORP",
+        "STATE": "WI"
+      }
+    ]
+  },
+  "WPPI": {
+    "oids": [
+      1672
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1672,
+        "NAME": "WPPI ENERGY",
+        "STATE": "WI"
+      }
+    ]
+  },
+  "ALTW": {
+    "oids": [
+      2848
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2848,
+        "NAME": "INTERSTATE POWER AND LIGHT CO",
+        "STATE": "IA"
+      }
+    ]
+  },
+  "MEC": {
+    "oids": [
+      352
+    ],
+    "matches": [
+      {
+        "OBJECTID": 352,
+        "NAME": "MIDAMERICAN ENERGY CO",
+        "STATE": "IA"
+      }
+    ]
+  },
+  "AMIL": {
+    "oids": [
+      2316
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2316,
+        "NAME": "AMEREN ILLINOIS COMPANY",
+        "STATE": "MO"
+      }
+    ]
+  },
+  "CILC": {
+    "oids": [
+      2316
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2316,
+        "NAME": "AMEREN ILLINOIS COMPANY",
+        "STATE": "MO"
+      }
+    ]
+  },
+  "CWLP": {
+    "oids": [
+      1219
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1219,
+        "NAME": "CITY OF SPRINGFIELD - (IL)",
+        "STATE": "IL"
+      }
+    ]
+  },
+  "SIGE": {
+    "oids": [
+      2316
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2316,
+        "NAME": "AMEREN ILLINOIS COMPANY",
+        "STATE": "MO"
+      }
+    ]
+  },
+  "SIPC": {
+    "oids": [
+      1179
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1179,
+        "NAME": "SOUTHERN ILLINOIS ELEC COOP",
+        "STATE": "IL"
+      }
+    ]
+  },
+  "AMMO": {
+    "oids": [
+      1449
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1449,
+        "NAME": "UNION ELECTRIC CO - (MO)",
+        "STATE": "MO"
+      }
+    ]
+  },
+  "SWEC": {
+    "oids": [
+      1835
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1835,
+        "NAME": "SOUTHWEST ELECTRIC COOP, INC",
+        "STATE": "MO"
+      }
+    ]
+  },
+  "CIN": {
+    "oids": [
+      1180
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1180,
+        "NAME": "SOUTHERN INDIANA GAS & ELEC CO",
+        "STATE": "IN"
+      }
+    ]
+  },
+  "IPL": {
+    "oids": [
+      2840
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2840,
+        "NAME": "INDIANAPOLIS POWER & LIGHT CO",
+        "STATE": "IN"
+      }
+    ]
+  },
+  "NIPS": {
+    "oids": [
+      601
+    ],
+    "matches": [
+      {
+        "OBJECTID": 601,
+        "NAME": "NORTHERN INDIANA PUB SERV CO",
+        "STATE": "IN"
+      }
+    ]
+  },
+  "CONS": {
+    "oids": [
+      2129
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2129,
+        "NAME": "CONSUMERS ENERGY CO",
+        "STATE": "MI"
+      }
+    ]
+  },
+  "DECO": {
+    "oids": [
+      2237
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2237,
+        "NAME": "DTE ELECTRIC COMPANY",
+        "STATE": "MI"
+      }
+    ]
+  },
+  "MIUP": {
+    "oids": [
+      1468
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1468,
+        "NAME": "UPPER PENINSULA POWER COMPANY",
+        "STATE": "MI"
+      }
+    ]
+  },
+  "UPPC": {
+    "oids": [
+      1468
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1468,
+        "NAME": "UPPER PENINSULA POWER COMPANY",
+        "STATE": "MI"
+      }
+    ]
+  },
+  "EMBA": {
+    "oids": [
+      2281
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2281,
+        "NAME": "EAST CENTRAL ENERGY",
+        "STATE": "MN"
+      }
+    ]
+  },
+  "HE": {
+    "oids": [
+      394
+    ],
+    "matches": [
+      {
+        "OBJECTID": 394,
+        "NAME": "ALLETE, INC.",
+        "STATE": "MN"
+      }
+    ]
+  },
+  "MP": {
+    "oids": [
+      394
+    ],
+    "matches": [
+      {
+        "OBJECTID": 394,
+        "NAME": "ALLETE, INC.",
+        "STATE": "MN"
+      }
+    ]
+  },
+  "NSP": {
+    "oids": [
+      606,
+      607
+    ],
+    "matches": [
+      {
+        "OBJECTID": 606,
+        "NAME": "NORTHERN STATES POWER CO",
+        "STATE": "MN"
+      },
+      {
+        "OBJECTID": 607,
+        "NAME": "NORTHERN STATES POWER CO - MINNESOTA",
+        "STATE": "MN"
+      }
+    ]
+  },
+  "OTP": {
+    "oids": [
+      694
+    ],
+    "matches": [
+      {
+        "OBJECTID": 694,
+        "NAME": "OTTER TAIL POWER CO",
+        "STATE": "MN"
+      }
+    ]
+  },
+  "CLEC": {
+    "oids": [
+      1934
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1934,
+        "NAME": "CLECO POWER LLC",
+        "STATE": "LA"
+      }
+    ]
+  },
+  "EES": {
+    "oids": [
+      209
+    ],
+    "matches": [
+      {
+        "OBJECTID": 209,
+        "NAME": "ENTERGY LOUISIANA LLC",
+        "STATE": "LA"
+      }
+    ]
+  },
+  "LAFA": {
+    "oids": [
+      2819
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2819,
+        "NAME": "CITY OF LAFAYETTE - (LA)",
+        "STATE": "LA"
+      }
+    ]
+  },
+  "EAI": {
+    "oids": [
+      2691
+    ],
+    "matches": [
+      {
+        "OBJECTID": 2691,
+        "NAME": "ENTERGY ARKANSAS LLC",
+        "STATE": "AR"
+      }
+    ]
+  },
+  "SMP": {
+    "oids": [
+      1599
+    ],
+    "matches": [
+      {
+        "OBJECTID": 1599,
+        "NAME": "CITY OF WEST MEMPHIS - (AR)",
+        "STATE": "AR"
+      }
+    ]
+  },
+  "DEVI": {
+    "oids": [
+      399
+    ],
+    "matches": [
+      {
+        "OBJECTID": 399,
+        "NAME": "ENTERGY MISSISSIPPI LLC",
+        "STATE": "MS"
+      }
+    ]
+  },
+  "MDU": {
+    "oids": [
+      328
+    ],
+    "matches": [
+      {
+        "OBJECTID": 328,
+        "NAME": "MONTANA-DAKOTA UTILITIES CO",
+        "STATE": "ND"
+      }
+    ]
+  }
+}

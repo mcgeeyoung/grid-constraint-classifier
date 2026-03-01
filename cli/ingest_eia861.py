@@ -45,21 +45,43 @@ def download_eia861(year: int, cache_dir: Path) -> Path:
         logger.info(f"Using cached {zip_path.name}")
         return zip_path
 
-    # EIA uses different URL patterns
-    url = f"{EIA_861_BASE}/zip/f861{year}.zip"
-    logger.info(f"Downloading {url}...")
+    # EIA puts the latest year at zip/ and older years at archive/zip/
+    urls = [
+        f"{EIA_861_BASE}/zip/f861{year}.zip",
+        f"{EIA_861_BASE}/archive/zip/f861{year}.zip",
+    ]
 
-    resp = requests.get(url, timeout=120)
-    if resp.status_code == 404:
-        # Try alternate URL pattern
-        url = f"{EIA_861_BASE}/zip/f8612023.zip"
-        logger.info(f"Trying alternate URL: {url}")
-        resp = requests.get(url, timeout=120)
+    for url in urls:
+        logger.info(f"Trying {url}...")
+        resp = requests.get(url, timeout=120, allow_redirects=False)
+        if resp.status_code in (301, 302, 404):
+            logger.info(f"  {resp.status_code}, trying next URL")
+            continue
+        resp.raise_for_status()
+        # Verify it's actually a ZIP, not an HTML error page
+        if resp.content[:4] != b"PK\x03\x04":
+            logger.warning(f"  Response is not a ZIP file, trying next URL")
+            continue
+        zip_path.write_bytes(resp.content)
+        logger.info(f"Downloaded {len(resp.content) / 1024 / 1024:.1f} MB -> {zip_path.name}")
+        return zip_path
 
-    resp.raise_for_status()
-    zip_path.write_bytes(resp.content)
-    logger.info(f"Downloaded {len(resp.content) / 1024 / 1024:.1f} MB -> {zip_path.name}")
-    return zip_path
+    raise RuntimeError(f"Could not download EIA-861 for year {year}. Tried: {urls}")
+
+
+def read_eia_excel(raw_bytes: bytes, marker_col: str = "Utility Number") -> pd.DataFrame:
+    """Read an EIA Excel file, auto-detecting the header row.
+
+    EIA-861 files have group-header rows before the actual column names.
+    This function tries header rows 0-3 until it finds the one containing
+    the expected marker column.
+    """
+    for header_row in range(4):
+        df = pd.read_excel(io.BytesIO(raw_bytes), header=header_row)
+        if marker_col in df.columns:
+            return df
+    # Fallback: use row 0
+    return pd.read_excel(io.BytesIO(raw_bytes), header=0)
 
 
 def find_file_in_zip(zf: zipfile.ZipFile, pattern: str) -> Optional[str]:
@@ -93,12 +115,12 @@ def parse_utility_data(zip_path: Path) -> pd.DataFrame:
 
         logger.info(f"Parsing {fname}...")
         with zf.open(fname) as f:
-            df = pd.read_excel(io.BytesIO(f.read()))
+            df = read_eia_excel(f.read())
 
     # Normalize column names (EIA uses various capitalizations)
     col_map = {}
     for col in df.columns:
-        col_lower = col.strip().lower().replace(" ", "_")
+        col_lower = str(col).strip().lower().replace(" ", "_")
         if "utility_n" in col_lower and ("number" in col_lower or "num" in col_lower):
             col_map[col] = "eia_id"
         elif "utility_name" in col_lower or (col_lower == "utility_name"):
@@ -154,12 +176,12 @@ def parse_sales_data(zip_path: Path) -> pd.DataFrame:
 
         logger.info(f"Parsing {fname}...")
         with zf.open(fname) as f:
-            df = pd.read_excel(io.BytesIO(f.read()))
+            df = read_eia_excel(f.read())
 
     # Normalize columns
     col_map = {}
     for col in df.columns:
-        col_lower = col.strip().lower().replace(" ", "_")
+        col_lower = str(col).strip().lower().replace(" ", "_")
         if "utility_n" in col_lower and ("number" in col_lower or "num" in col_lower):
             col_map[col] = "eia_id"
         elif col_lower in ("state", "st"):
@@ -337,6 +359,10 @@ def _write_to_db(df: pd.DataFrame):
     from app.database import SessionLocal
     from app.models import Utility, Regulator
 
+    # Deduplicate by eia_id (e.g. 88888 "Withheld" appears multiple times)
+    df = df.drop_duplicates(subset=["eia_id"], keep="first")
+    logger.info(f"After dedup: {len(df)} unique utilities")
+
     session = SessionLocal()
     try:
         # Build regulator lookup by state
@@ -385,8 +411,9 @@ def _write_to_db(df: pd.DataFrame):
                     existing.customers_total = int(row["customers_total"])
                 if pd.notna(row.get("sales_mwh")):
                     existing.sales_mwh = float(row["sales_mwh"])
-                if "counties" in row and pd.notna(row.get("counties")):
-                    existing.service_territory_counties = row["counties"]
+                counties = row.get("counties")
+                if counties is not None and not (isinstance(counties, float) and pd.isna(counties)):
+                    existing.service_territory_counties = counties
                 updated += 1
             else:
                 util = Utility(
@@ -400,7 +427,7 @@ def _write_to_db(df: pd.DataFrame):
                     regulator_id=regulators.get(state) if state else None,
                     customers_total=int(row["customers_total"]) if pd.notna(row.get("customers_total")) else None,
                     sales_mwh=float(row["sales_mwh"]) if pd.notna(row.get("sales_mwh")) else None,
-                    service_territory_counties=row.get("counties") if pd.notna(row.get("counties", None)) else None,
+                    service_territory_counties=row.get("counties") if row.get("counties") is not None and not (isinstance(row.get("counties"), float) and pd.isna(row["counties"])) else None,
                 )
                 session.add(util)
                 created += 1

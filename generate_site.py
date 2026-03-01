@@ -232,6 +232,59 @@ def build_pnode_drilldown(data: dict) -> str:
     return "\n".join(zone_cards)
 
 
+GRIP_RISK_COLORS = {
+    "CRITICAL": "#c0392b",
+    "ELEVATED": "#e67e22",
+    "MODERATE": "#f1c40f",
+    "LOW": "#27ae60",
+}
+
+
+def _build_grip_callout(division_overlay: list, grip_meta: dict) -> str:
+    """Build a GRIP distribution overlay callout for the executive summary."""
+    if not division_overlay:
+        return ""
+
+    critical = [d for d in division_overlay if d.get("risk") == "CRITICAL"]
+    elevated = [d for d in division_overlay if d.get("risk") == "ELEVATED"]
+    total_banks = grip_meta.get("total_grip_banks", 0)
+    total_pnodes = grip_meta.get("total_pnodes", 0)
+
+    if not critical and not elevated:
+        return ""
+
+    items = []
+    for d in critical + elevated:
+        risk = d.get("risk", "LOW")
+        color = GRIP_RISK_COLORS.get(risk, "#27ae60")
+        items.append(
+            f'<div class="pressure-card">'
+            f'<div class="pressure-zone">{html.escape(d["division"])}'
+            f' <span class="cls-badge" style="background:{color}">{risk}</span></div>'
+            f'<div class="pressure-stats">'
+            f'<span>Tx Risk: <b>{d.get("tx_risk", 0):.3f}</b></span>'
+            f'<span>Dx Risk: <b>{d.get("dx_risk", 0):.3f}</b></span>'
+            f'<span><b>{d.get("n_banks", 0)}</b> banks</span>'
+            f'<span>Avg Load: <b>{d.get("avg_loading", 0):.0f}%</b></span>'
+            f'<span>&ge;100%: <b>{d.get("banks_over_100", 0)}</b></span>'
+            f'</div>'
+            f'</div>'
+        )
+
+    return f"""
+    <div class="pressure-section" style="border-color:#c0392b;background:#fdedec">
+      <h3 style="color:#922b21">Distribution Overlay: Convergence Zones</h3>
+      <p class="pressure-desc" style="color:#922b21">
+        PG&E divisions where both CAISO transmission congestion AND distribution substation
+        overloading converge. Analysis combines {total_pnodes:,} PNode congestion scores with
+        {total_banks:,} GRIP distribution bank loading records.
+        See full details in the interactive dashboard.
+      </p>
+      <div class="pressure-grid">{"".join(items)}</div>
+    </div>
+    """
+
+
 def build_executive_summary(data: dict, iso_name: str = "PJM") -> str:
     """Generate the full executive summary HTML page."""
     meta = data["metadata"]
@@ -271,9 +324,18 @@ def build_executive_summary(data: dict, iso_name: str = "PJM") -> str:
     backbone_lines = meta.get("pjm_backbone_lines", 0)
     zone_boundaries = meta.get("pjm_zone_boundaries", 0)
 
+    # GRIP overlay stats
+    grip = data.get("grip_overlay", {})
+    grip_division_overlay = grip.get("division_overlay", [])
+    grip_meta = grip.get("metadata", {})
+    grip_critical_divs = [
+        d["division"] for d in grip_division_overlay if d.get("risk") == "CRITICAL"
+    ]
+
     zone_table_rows = build_zone_table_rows(data)
     growth_pressure = build_growth_pressure(data)
     pnode_section = build_pnode_drilldown(data)
+    grip_callout = _build_grip_callout(grip_division_overlay, grip_meta)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -740,6 +802,11 @@ table.pnode-table tbody tr:hover {{
         <div class="stat-detail">{total_critical} critical hotspots across
         {len(pnode_drilldown)} zones</div>
       </div>'''}
+      {"" if not grip_critical_divs else f'''<div class="stat-card highlight">
+        <div class="stat-value">{len(grip_critical_divs)}</div>
+        <div class="stat-label">CRITICAL PG&amp;E Divisions</div>
+        <div class="stat-detail">{", ".join(grip_critical_divs[:3])}{" ..." if len(grip_critical_divs) > 3 else ""}</div>
+      </div>'''}
       {"" if not backbone_lines else f'''<div class="stat-card">
         <div class="stat-value">{backbone_lines}</div>
         <div class="stat-label">Transmission Lines Mapped</div>
@@ -822,6 +889,12 @@ table.pnode-table tbody tr:hover {{
     12x24 loadshapes are available in the interactive dashboard.</p>
     {pnode_section}
   </div>
+
+  <!-- GRIP Distribution Overlay -->
+  {"" if not grip_callout else f'''<div class="section">
+    <h2 class="section-title">PG&amp;E Distribution Overlay</h2>
+    {grip_callout}
+  </div>'''}
 
   <!-- CTA: View Dashboard -->
   <div class="cta-section">

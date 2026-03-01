@@ -103,6 +103,39 @@ class _EsriTransmissionLayer(MacroElement):
         self.where_clause = where_clause
 
 
+class _MapMessageListener(MacroElement):
+    """
+    MacroElement that adds a postMessage listener to the map so the
+    parent dashboard can tell it to pan/zoom to a specific location.
+    """
+
+    _template = Template("""
+        {% macro script(this, kwargs) %}
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'panTo') {
+                {{ this._parent.get_name() }}.flyTo(
+                    [e.data.lat, e.data.lng],
+                    e.data.zoom || 9,
+                    {duration: 1.0}
+                );
+            }
+        });
+        {% endmacro %}
+    """)
+
+    def __init__(self):
+        super().__init__()
+        self._name = "MapMessageListener"
+
+
+DIVISION_RISK_COLORS = {
+    "CRITICAL": "#e74c3c",
+    "ELEVATED": "#e67e22",
+    "MODERATE": "#f1c40f",
+    "LOW": "#27ae60",
+}
+
+
 def create_interactive_map(
     classification_df: pd.DataFrame,
     zone_centroids: dict,
@@ -111,6 +144,7 @@ def create_interactive_map(
     transmission_geojson: Optional[dict] = None,
     pnode_data: Optional[dict] = None,
     zone_boundaries: Optional[dict] = None,
+    division_boundaries: Optional[dict] = None,
     backbone_geojson: Optional[dict] = None,
     output_path: Optional[Path] = None,
     map_center: tuple[float, float] = (39.5, -78.0),
@@ -129,6 +163,7 @@ def create_interactive_map(
         transmission_geojson: GeoJSON for transmission lines.
         pnode_data: {coordinates: {}, results: {}} for pnode markers.
         zone_boundaries: GeoJSON for zone boundary polygons.
+        division_boundaries: GeoJSON for PG&E division risk polygons.
         backbone_geojson: GeoJSON for backbone transmission lines.
         output_path: Where to save the HTML map.
         map_center: (lat, lon) center for the map.
@@ -207,6 +242,36 @@ def create_interactive_map(
 
         boundary_layer.add_to(m)
         logger.info(f"Added zone boundary layer with {len(zone_boundaries['features'])} polygons")
+
+    # -- PG&E Division risk boundaries --
+    if division_boundaries and division_boundaries.get("features"):
+        div_layer = folium.FeatureGroup(name="PG&E Division Risk", show=True)
+
+        def div_style(feature):
+            risk = feature["properties"].get("risk", "LOW")
+            return {
+                "fillColor": DIVISION_RISK_COLORS.get(risk, "#95a5a6"),
+                "color": "#555",
+                "weight": 1.5,
+                "fillOpacity": 0.25,
+                "opacity": 0.6,
+            }
+
+        folium.GeoJson(
+            division_boundaries,
+            style_function=div_style,
+            tooltip=folium.GeoJsonTooltip(
+                fields=["division", "risk", "combined_risk", "tx_risk", "dx_risk", "avg_loading"],
+                aliases=["Division:", "Risk:", "Combined:", "Tx Risk:", "Dx Risk:", "Avg Load%:"],
+                sticky=True,
+            ),
+        ).add_to(div_layer)
+
+        div_layer.add_to(m)
+        logger.info(
+            f"Added PG&E division risk layer with "
+            f"{len(division_boundaries['features'])} divisions"
+        )
 
     # -- Zone markers --
     zone_layer = folium.FeatureGroup(name="Zone Classifications", show=True)
@@ -447,10 +512,21 @@ def create_interactive_map(
     <i style="background: #f1c40f; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Moderate (&ge;0.25)<br>
     <i style="background: #27ae60; width: 12px; height: 12px; display: inline-block; border-radius: 50%;"></i> Low (&lt;0.25)<br>
     <br><i>Marker size = severity score</i>
+    {"" if not (division_boundaries and division_boundaries.get("features")) else '''
+    <hr style="margin: 4px 0;">
+    <b>PG&amp;E Division Risk</b><br>
+    <i style="background: #e74c3c; width: 16px; height: 10px; display: inline-block; opacity: 0.5;"></i> Critical<br>
+    <i style="background: #e67e22; width: 16px; height: 10px; display: inline-block; opacity: 0.5;"></i> Elevated<br>
+    <i style="background: #f1c40f; width: 16px; height: 10px; display: inline-block; opacity: 0.5;"></i> Moderate<br>
+    <i style="background: #27ae60; width: 16px; height: 10px; display: inline-block; opacity: 0.5;"></i> Low
+    '''}
     </div>
     """
     import folium as _folium
     m.get_root().html.add_child(_folium.Element(legend_html))
+
+    # Add postMessage listener for dashboard table-to-map linking
+    _MapMessageListener().add_to(m)
 
     folium.LayerControl().add_to(m)
 
