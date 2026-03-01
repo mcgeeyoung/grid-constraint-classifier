@@ -1,6 +1,6 @@
 """Pydantic response models for the API."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -74,6 +74,26 @@ class ZoneLMPResponse(BaseModel):
 class LoadshapeHourResponse(BaseModel):
     hour: int
     avg_congestion: float
+
+
+class DailyLMPResponse(BaseModel):
+    day: date
+    avg_lmp: float
+    avg_congestion: Optional[float] = None
+    avg_energy: Optional[float] = None
+    avg_loss: Optional[float] = None
+    max_congestion: Optional[float] = None
+    min_congestion: Optional[float] = None
+    sample_count: int
+
+
+class LMPCoverageResponse(BaseModel):
+    zone_code: str
+    zone_name: Optional[str] = None
+    total_records: int
+    earliest: Optional[datetime] = None
+    latest: Optional[datetime] = None
+    months_covered: int
 
 
 class SubstationLoadshapeHourResponse(BaseModel):

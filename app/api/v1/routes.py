@@ -19,6 +19,7 @@ from app.api.v1.spatial import BBox, parse_bbox
 from app.schemas.responses import (
     ISOResponse, ZoneResponse, ZoneGeometryResponse, ZoneClassificationResponse,
     PnodeScoreResponse, ZoneLMPResponse, LoadshapeHourResponse,
+    DailyLMPResponse, LMPCoverageResponse,
     DataCenterResponse, TransmissionLineResponse,
     DERRecommendationResponse, PipelineRunResponse, OverviewResponse,
     ValueSummaryResponse, TopZone,
@@ -267,15 +268,26 @@ def get_all_pnode_scores(
 
 
 @router.get("/isos/{iso_id}/zones/{zone_code}/lmps", response_model=list[ZoneLMPResponse])
+@cache_response("zone-lmps", ttl=300)
 def get_zone_lmps(
     iso_id: str,
     zone_code: str,
     limit: int = Query(default=500, le=10000),
     offset: int = Query(default=0, ge=0),
     month: Optional[int] = Query(default=None, ge=1, le=12),
+    start_date: Optional[str] = Query(
+        default=None, description="Start date (YYYY-MM-DD)",
+    ),
+    end_date: Optional[str] = Query(
+        default=None, description="End date (YYYY-MM-DD)",
+    ),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
-    """Get zone LMP time series (paginated)."""
+    """Get zone LMP time series (paginated).
+
+    Supports date range filtering via start_date/end_date query params.
+    """
     iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
     if not iso:
         raise HTTPException(404, f"ISO '{iso_id}' not found")
@@ -292,15 +304,23 @@ def get_zone_lmps(
     if month is not None:
         query = query.filter(ZoneLMP.month == month)
 
+    if start_date:
+        query = query.filter(ZoneLMP.timestamp_utc >= start_date)
+
+    if end_date:
+        query = query.filter(ZoneLMP.timestamp_utc <= end_date)
+
     lmps = query.order_by(ZoneLMP.timestamp_utc.desc()).offset(offset).limit(limit).all()
     return lmps
 
 
 @router.get("/isos/{iso_id}/zones/{zone_code}/loadshape", response_model=list[LoadshapeHourResponse])
+@cache_response("loadshape", ttl=300)
 def get_zone_loadshape(
     iso_id: str,
     zone_code: str,
     month: Optional[int] = Query(default=None, ge=1, le=12),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Get 24-hour average congestion loadshape for a zone.
@@ -362,6 +382,160 @@ def get_zone_loadshape(
 
     return [
         LoadshapeHourResponse(hour=row.hour_local, avg_congestion=float(row.avg_congestion or 0))
+        for row in rows
+    ]
+
+
+@router.get(
+    "/isos/{iso_id}/zones/{zone_code}/lmps/daily",
+    response_model=list[DailyLMPResponse],
+)
+@cache_response("zone-lmps-daily", ttl=600)
+def get_zone_lmps_daily(
+    iso_id: str,
+    zone_code: str,
+    start_date: Optional[str] = Query(
+        default=None, description="Start date (YYYY-MM-DD)",
+    ),
+    end_date: Optional[str] = Query(
+        default=None, description="End date (YYYY-MM-DD)",
+    ),
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
+    """Get daily-aggregated LMP data for a zone.
+
+    Uses the zone_lmp_daily_avg materialized view for fast retrieval.
+    Falls back to live aggregation if the view doesn't exist.
+    Ideal for multi-month or multi-year time-series display.
+    """
+    iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
+    if not iso:
+        raise HTTPException(404, f"ISO '{iso_id}' not found")
+
+    zone = db.query(Zone).filter(Zone.iso_id == iso.id, Zone.zone_code == zone_code).first()
+    if not zone:
+        raise HTTPException(404, f"Zone '{zone_code}' not found in {iso_id}")
+
+    try:
+        sql = """
+            SELECT day, avg_lmp, avg_congestion, avg_energy, avg_loss,
+                   max_congestion, min_congestion, sample_count
+            FROM zone_lmp_daily_avg
+            WHERE iso_id = :iso_id AND zone_id = :zone_id
+        """
+        params = {"iso_id": iso.id, "zone_id": zone.id}
+
+        if start_date:
+            sql += " AND day >= :start_date"
+            params["start_date"] = start_date
+        if end_date:
+            sql += " AND day <= :end_date"
+            params["end_date"] = end_date
+
+        sql += " ORDER BY day"
+
+        rows = db.execute(text(sql), params).fetchall()
+
+        return [
+            DailyLMPResponse(
+                day=row.day,
+                avg_lmp=float(row.avg_lmp),
+                avg_congestion=float(row.avg_congestion) if row.avg_congestion else None,
+                avg_energy=float(row.avg_energy) if row.avg_energy else None,
+                avg_loss=float(row.avg_loss) if row.avg_loss else None,
+                max_congestion=float(row.max_congestion) if row.max_congestion else None,
+                min_congestion=float(row.min_congestion) if row.min_congestion else None,
+                sample_count=row.sample_count,
+            )
+            for row in rows
+        ]
+    except Exception:
+        db.rollback()
+
+    # Fallback: live aggregation
+    from sqlalchemy import cast, Date
+    query = (
+        db.query(
+            cast(ZoneLMP.timestamp_utc, Date).label("day"),
+            func.avg(ZoneLMP.lmp).label("avg_lmp"),
+            func.avg(ZoneLMP.congestion).label("avg_congestion"),
+            func.avg(ZoneLMP.energy).label("avg_energy"),
+            func.avg(ZoneLMP.loss).label("avg_loss"),
+            func.max(ZoneLMP.congestion).label("max_congestion"),
+            func.min(ZoneLMP.congestion).label("min_congestion"),
+            func.count().label("sample_count"),
+        )
+        .filter(ZoneLMP.iso_id == iso.id, ZoneLMP.zone_id == zone.id)
+    )
+
+    if start_date:
+        query = query.filter(ZoneLMP.timestamp_utc >= start_date)
+    if end_date:
+        query = query.filter(ZoneLMP.timestamp_utc <= end_date)
+
+    rows = (
+        query
+        .group_by(cast(ZoneLMP.timestamp_utc, Date))
+        .order_by(cast(ZoneLMP.timestamp_utc, Date))
+        .all()
+    )
+
+    return [
+        DailyLMPResponse(
+            day=row.day,
+            avg_lmp=float(row.avg_lmp),
+            avg_congestion=float(row.avg_congestion) if row.avg_congestion else None,
+            avg_energy=float(row.avg_energy) if row.avg_energy else None,
+            avg_loss=float(row.avg_loss) if row.avg_loss else None,
+            max_congestion=float(row.max_congestion) if row.max_congestion else None,
+            min_congestion=float(row.min_congestion) if row.min_congestion else None,
+            sample_count=row.sample_count,
+        )
+        for row in rows
+    ]
+
+
+@router.get("/isos/{iso_id}/lmp-coverage", response_model=list[LMPCoverageResponse])
+@cache_response("lmp-coverage", ttl=3600)
+def get_lmp_coverage(
+    iso_id: str,
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
+    """Get LMP data coverage summary for all zones in an ISO.
+
+    Returns date ranges, record counts, and data freshness per zone.
+    """
+    iso = db.query(ISO).filter(ISO.iso_code == iso_id.lower()).first()
+    if not iso:
+        raise HTTPException(404, f"ISO '{iso_id}' not found")
+
+    rows = (
+        db.query(
+            Zone.zone_code,
+            Zone.zone_name,
+            func.count(ZoneLMP.id).label("total_records"),
+            func.min(ZoneLMP.timestamp_utc).label("earliest"),
+            func.max(ZoneLMP.timestamp_utc).label("latest"),
+            func.count(func.distinct(ZoneLMP.month)).label("months_covered"),
+        )
+        .join(ZoneLMP, (Zone.id == ZoneLMP.zone_id) & (ZoneLMP.iso_id == iso.id))
+        .filter(Zone.iso_id == iso.id)
+        .group_by(Zone.zone_code, Zone.zone_name)
+        .order_by(func.count(ZoneLMP.id).desc())
+        .all()
+    )
+
+    return [
+        LMPCoverageResponse(
+            zone_code=row.zone_code,
+            zone_name=row.zone_name,
+            total_records=row.total_records,
+            earliest=row.earliest,
+            latest=row.latest,
+            months_covered=row.months_covered,
+        )
         for row in rows
     ]
 
@@ -776,4 +950,4 @@ def refresh_matviews(db: Session = Depends(get_db)):
     """
     from app.matviews import refresh_materialized_views
     refresh_materialized_views(db)
-    return {"status": "ok", "views_refreshed": ["zone_lmp_hourly_avg", "zone_lmp_hourly_avg_annual"]}
+    return {"status": "ok", "views_refreshed": ["zone_lmp_hourly_avg", "zone_lmp_hourly_avg_annual", "zone_lmp_daily_avg"]}

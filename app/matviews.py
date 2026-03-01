@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 MATERIALIZED_VIEWS = [
     "zone_lmp_hourly_avg",
     "zone_lmp_hourly_avg_annual",
+    "zone_lmp_daily_avg",
 ]
 
 
