@@ -240,6 +240,13 @@ def job_check_staleness():
         summary=f"Checked {checked} records, {stale_count} stale",
         details_json={"stale_alerts": alerts[:20]} if alerts else None,
     )
+
+    if stale_count > 0:
+        alert_msg = f"{stale_count} data sources are stale:\n" + "\n".join(alerts[:5])
+        if len(alerts) > 5:
+            alert_msg += f"\n... and {len(alerts) - 5} more"
+        send_alert("Stale Data Detected", alert_msg, level="warning")
+
     logger.info(f"  Done: {checked} checked, {stale_count} stale")
 
 
@@ -335,9 +342,10 @@ def job_health_check():
 
     # DB check
     try:
+        from sqlalchemy import text
         from app.database import SessionLocal
         session = SessionLocal()
-        session.execute("SELECT 1")
+        session.execute(text("SELECT 1"))
         session.close()
         checks["database"] = "ok"
     except Exception as e:
@@ -356,13 +364,344 @@ def job_health_check():
         checks["redis"] = f"error: {e}"
 
     all_ok = all(v == "ok" for v in checks.values())
+    status = "success" if all_ok else "partial"
     _complete_event(
         event_id,
-        status="success" if all_ok else "partial",
+        status=status,
         summary=f"DB: {checks.get('database')}, Redis: {checks.get('redis')}",
         details_json=checks,
     )
+
+    if not all_ok:
+        send_alert(
+            "Health Check Degraded",
+            f"DB: {checks.get('database')}, Redis: {checks.get('redis')}",
+            level="warning",
+        )
+
     logger.info(f"  Done: {checks}")
+
+
+def job_hc_refresh():
+    """Refresh hosting capacity data for all available utilities."""
+    logger.info("Running: hc_refresh")
+    event_id = _record_event("hc_refresh")
+
+    checked = 0
+    updated = 0
+    errors = []
+
+    try:
+        from adapters.hosting_capacity.base import UtilityHCConfig
+        from adapters.hosting_capacity.registry import get_hc_adapter, list_hc_utilities
+        from app.hc_writer import HostingCapacityWriter
+
+        configs_dir = Path(__file__).resolve().parent.parent / "adapters" / "hosting_capacity" / "configs"
+        utilities = list_hc_utilities()
+
+        # Skip unavailable utilities
+        available = []
+        for code in utilities:
+            cfg = UtilityHCConfig.from_yaml(configs_dir / f"{code}.yaml")
+            if cfg.data_source_type != "unavailable":
+                available.append(code)
+
+        for code in available:
+            checked += 1
+            try:
+                adapter = get_hc_adapter(code)
+                df = adapter.pull_hosting_capacity(force=False)
+
+                if df.empty:
+                    continue
+
+                writer = HostingCapacityWriter()
+                try:
+                    utility = writer.ensure_utility(adapter.config)
+                    run = writer.start_run(utility, adapter.resolve_current_url())
+                    run.records_fetched = len(df)
+                    count = writer.write_records(df, utility, run)
+                    writer.compute_summary(utility)
+                    writer.complete_run(run)
+                    updated += count
+                    logger.info(f"  {code}: {count} records")
+                except Exception as e:
+                    errors.append(f"{code}: {e}")
+                    logger.warning(f"  {code} write failed: {e}")
+                finally:
+                    writer.close()
+
+            except Exception as e:
+                errors.append(f"{code}: {e}")
+                logger.warning(f"  {code} failed: {e}")
+
+            time.sleep(1)  # Rate limit between utilities
+
+    except ImportError as e:
+        errors.append(f"Import error: {e}")
+    except Exception as e:
+        errors.append(str(e))
+
+    status = "success" if not errors else ("partial" if checked > 0 else "failed")
+    _complete_event(
+        event_id,
+        status=status,
+        records_checked=checked,
+        records_updated=updated,
+        summary=f"Refreshed {checked} utilities, {updated} records updated",
+        error_message="; ".join(errors[:5]) if errors else None,
+    )
+
+    if status == "failed":
+        send_alert("HC Refresh Failed", "; ".join(errors[:3]), level="error")
+
+    logger.info(f"  Done: {checked} utilities, {updated} records, {len(errors)} errors")
+
+
+def job_eia_update():
+    """Download and ingest the latest EIA-861 utility data."""
+    logger.info("Running: eia_update")
+    event_id = _record_event("eia_update")
+
+    errors = []
+    record_count = 0
+
+    try:
+        from cli.ingest_eia861 import (
+            download_eia861, parse_utility_data, parse_sales_data,
+            parse_service_territory, _write_to_db,
+        )
+
+        data_dir = Path(__file__).resolve().parent.parent / "data" / "eia"
+        data_dir.mkdir(parents=True, exist_ok=True)
+
+        # Download latest
+        zip_path = download_eia861(data_dir)
+        if not zip_path:
+            errors.append("Download failed")
+        else:
+            # Parse
+            df_util = parse_utility_data(zip_path)
+            df_sales = parse_sales_data(zip_path)
+            df_territory = parse_service_territory(zip_path)
+
+            if df_util is not None:
+                # Merge
+                df = df_util.copy()
+                if df_sales is not None:
+                    df = df.merge(df_sales, on="utility_id", how="left")
+                if df_territory is not None:
+                    df = df.merge(df_territory, on="utility_id", how="left")
+
+                record_count = len(df)
+                _write_to_db(df)
+                logger.info(f"  EIA-861: {record_count} utilities updated")
+            else:
+                errors.append("Failed to parse utility data")
+
+    except ImportError as e:
+        errors.append(f"Import error: {e}")
+    except Exception as e:
+        errors.append(str(e))
+        logger.error(f"  EIA update failed: {e}")
+
+    status = "success" if not errors else "failed"
+    _complete_event(
+        event_id,
+        status=status,
+        records_checked=record_count,
+        records_updated=record_count if not errors else 0,
+        summary=f"EIA-861: {record_count} utilities" if not errors else f"Failed: {errors[0][:200]}",
+        error_message="; ".join(errors[:3]) if errors else None,
+    )
+
+    if status == "failed":
+        send_alert("EIA Update Failed", "; ".join(errors[:3]), level="error")
+
+    logger.info(f"  Done: {record_count} records, status={status}")
+
+
+def job_ferc_714():
+    """Download and import FERC Form 714 planning area data."""
+    logger.info("Running: ferc_714")
+    event_id = _record_event("ferc_714")
+
+    errors = []
+    record_count = 0
+
+    try:
+        from adapters.federal_data.ferc714 import FERC714Parser
+
+        data_dir = Path(__file__).resolve().parent.parent / "data" / "ferc"
+        data_dir.mkdir(parents=True, exist_ok=True)
+
+        parser = FERC714Parser(data_dir=data_dir)
+        zip_path = parser.download_bulk_data()
+
+        if not zip_path:
+            errors.append("FERC 714 download failed")
+        else:
+            # Parse planning areas
+            areas = parser.parse_planning_areas()
+            logger.info(f"  Parsed {len(areas)} planning areas")
+
+            # Import to DB
+            from app.database import SessionLocal
+            from app.models import Utility, LoadForecast
+
+            session = SessionLocal()
+            try:
+                # Build EIA-to-utility mapping
+                utilities = {
+                    u.eia_id: u.id
+                    for u in session.query(Utility).filter(Utility.eia_id.isnot(None)).all()
+                }
+
+                for area in areas:
+                    utility_id = utilities.get(area.respondent_id)
+                    if not utility_id:
+                        continue
+
+                    lf = LoadForecast(
+                        utility_id=utility_id,
+                        forecast_year=area.year or 0,
+                        area_name=area.area_name,
+                        area_type="planning_area",
+                        peak_demand_mw=area.peak_demand_mw,
+                        energy_gwh=area.net_energy_gwh,
+                        scenario="ferc714_actual",
+                    )
+                    session.add(lf)
+                    record_count += 1
+
+                session.commit()
+                logger.info(f"  Imported {record_count} load forecast records")
+
+            except Exception as e:
+                session.rollback()
+                errors.append(f"DB import failed: {e}")
+            finally:
+                session.close()
+
+    except ImportError as e:
+        errors.append(f"Import error: {e}")
+    except Exception as e:
+        errors.append(str(e))
+        logger.error(f"  FERC 714 update failed: {e}")
+
+    status = "success" if not errors else "failed"
+    _complete_event(
+        event_id,
+        status=status,
+        records_checked=record_count,
+        records_updated=record_count if not errors else 0,
+        summary=f"FERC 714: {record_count} records" if not errors else f"Failed: {errors[0][:200]}",
+        error_message="; ".join(errors[:3]) if errors else None,
+    )
+
+    if status == "failed":
+        send_alert("FERC 714 Import Failed", "; ".join(errors[:3]), level="error")
+
+    logger.info(f"  Done: {record_count} records, status={status}")
+
+
+def job_eia_930_update():
+    """Incremental EIA-930 hourly data pull and congestion score recompute."""
+    logger.info("Running: eia_930_update")
+    event_id = _record_event("eia_930_update")
+
+    errors = []
+    records_fetched = 0
+    scores_updated = 0
+
+    try:
+        from adapters.eia_client import EIAClient
+        from app.database import SessionLocal
+        from app.models import BalancingAuthority, BAHourlyData
+
+        session = SessionLocal()
+        try:
+            bas = session.query(BalancingAuthority).filter(
+                BalancingAuthority.is_rto == False,
+            ).all()
+
+            client = EIAClient()
+            now = datetime.now(timezone.utc)
+            since = now - timedelta(days=7)
+
+            for ba in bas:
+                try:
+                    rows = client.fetch_hourly_data(
+                        ba.ba_code,
+                        start=since.strftime("%Y-%m-%d"),
+                        end=now.strftime("%Y-%m-%d"),
+                    )
+                    if rows:
+                        for row in rows:
+                            existing = (
+                                session.query(BAHourlyData)
+                                .filter_by(
+                                    ba_id=ba.id,
+                                    timestamp_utc=row.get("timestamp_utc"),
+                                )
+                                .first()
+                            )
+                            if not existing:
+                                hourly = BAHourlyData(
+                                    ba_id=ba.id,
+                                    timestamp_utc=row["timestamp_utc"],
+                                    demand_mw=row.get("demand_mw"),
+                                    net_generation_mw=row.get("net_generation_mw"),
+                                    total_interchange_mw=row.get("total_interchange_mw"),
+                                )
+                                session.add(hourly)
+                                records_fetched += 1
+
+                except Exception as e:
+                    errors.append(f"{ba.ba_code}: {e}")
+                    logger.warning(f"  {ba.ba_code} failed: {e}")
+
+                time.sleep(0.5)
+
+            session.commit()
+
+        finally:
+            session.close()
+
+        # Recompute scores if we fetched new data
+        if records_fetched > 0:
+            try:
+                from core.congestion_calculator import CongestionCalculator
+
+                calc = CongestionCalculator()
+                year = now.year
+                scores_updated = calc.compute_scores(year=year)
+                logger.info(f"  Recomputed {scores_updated} congestion scores")
+            except Exception as e:
+                errors.append(f"Score recompute failed: {e}")
+                logger.warning(f"  Score recompute failed: {e}")
+
+    except ImportError as e:
+        errors.append(f"Import error: {e}")
+    except Exception as e:
+        errors.append(str(e))
+        logger.error(f"  EIA-930 update failed: {e}")
+
+    status = "success" if not errors else ("partial" if records_fetched > 0 else "failed")
+    _complete_event(
+        event_id,
+        status=status,
+        records_checked=records_fetched,
+        records_updated=scores_updated,
+        new_items_found=records_fetched,
+        summary=f"EIA-930: {records_fetched} rows, {scores_updated} scores recomputed",
+        error_message="; ".join(errors[:5]) if errors else None,
+    )
+
+    if status == "failed":
+        send_alert("EIA-930 Update Failed", "; ".join(errors[:3]), level="error")
+
+    logger.info(f"  Done: {records_fetched} rows, {scores_updated} scores, status={status}")
 
 
 # ---------------------------------------------------------------------------
@@ -404,6 +743,7 @@ def send_alert(title: str, message: str, level: str = "info"):
 
 # Job registry with schedule configuration
 JOB_REGISTRY = [
+    # --- Daily jobs ---
     {
         "id": "docket_watchlist",
         "func": job_check_docket_watchlist,
@@ -421,6 +761,15 @@ JOB_REGISTRY = [
         "description": "Check data freshness and flag stale sources",
     },
     {
+        "id": "eia_930_update",
+        "func": job_eia_930_update,
+        "trigger": "cron",
+        "hour": 4,
+        "minute": 0,
+        "description": "Incremental EIA-930 hourly data + congestion score recompute",
+    },
+    # --- Weekly jobs ---
+    {
         "id": "coverage_snapshot",
         "func": job_coverage_snapshot,
         "trigger": "cron",
@@ -429,6 +778,35 @@ JOB_REGISTRY = [
         "minute": 0,
         "description": "Compute weekly coverage snapshot",
     },
+    {
+        "id": "hc_refresh",
+        "func": job_hc_refresh,
+        "trigger": "cron",
+        "day_of_week": "sun",
+        "hour": 3,
+        "minute": 0,
+        "description": "Refresh hosting capacity data from all available utilities",
+    },
+    # --- Annual jobs (run monthly, idempotent on unchanged data) ---
+    {
+        "id": "eia_update",
+        "func": job_eia_update,
+        "trigger": "cron",
+        "day": 15,
+        "hour": 2,
+        "minute": 0,
+        "description": "Download and ingest EIA-861 utility registry data",
+    },
+    {
+        "id": "ferc_714",
+        "func": job_ferc_714,
+        "trigger": "cron",
+        "day": 15,
+        "hour": 2,
+        "minute": 30,
+        "description": "Download and import FERC Form 714 planning area data",
+    },
+    # --- High-frequency ---
     {
         "id": "health_check",
         "func": job_health_check,
