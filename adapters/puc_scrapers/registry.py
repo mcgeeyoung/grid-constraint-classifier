@@ -7,6 +7,7 @@ from .cpuc import CPUCScraper
 from .vascc import VASCCScraper
 from .ncuc import NCUCScraper
 from .nypsc import NYPSCScraper
+from .smud import SMUDScraper
 
 
 _SCRAPER_MAP: dict[str, type[PUCScraper]] = {
@@ -14,6 +15,7 @@ _SCRAPER_MAP: dict[str, type[PUCScraper]] = {
     "VA": VASCCScraper,
     "NC": NCUCScraper,
     "NY": NYPSCScraper,
+    "CA_SMUD": SMUDScraper,
 }
 
 

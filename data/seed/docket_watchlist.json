@@ -107,5 +107,32 @@
     "filing_type": "rate_case",
     "priority": 2,
     "notes": "National Grid rate case with grid modernization components"
+  },
+  {
+    "state": "CA_SMUD",
+    "docket_number": "SMUD-BOD",
+    "title": "SMUD Board of Directors Meetings",
+    "utility_name": "SMUD",
+    "filing_type": "BOD",
+    "priority": 1,
+    "notes": "Monthly board meetings. DER policy, rate design, 2030 zero carbon plan, grid modernization decisions."
+  },
+  {
+    "state": "CA_SMUD",
+    "docket_number": "SMUD-ERCS",
+    "title": "SMUD Energy Resources & Customer Services Committee",
+    "utility_name": "SMUD",
+    "filing_type": "ERCS",
+    "priority": 1,
+    "notes": "ERCS committee covers DER programs, resource planning, customer programs, electrification. Most relevant committee for grid/energy topics."
+  },
+  {
+    "state": "CA_SMUD",
+    "docket_number": "SMUD-SD",
+    "title": "SMUD Strategic Development Committee",
+    "utility_name": "SMUD",
+    "filing_type": "SD",
+    "priority": 2,
+    "notes": "Strategic Development covers long-term grid planning, innovation, partnerships."
   }
 ]
