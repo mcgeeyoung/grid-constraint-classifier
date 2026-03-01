@@ -139,7 +139,9 @@ def create_der_location(
 
 @router.get("/der-locations", response_model=list[DERLocationResponse])
 def list_der_locations(
-    iso_id: Optional[str] = None,
+    iso_id: Optional[str] = Query(
+        None, description="Comma-separated ISO codes (e.g. 'pjm,miso')",
+    ),
     zone_code: Optional[str] = None,
     der_type: Optional[str] = None,
     source: Optional[str] = None,
@@ -150,6 +152,7 @@ def list_der_locations(
 ):
     """List DER locations with optional filters. Includes latest value_tier.
 
+    Supports multi-ISO: ?iso_id=pjm,miso
     Supports bbox filtering: ?bbox=west,south,east,north
     """
     query = (
@@ -161,7 +164,11 @@ def list_der_locations(
     )
 
     if iso_id:
-        query = query.filter(ISO.iso_code == iso_id.lower())
+        codes = [c.strip().lower() for c in iso_id.split(",") if c.strip()]
+        if len(codes) == 1:
+            query = query.filter(ISO.iso_code == codes[0])
+        else:
+            query = query.filter(ISO.iso_code.in_(codes))
     if zone_code:
         query = query.filter(Zone.zone_code == zone_code)
     if der_type:

@@ -68,12 +68,14 @@ export async function geoResolve(lat: number, lon: number): Promise<GeoResolutio
 }
 
 export async function fetchDERLocations(
-  isoCode?: string,
+  isoCode?: string | string[],
   zoneCode?: string,
   derType?: string,
 ): Promise<DERLocation[]> {
   const params: Record<string, string> = {}
-  if (isoCode) params.iso_id = isoCode
+  if (isoCode) {
+    params.iso_id = Array.isArray(isoCode) ? isoCode.join(',') : isoCode
+  }
   if (zoneCode) params.zone_code = zoneCode
   if (derType) params.der_type = derType
   const { data } = await client.get<DERLocation[]>('/der-locations', { params })

@@ -540,10 +540,194 @@ def get_lmp_coverage(
     ]
 
 
+# ------------------------------------------------------------------
+# Multi-ISO endpoints (accept comma-separated iso_ids query param)
+# ------------------------------------------------------------------
+
+def _resolve_iso_ids(db: Session, iso_ids: str) -> list[tuple]:
+    """Parse comma-separated ISO codes and return list of (id, iso_code) tuples."""
+    codes = [c.strip().lower() for c in iso_ids.split(",") if c.strip()]
+    if not codes:
+        return []
+    rows = db.query(ISO.id, ISO.iso_code).filter(ISO.iso_code.in_(codes)).all()
+    return [(r.id, r.iso_code) for r in rows]
+
+
+@router.get("/classifications", response_model=list[ZoneClassificationResponse])
+@cache_response("multi-classifications", ttl=300)
+def get_multi_iso_classifications(
+    iso_ids: str = Query(
+        ..., description="Comma-separated ISO codes (e.g. 'pjm,miso,caiso')",
+    ),
+    limit: int = Query(default=2000, le=10000),
+    offset: int = Query(default=0, ge=0),
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
+    """Get latest zone classifications across multiple ISOs."""
+    resolved = _resolve_iso_ids(db, iso_ids)
+    if not resolved:
+        return []
+
+    all_results = []
+    for iso_id, iso_code in resolved:
+        latest_run = (
+            db.query(PipelineRun)
+            .filter(PipelineRun.iso_id == iso_id, PipelineRun.status == "completed")
+            .order_by(PipelineRun.completed_at.desc())
+            .first()
+        )
+        if not latest_run:
+            continue
+
+        results = (
+            db.query(ZoneClassification, Zone)
+            .join(Zone, ZoneClassification.zone_id == Zone.id)
+            .filter(ZoneClassification.pipeline_run_id == latest_run.id)
+            .all()
+        )
+
+        for cls, zone in results:
+            all_results.append(ZoneClassificationResponse(
+                zone_code=zone.zone_code,
+                zone_name=zone.zone_name,
+                classification=cls.classification,
+                transmission_score=cls.transmission_score,
+                generation_score=cls.generation_score,
+                avg_abs_congestion=cls.avg_abs_congestion,
+                max_congestion=cls.max_congestion,
+                congested_hours_pct=cls.congested_hours_pct,
+            ))
+
+    # Sort by transmission score descending across all ISOs
+    all_results.sort(key=lambda x: x.transmission_score, reverse=True)
+    return all_results[offset:offset + limit]
+
+
+@router.get("/pnodes", response_model=list[PnodeScoreResponse])
+@cache_response("multi-pnodes", ttl=300)
+def get_multi_iso_pnodes(
+    iso_ids: str = Query(
+        ..., description="Comma-separated ISO codes (e.g. 'pjm,miso,caiso')",
+    ),
+    limit: int = Query(default=1000, le=10000),
+    offset: int = Query(default=0, ge=0),
+    bbox: Optional[BBox] = Depends(parse_bbox),
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
+    """Get pnode severity scores across multiple ISOs."""
+    resolved = _resolve_iso_ids(db, iso_ids)
+    if not resolved:
+        return []
+
+    iso_id_list = [r[0] for r in resolved]
+
+    # Get latest run per ISO
+    run_ids = []
+    for iso_id, _ in resolved:
+        run = (
+            db.query(PipelineRun)
+            .filter(PipelineRun.iso_id == iso_id, PipelineRun.status == "completed")
+            .order_by(PipelineRun.completed_at.desc())
+            .first()
+        )
+        if run:
+            run_ids.append(run.id)
+
+    if not run_ids:
+        return []
+
+    query = (
+        db.query(PnodeScore, Pnode)
+        .join(Pnode, PnodeScore.pnode_id == Pnode.id)
+        .filter(
+            PnodeScore.pipeline_run_id.in_(run_ids),
+            Pnode.iso_id.in_(iso_id_list),
+        )
+    )
+
+    if bbox:
+        query = query.filter(bbox.filter_column(Pnode.geom))
+
+    results = (
+        query
+        .order_by(PnodeScore.severity_score.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        PnodeScoreResponse(
+            node_id_external=pnode.node_id_external,
+            node_name=pnode.node_name,
+            severity_score=score.severity_score,
+            tier=score.tier,
+            avg_congestion=score.avg_congestion,
+            max_congestion=score.max_congestion,
+            congested_hours_pct=score.congested_hours_pct,
+            lat=pnode.lat,
+            lon=pnode.lon,
+        )
+        for score, pnode in results
+    ]
+
+
+@router.get("/recommendations", response_model=list[DERRecommendationResponse])
+@cache_response("multi-recommendations", ttl=300)
+def get_multi_iso_recommendations(
+    iso_ids: str = Query(
+        ..., description="Comma-separated ISO codes (e.g. 'pjm,miso,caiso')",
+    ),
+    limit: int = Query(default=2000, le=10000),
+    offset: int = Query(default=0, ge=0),
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
+    """Get DER recommendations across multiple ISOs."""
+    resolved = _resolve_iso_ids(db, iso_ids)
+    if not resolved:
+        return []
+
+    all_results = []
+    for iso_id, _ in resolved:
+        latest_run = (
+            db.query(PipelineRun)
+            .filter(PipelineRun.iso_id == iso_id, PipelineRun.status == "completed")
+            .order_by(PipelineRun.completed_at.desc())
+            .first()
+        )
+        if not latest_run:
+            continue
+
+        results = (
+            db.query(DERRecommendation, Zone)
+            .join(Zone, DERRecommendation.zone_id == Zone.id)
+            .filter(DERRecommendation.pipeline_run_id == latest_run.id)
+            .all()
+        )
+
+        for rec, zone in results:
+            all_results.append(DERRecommendationResponse(
+                zone_code=zone.zone_code,
+                classification=rec.classification,
+                rationale=rec.rationale,
+                congestion_value=rec.congestion_value,
+                primary_rec=rec.primary_rec,
+                secondary_rec=rec.secondary_rec,
+                tertiary_rec=rec.tertiary_rec,
+            ))
+
+    return all_results[offset:offset + limit]
+
+
 @router.get("/data-centers", response_model=list[DataCenterResponse])
 @cache_response("data-centers", ttl=3600)
 def list_data_centers(
-    iso_id: Optional[str] = None,
+    iso_id: Optional[str] = Query(
+        None, description="Comma-separated ISO codes (e.g. 'pjm,miso')",
+    ),
     zone_code: Optional[str] = None,
     status: Optional[str] = None,
     limit: int = Query(default=100, le=5000),
@@ -552,8 +736,9 @@ def list_data_centers(
     request: Request = None,
     db: Session = Depends(get_db),
 ):
-    """List data centers, filterable by ISO, zone, status, bbox.
+    """List data centers, filterable by ISO(s), zone, status, bbox.
 
+    Supports multi-ISO: ?iso_id=pjm,miso
     Supports bbox filtering: ?bbox=west,south,east,north
     """
     query = (
@@ -575,7 +760,11 @@ def list_data_centers(
     )
 
     if iso_id:
-        query = query.filter(ISO.iso_code == iso_id.lower())
+        codes = [c.strip().lower() for c in iso_id.split(",") if c.strip()]
+        if len(codes) == 1:
+            query = query.filter(ISO.iso_code == codes[0])
+        else:
+            query = query.filter(ISO.iso_code.in_(codes))
     if zone_code:
         query = query.filter(Zone.zone_code == zone_code)
     if status:

@@ -88,15 +88,31 @@ export async function fetchClassifications(isoCode: string): Promise<ZoneClassif
   return data
 }
 
-export async function fetchDataCenters(isoCode?: string): Promise<DataCenter[]> {
+export async function fetchMultiISOClassifications(isoCodes: string[]): Promise<ZoneClassification[]> {
+  const { data } = await client.get<ZoneClassification[]>('/classifications', {
+    params: { iso_ids: isoCodes.join(',') },
+  })
+  return data
+}
+
+export async function fetchDataCenters(isoCodes?: string | string[]): Promise<DataCenter[]> {
   const params: Record<string, string | number> = { limit: 5000 }
-  if (isoCode) params.iso_id = isoCode
+  if (isoCodes) {
+    params.iso_id = Array.isArray(isoCodes) ? isoCodes.join(',') : isoCodes
+  }
   const { data } = await client.get<DataCenter[]>('/data-centers', { params })
   return data
 }
 
 export async function fetchRecommendations(isoCode: string): Promise<DERRecommendation[]> {
   const { data } = await client.get<DERRecommendation[]>(`/isos/${isoCode}/recommendations`)
+  return data
+}
+
+export async function fetchMultiISORecommendations(isoCodes: string[]): Promise<DERRecommendation[]> {
+  const { data } = await client.get<DERRecommendation[]>('/recommendations', {
+    params: { iso_ids: isoCodes.join(',') },
+  })
   return data
 }
 
@@ -149,6 +165,13 @@ export async function fetchPnodeScores(isoCode: string, zoneCode: string): Promi
 
 export async function fetchAllPnodeScores(isoCode: string): Promise<PnodeScore[]> {
   const { data } = await client.get<PnodeScore[]>(`/isos/${isoCode}/pnodes`)
+  return data
+}
+
+export async function fetchMultiISOPnodeScores(isoCodes: string[]): Promise<PnodeScore[]> {
+  const { data } = await client.get<PnodeScore[]>('/pnodes', {
+    params: { iso_ids: isoCodes.join(',') },
+  })
   return data
 }
 
