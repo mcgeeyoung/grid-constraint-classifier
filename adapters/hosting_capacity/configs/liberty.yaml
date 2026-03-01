@@ -3,9 +3,27 @@ utility_name: "Liberty Utilities"
 parent_company: "Algonquin Power & Utilities"
 iso_id: isone
 states: [NH]
-data_source_type: unavailable
+data_source_type: arcgis_feature
 requires_auth: false
 
-# Custom portal
-service_url: null
-layer_index: null
+# NH Hosting Capacity Analysis (ArcGIS Experience Builder)
+# https://experience.arcgis.com/experience/f5188113a0ef4d879bb912ca9b7cf77a
+# Three-phase sections (10K records) with detailed HC analysis
+service_url: "https://services5.arcgis.com/YAfU4W3mlwAI585a/arcgis/rest/services/Three_Phase_HCA_Sections_2024/FeatureServer"
+layer_index: 1  # Three_Phase_HCA_Sections_2024 (10,263 records)
+page_size: 2000
+out_sr: 4326
+capacity_unit: mw
+
+url_discovery_method: static
+
+# Also available: Single_and_Dual_Phase_HCA_Sections_101823/FeatureServer/1 (16K records)
+# Note: HC fields are in MW; DG fields (Feeder_Acti, Feeder_Queu) are in kW.
+# DG fields not mapped to avoid mixed-unit confusion in MW columns.
+field_map:
+  HCA_Update_2024_csv_SectionID: feeder_id_external
+  HCA_Update_2024_csv_NameDesc: feeder_name
+  HCA_Update_2024_csv_Substation_: substation_name
+  HCA_Update_2024_csv_Maximum_Ava: hosting_capacity_mw
+  HCA_Update_2024_csv_Maximum_A_1: hosting_capacity_max_mw
+  HCA_Update_2024_csv_Generation_: constraining_metric

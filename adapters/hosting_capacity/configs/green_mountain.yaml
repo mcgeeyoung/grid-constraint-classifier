@@ -3,9 +3,25 @@ utility_name: "Green Mountain Power"
 parent_company: null
 iso_id: isone
 states: [VT]
-data_source_type: unavailable
+data_source_type: arcgis_map
 requires_auth: false
 
-# Custom portal
-service_url: null
-layer_index: null
+# GMP Solar Map / Capacity Planning Map (self-hosted ArcGIS Server)
+# Layer 2: GMP Distribution Circuits with per-feeder HC data
+# https://www.arcgis.com/apps/webappviewer/index.html?id=4eaec2b58c4c4820b24c408a95ee8956
+service_url: "https://maps.gmpvt.com/arcgis/rest/services/CapacityPlanningMap/MapServer"
+layer_index: 2  # GMP Distribution Circuits (332 records)
+page_size: 1000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+# Fields: FEEDER_ID, LOCATION, RATING, DG_KW_FEEDER, DG_KW_TRANSFORMER,
+#          MAX_KVA_RATING, REMAINING_CAPACITY, REMAINING_CAPACITY_PERCENT
+field_map:
+  FEEDER_ID: feeder_id_external
+  LOCATION: substation_name
+  MAX_KVA_RATING: hosting_capacity_mw
+  DG_KW_FEEDER: installed_dg_mw
+  REMAINING_CAPACITY: remaining_capacity_mw

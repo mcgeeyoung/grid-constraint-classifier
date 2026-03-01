@@ -3,9 +3,28 @@ utility_name: "Rhode Island Energy"
 parent_company: "PPL Corporation"
 iso_id: isone
 states: [RI]
-data_source_type: unavailable
+data_source_type: arcgis_map
 requires_auth: false
 
-# Custom portal
-service_url: null
-layer_index: null
+# National Grid System Data Portal - RI Hosting Capacity (all constraint types)
+# https://systemdataportal.nationalgrid.com/RI/
+# Layer 0: Feeder Level Data 3 Phase (MW) - 24K polyline records
+service_url: "https://systemdataportal.nationalgrid.com/arcgis/rest/services/RISDP/Hosting_Capacity_All/MapServer"
+layer_index: 0  # Feeder Level Data 3 Phase (MW)
+page_size: 2000
+out_sr: 4326
+capacity_unit: mw
+
+url_discovery_method: static
+
+# Fields: CDF (feeder ID), Substation, Voltage, Max_HC, Min_HC,
+#          DG_Connected, DG_In_Queue, Challenging_Feeder, Area, etc.
+field_map:
+  CDF: feeder_id_external
+  Substation: substation_name
+  Max_HC: hosting_capacity_max_mw
+  Min_HC: hosting_capacity_min_mw
+  DG_Connected: installed_dg_mw
+  DG_In_Queue: queued_dg_mw
+  Voltage: voltage_kv
+  Challenging_Feeder: constraining_metric

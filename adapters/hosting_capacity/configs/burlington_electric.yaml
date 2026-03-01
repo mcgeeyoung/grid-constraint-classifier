@@ -3,9 +3,23 @@ utility_name: "Burlington Electric Department"
 parent_company: null
 iso_id: isone
 states: [VT]
-data_source_type: unavailable
+data_source_type: arcgis_feature
 requires_auth: false
 
-# Custom portal
-service_url: null
-layer_index: null
+# Distributed Generation Map - conductor segments with available DG capacity
+# https://burlingtonvt.maps.arcgis.com/apps/Embed/index.html?webmap=bb1b9156d8294e308ecfe803131e8c00
+# Updated monthly (filename includes date, e.g., _20260204)
+service_url: "https://services1.arcgis.com/1bO0c7PxQdsGidPK/arcgis/rest/services/Distributed_Generation_Map_20260204/FeatureServer"
+layer_index: 2  # Overhead_Primary_Conductor (2253 records; also layer 1 for UG)
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+# Fields: FeederID, AvailableDGCapacity, SHAPE__Length
+# Note: AvailableDGCapacity is categorical ("GOOD", "MODERATE", etc.), not numeric.
+# Storing as constraining_metric since no numeric HC values are available.
+field_map:
+  FeederID: feeder_id_external
+  AvailableDGCapacity: constraining_metric

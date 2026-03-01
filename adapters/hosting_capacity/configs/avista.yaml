@@ -3,9 +3,21 @@ utility_name: "Avista Corporation"
 parent_company: null
 iso_id: null
 states: [WA, ID, OR]
-data_source_type: unavailable
+data_source_type: arcgis_feature
 requires_auth: false
 
-# Custom portal
-service_url: null
-layer_index: null
+# DER Hosting Capacity (ArcGIS Experience Builder)
+# https://experience.arcgis.com/experience/955db80ba1124479a906c0a6edefe1cc/page/Distributed-Energy-Resource-Hosting-Capacity/
+# Layer 0: DER Hosting Capacity (504K polyline records) - per-section GEN_MAX_KW
+service_url: "https://services3.arcgis.com/WlYQgAChrqj0tuQi/arcgis/rest/services/DER_Hosting_Capacity_PRD/FeatureServer"
+layer_index: 0  # DER Hosting Capacity (504,831 records)
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+# Fields: SECTIONID, GEN_MAX_KW, FROMNODEID, TONODEID
+field_map:
+  SECTIONID: feeder_id_external
+  GEN_MAX_KW: hosting_capacity_mw

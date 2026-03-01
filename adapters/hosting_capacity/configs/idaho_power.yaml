@@ -3,9 +3,25 @@ utility_name: "Idaho Power"
 parent_company: "IDACORP"
 iso_id: null
 states: [ID, OR]
-data_source_type: unavailable
+data_source_type: arcgis_feature
 requires_auth: false
 
-# Custom portal
-service_url: null
-layer_index: null
+# Generator Interconnection POI Heatmap (ArcGIS Experience Builder)
+# https://experience.arcgis.com/experience/3390e1921c7e4682854f2b8781529426
+# Layer 0: substation_capacity (234 point records) - Max_Injection per substation
+service_url: "https://services1.arcgis.com/A5HVOoaVqcd8etEM/arcgis/rest/services/InterconnectCapacity/FeatureServer"
+layer_index: 0  # substation_capacity (234 records)
+page_size: 2000
+out_sr: 4326
+capacity_unit: mw
+
+url_discovery_method: static
+
+# Fields: Location_Code, Station_Name, Bus_Name, Bus_Number,
+#          Max_Injection, Percentage, Contingency, Exceedance_Location
+field_map:
+  Location_Code: feeder_id_external
+  Station_Name: substation_name
+  Bus_Name: feeder_name
+  Max_Injection: hosting_capacity_mw
+  Contingency: constraining_metric

@@ -3,9 +3,25 @@ utility_name: "LUMA Energy"
 parent_company: null
 iso_id: null
 states: [PR]
-data_source_type: unavailable
+data_source_type: arcgis_feature
 requires_auth: false
 
-# Custom portal
-service_url: null
-layer_index: null
+# Feeder Hosting Capacity Dashboard
+# https://experience.arcgis.com/experience/99811dd66276465bb687a7fc8cc8cbe0
+# Layer 1: FeederHostingCapacity (198K polyline records)
+service_url: "https://services8.arcgis.com/ncPPFeyaIhDBQq2X/arcgis/rest/services/Feeder_Hosting_Capacity_Layers/FeatureServer"
+layer_index: 1  # FeederHostingCapacity (198,146 records)
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+# Fields: FEEDERNUM, Type, Phase, VoltageKV, DistributionZone,
+#          VoltagekVLL, FeederPV, DistZonePV, UpdateDate
+field_map:
+  FEEDERNUM: feeder_id_external
+  FeederPV: hosting_capacity_mw
+  DistributionZone: substation_name
+  VoltageKV: voltage_kv
+  Phase: phase_config

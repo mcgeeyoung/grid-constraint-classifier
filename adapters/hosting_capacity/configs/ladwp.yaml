@@ -3,9 +3,24 @@ utility_name: "Los Angeles Department of Water and Power"
 parent_company: null
 iso_id: null
 states: [CA]
-data_source_type: unavailable
+data_source_type: arcgis_feature
 requires_auth: false
 
-# Custom portal, not ArcGIS-based
-service_url: null
-layer_index: null
+# Power Capacity Map - distribution line segments with capacity ranges
+# https://ladwp-power.maps.arcgis.com/apps/webappviewer/index.html?id=290be9aa52694ef39bf3088940079f62
+service_url: "https://services7.arcgis.com/ZzOj15zjzIfDG8aL/arcgis/rest/services/PowerCapacity/FeatureServer"
+layer_index: 0  # Power_Capacity (211K polyline records)
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+# Fields: GISID, OH_UG, Capacity_Range_KW, Capacity_Status, Voltage_Class, SHAPE__Length
+# Note: Capacity_Range_KW is categorical ("0 - 150", "450 - 600", "NO CAPACITY")
+# and Capacity_Status is categorical ("Low Capacity", "High Capacity", "No Capacity").
+# Numeric HC values are not available; storing status as constraining_metric.
+field_map:
+  GISID: feeder_id_external
+  Capacity_Status: constraining_metric
+  OH_UG: phase_config
