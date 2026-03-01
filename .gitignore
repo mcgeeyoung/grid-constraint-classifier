@@ -1,9 +1,14 @@
 # Data & outputs (large/generated)
 data/
+!data/reference/
+!data/seed/
 output/
 
 # GitHub Pages site is tracked
 !docs/
+
+# Secrets
+.env
 
 # Python
 __pycache__/

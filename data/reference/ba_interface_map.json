@@ -1,0 +1,852 @@
+[
+  {
+    "ba_code": "BANC",
+    "ba_name": "Balancing Authority of Northern California",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "MALIN_5_N101", "node_name": "Malin", "gridstatus_verified": true},
+      {"rto": "CAISO", "node_id": "CAPTJACK_5_N101", "node_name": "Captain Jack", "gridstatus_verified": true}
+    ],
+    "latitude": 38.58,
+    "longitude": -121.49
+  },
+  {
+    "ba_code": "AZPS",
+    "ba_name": "Arizona Public Service",
+    "region": "Southwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"},
+      {"rto": "CAISO", "node_id": "MCCULLGH_5_N101", "node_name": "McCullough (near Mead)"}
+    ],
+    "latitude": 33.45,
+    "longitude": -112.07
+  },
+  {
+    "ba_code": "SRP",
+    "ba_name": "Salt River Project",
+    "region": "Southwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+    ],
+    "latitude": 33.43,
+    "longitude": -111.94
+  },
+  {
+    "ba_code": "NEVP",
+    "ba_name": "Nevada Power (NV Energy South)",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "MCCULLGH_5_N101", "node_name": "McCullough (near Eldorado)"}
+    ],
+    "latitude": 36.17,
+    "longitude": -115.14
+  },
+  {
+    "ba_code": "LDWP",
+    "ba_name": "Los Angeles Department of Water and Power",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "SYLMARDC_7_N001", "node_name": "Sylmar DC", "gridstatus_verified": false}
+    ],
+    "latitude": 34.05,
+    "longitude": -118.24
+  },
+  {
+    "ba_code": "IID",
+    "ba_name": "Imperial Irrigation District",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "MCCULLGH_5_N101", "node_name": "McCullough (near Eldorado)"}
+    ],
+    "latitude": 32.79,
+    "longitude": -115.57
+  },
+  {
+    "ba_code": "WALC",
+    "ba_name": "Western Area Power Administration - Desert Southwest",
+    "region": "Southwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"},
+      {"rto": "CAISO", "node_id": "MCCULLGH_5_N101", "node_name": "McCullough (near Mead)"}
+    ],
+    "latitude": 33.45,
+    "longitude": -112.07
+  },
+  {
+    "ba_code": "BPAT",
+    "ba_name": "Bonneville Power Administration",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "MALIN_5_N101", "node_name": "Malin"}
+    ],
+    "latitude": 45.52,
+    "longitude": -122.68
+  },
+  {
+    "ba_code": "PACW",
+    "ba_name": "PacifiCorp West",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "MALIN_5_N101", "node_name": "Malin"}
+    ],
+    "latitude": 45.52,
+    "longitude": -122.68
+  },
+  {
+    "ba_code": "PGE",
+    "ba_name": "Portland General Electric",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "MALIN_5_N101", "node_name": "Malin"}
+    ],
+    "latitude": 45.52,
+    "longitude": -122.68
+  },
+  {
+    "ba_code": "SOCO",
+    "ba_name": "Southern Company Services",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": "MISO",
+    "interface_points": [
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 33.75,
+    "longitude": -84.39
+  },
+  {
+    "ba_code": "DUK",
+    "ba_name": "Duke Energy Carolinas",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 35.23,
+    "longitude": -80.84
+  },
+  {
+    "ba_code": "CPLE",
+    "ba_name": "Duke Energy Progress East",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 35.77,
+    "longitude": -78.64
+  },
+  {
+    "ba_code": "CPLW",
+    "ba_name": "Duke Energy Progress West",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 35.59,
+    "longitude": -82.55
+  },
+  {
+    "ba_code": "SCEG",
+    "ba_name": "Dominion Energy South Carolina",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 34.00,
+    "longitude": -81.04
+  },
+  {
+    "ba_code": "SC",
+    "ba_name": "South Carolina Public Service Authority (Santee Cooper)",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 33.92,
+    "longitude": -79.99
+  },
+  {
+    "ba_code": "FPC",
+    "ba_name": "Duke Energy Florida",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 28.54,
+    "longitude": -81.38
+  },
+  {
+    "ba_code": "FPL",
+    "ba_name": "Florida Power & Light",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 25.76,
+    "longitude": -80.19
+  },
+  {
+    "ba_code": "SEC",
+    "ba_name": "Seminole Electric Cooperative",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 28.75,
+    "longitude": -82.50
+  },
+  {
+    "ba_code": "TVA",
+    "ba_name": "Tennessee Valley Authority",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "MISO",
+    "rto_neighbor_secondary": "PJM",
+    "interface_points": [
+      {"rto": "MISO", "node_id": "TVA", "node_name": "MISO-TVA Interface", "gridstatus_verified": true},
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 35.05,
+    "longitude": -85.31
+  },
+  {
+    "ba_code": "AECI",
+    "ba_name": "Associated Electric Cooperative Inc",
+    "region": "Central",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "MISO",
+    "rto_neighbor_secondary": "SPP",
+    "interface_points": [
+      {"rto": "MISO", "node_id": "AECI", "node_name": "MISO-AECI Interface", "gridstatus_verified": true},
+      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub", "gridstatus_verified": false}
+    ],
+    "latitude": 38.58,
+    "longitude": -92.17
+  },
+  {
+    "ba_code": "LGEE",
+    "ba_name": "Louisville Gas and Electric / Kentucky Utilities",
+    "region": "Central",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "MISO",
+    "rto_neighbor_secondary": "PJM",
+    "interface_points": [
+      {"rto": "MISO", "node_id": "LGEE", "node_name": "MISO-LGEE Interface", "gridstatus_verified": true},
+      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+    ],
+    "latitude": 38.25,
+    "longitude": -85.76
+  },
+  {
+    "ba_code": "PSCO",
+    "ba_name": "Public Service Company of Colorado (Xcel Energy)",
+    "region": "Central",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "SPP",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub (nearest to PSCO/CO)"}
+    ],
+    "latitude": 39.74,
+    "longitude": -104.99
+  },
+  {
+    "ba_code": "WACM",
+    "ba_name": "Western Area Power Administration - Colorado/Missouri",
+    "region": "Central",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "SPP",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub"}
+    ],
+    "latitude": 39.74,
+    "longitude": -104.99
+  },
+  {
+    "ba_code": "SWPA",
+    "ba_name": "Southwestern Power Administration",
+    "region": "Central",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "SPP",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub (nearest to OK)"}
+    ],
+    "latitude": 36.15,
+    "longitude": -95.99
+  },
+  {
+    "ba_code": "GRDA",
+    "ba_name": "Grand River Dam Authority",
+    "region": "Central",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "SPP",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub (nearest to OK)"}
+    ],
+    "latitude": 36.30,
+    "longitude": -95.29
+  },
+  {
+    "ba_code": "EDE",
+    "ba_name": "Empire District Electric (Liberty Utilities)",
+    "region": "Central",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "SPP",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub (nearest to MO/OK)"}
+    ],
+    "latitude": 37.22,
+    "longitude": -93.29
+  },
+  {
+    "ba_code": "PACE",
+    "ba_name": "PacifiCorp East",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+    ],
+    "latitude": 40.76,
+    "longitude": -111.89
+  },
+  {
+    "ba_code": "NWMT",
+    "ba_name": "NorthWestern Energy (Montana)",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 46.87,
+    "longitude": -114.00
+  },
+  {
+    "ba_code": "AVA",
+    "ba_name": "Avista Corporation",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 47.66,
+    "longitude": -117.43
+  },
+  {
+    "ba_code": "IPCO",
+    "ba_name": "Idaho Power Company",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 43.62,
+    "longitude": -116.21
+  },
+  {
+    "ba_code": "PSEI",
+    "ba_name": "Puget Sound Energy",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 47.61,
+    "longitude": -122.33
+  },
+  {
+    "ba_code": "SCL",
+    "ba_name": "Seattle City Light",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 47.61,
+    "longitude": -122.33
+  },
+  {
+    "ba_code": "TPWR",
+    "ba_name": "City of Tacoma (Tacoma Power)",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 47.25,
+    "longitude": -122.44
+  },
+  {
+    "ba_code": "GCPD",
+    "ba_name": "Grant County PUD",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 47.21,
+    "longitude": -119.85
+  },
+  {
+    "ba_code": "CHPD",
+    "ba_name": "Chelan County PUD",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 47.42,
+    "longitude": -120.31
+  },
+  {
+    "ba_code": "DOPD",
+    "ba_name": "Douglas County PUD",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 47.40,
+    "longitude": -120.19
+  },
+  {
+    "ba_code": "WAUW",
+    "ba_name": "Western Area Power Administration - Upper Great Plains West",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "SPP",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 46.88,
+    "longitude": -104.07
+  },
+  {
+    "ba_code": "WAUE",
+    "ba_name": "Western Area Power Administration - Upper Great Plains East",
+    "region": "Central",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "MISO",
+    "rto_neighbor_secondary": "SPP",
+    "interface_points": [],
+    "latitude": 44.37,
+    "longitude": -100.35
+  },
+  {
+    "ba_code": "GVL",
+    "ba_name": "Gainesville Regional Utilities",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 29.65,
+    "longitude": -82.32
+  },
+  {
+    "ba_code": "JEA",
+    "ba_name": "JEA (Jacksonville Electric Authority)",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 30.33,
+    "longitude": -81.66
+  },
+  {
+    "ba_code": "TAL",
+    "ba_name": "City of Tallahassee",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 30.44,
+    "longitude": -84.28
+  },
+  {
+    "ba_code": "TEC",
+    "ba_name": "Tampa Electric Company",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 27.95,
+    "longitude": -82.46
+  },
+  {
+    "ba_code": "FMPP",
+    "ba_name": "Florida Municipal Power Pool",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 28.54,
+    "longitude": -81.38
+  },
+  {
+    "ba_code": "NSB",
+    "ba_name": "Utilities Commission of New Smyrna Beach",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 29.03,
+    "longitude": -80.93
+  },
+  {
+    "ba_code": "HST",
+    "ba_name": "City of Homestead",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 25.47,
+    "longitude": -80.48
+  },
+  {
+    "ba_code": "TIDC",
+    "ba_name": "Turlock Irrigation District",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 37.49,
+    "longitude": -120.85
+  },
+  {
+    "ba_code": "DEAA",
+    "ba_name": "Arlington Valley (DECA)",
+    "region": "Southwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 33.31,
+    "longitude": -112.75
+  },
+  {
+    "ba_code": "HGMA",
+    "ba_name": "New Harquahala Generating Company",
+    "region": "Southwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 33.73,
+    "longitude": -113.14
+  },
+  {
+    "ba_code": "GRIF",
+    "ba_name": "Griffith Energy",
+    "region": "Southwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 35.06,
+    "longitude": -114.56
+  },
+  {
+    "ba_code": "WWA",
+    "ba_name": "NaturEner Wind Watch",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 48.29,
+    "longitude": -111.31
+  },
+  {
+    "ba_code": "GWA",
+    "ba_name": "NaturEner Power Watch",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 48.55,
+    "longitude": -109.68
+  },
+  {
+    "ba_code": "YAD",
+    "ba_name": "Alcoa Power Generating Inc - Yadkin Division",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 35.72,
+    "longitude": -80.28
+  },
+  {
+    "ba_code": "SEPA",
+    "ba_name": "Southeastern Power Administration",
+    "region": "Southeast",
+    "interconnection": "Eastern",
+    "is_rto": false,
+    "rto_neighbor": "PJM",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 34.37,
+    "longitude": -82.07
+  },
+  {
+    "ba_code": "TEPC",
+    "ba_name": "Tucson Electric Power Company",
+    "region": "Southwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+    ],
+    "latitude": 32.22,
+    "longitude": -110.97
+  },
+  {
+    "ba_code": "EPE",
+    "ba_name": "El Paso Electric",
+    "region": "Southwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+    ],
+    "latitude": 31.76,
+    "longitude": -106.49
+  },
+  {
+    "ba_code": "PNM",
+    "ba_name": "Public Service Company of New Mexico",
+    "region": "Southwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+    ],
+    "latitude": 35.08,
+    "longitude": -106.65
+  },
+  {
+    "ba_code": "WAPA",
+    "ba_name": "Western Area Power Administration - Rocky Mountain",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 39.74,
+    "longitude": -104.99
+  },
+  {
+    "ba_code": "SMUD",
+    "ba_name": "Sacramento Municipal Utility District",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [
+      {"rto": "CAISO", "node_id": "NOB_5_N101", "node_name": "North of Boundary"}
+    ],
+    "latitude": 38.58,
+    "longitude": -121.49
+  },
+  {
+    "ba_code": "GRID",
+    "ba_name": "Gridforce Energy Management",
+    "region": "Northwest",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 45.52,
+    "longitude": -122.68
+  },
+  {
+    "ba_code": "GLHB",
+    "ba_name": "GridLiance",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": false,
+    "rto_neighbor": "CAISO",
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 36.17,
+    "longitude": -115.14
+  },
+  {
+    "ba_code": "CISO",
+    "ba_name": "California Independent System Operator",
+    "region": "Western",
+    "interconnection": "Western",
+    "is_rto": true,
+    "rto_neighbor": null,
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 38.58,
+    "longitude": -121.49
+  },
+  {
+    "ba_code": "PJM",
+    "ba_name": "PJM Interconnection",
+    "region": "Mid-Atlantic",
+    "interconnection": "Eastern",
+    "is_rto": true,
+    "rto_neighbor": null,
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 40.00,
+    "longitude": -76.31
+  },
+  {
+    "ba_code": "MISO",
+    "ba_name": "Midcontinent Independent System Operator",
+    "region": "Central",
+    "interconnection": "Eastern",
+    "is_rto": true,
+    "rto_neighbor": null,
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 44.98,
+    "longitude": -93.27
+  },
+  {
+    "ba_code": "SPP",
+    "ba_name": "Southwest Power Pool",
+    "region": "Central",
+    "interconnection": "Eastern",
+    "is_rto": true,
+    "rto_neighbor": null,
+    "rto_neighbor_secondary": null,
+    "interface_points": [],
+    "latitude": 36.15,
+    "longitude": -95.99
+  }
+]
