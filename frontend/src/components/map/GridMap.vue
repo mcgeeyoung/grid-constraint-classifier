@@ -20,6 +20,7 @@
     <DERMarkers v-if="mapStore.showDERs" />
     <SubstationMarkers v-if="mapStore.showSubstations" />
     <DataCenterMarkers />
+    <HostingCapacityLayer v-if="mapStore.showHostingCapacity" />
     <AssetMarkers v-if="mapStore.showAssets" />
     <PnodeMarkers />
     <ComparisonMarkers />
@@ -37,6 +38,7 @@ import ZoneLayer from './ZoneLayer.vue'
 import DERMarkers from './DERMarkers.vue'
 import SubstationMarkers from './SubstationMarkers.vue'
 import DataCenterMarkers from './DataCenterMarkers.vue'
+import HostingCapacityLayer from './HostingCapacityLayer.vue'
 import AssetMarkers from './AssetMarkers.vue'
 import PnodeMarkers from './PnodeMarkers.vue'
 import ComparisonMarkers from './ComparisonMarkers.vue'
