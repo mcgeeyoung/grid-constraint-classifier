@@ -2,9 +2,11 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+from app.cache import cache_response
 
 from app.api.v1.spatial import BBox, parse_bbox
 from app.database import get_db
@@ -24,7 +26,8 @@ router = APIRouter(prefix="/api/v1/infrastructure", tags=["infrastructure"])
 # ------------------------------------------------------------------
 
 @router.get("/summary", response_model=list[GPKGLayerSummary])
-def infrastructure_summary(db: Session = Depends(get_db)):
+@cache_response("infra-summary", ttl=3600)
+def infrastructure_summary(request: Request = None, db: Session = Depends(get_db)):
     """Get feature counts for all GeoPackage infrastructure layers."""
     results = []
     for model, layer_name in [
@@ -51,6 +54,7 @@ def infrastructure_summary(db: Session = Depends(get_db)):
 # ------------------------------------------------------------------
 
 @router.get("/power-lines", response_model=list[GPKGPowerLineResponse])
+@cache_response("infra-lines", ttl=300)
 def list_power_lines(
     limit: int = Query(default=200, le=5000),
     offset: int = Query(default=0, ge=0),
@@ -61,6 +65,7 @@ def list_power_lines(
     operator: Optional[str] = Query(
         None, description="Filter by operator (case-insensitive contains)",
     ),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """List power lines with optional spatial and attribute filters.
@@ -147,8 +152,10 @@ def power_lines_geojson(
 
 
 @router.get("/power-lines/voltage-stats")
+@cache_response("infra-voltage-stats", ttl=3600)
 def power_lines_voltage_stats(
     bbox: Optional[BBox] = Depends(parse_bbox),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Get voltage distribution statistics for power lines."""
@@ -179,6 +186,7 @@ def power_lines_voltage_stats(
 # ------------------------------------------------------------------
 
 @router.get("/substations", response_model=list[GPKGSubstationResponse])
+@cache_response("infra-substations", ttl=300)
 def list_substations(
     limit: int = Query(default=200, le=5000),
     offset: int = Query(default=0, ge=0),
@@ -190,6 +198,7 @@ def list_substations(
         None, description="Filter by operator (case-insensitive contains)",
     ),
     min_voltage_kv: Optional[float] = Query(None),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """List substations with optional spatial and attribute filters.
@@ -276,8 +285,10 @@ def substations_geojson(
 
 
 @router.get("/substations/type-stats")
+@cache_response("infra-type-stats", ttl=3600)
 def substations_type_stats(
     bbox: Optional[BBox] = Depends(parse_bbox),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Get substation type distribution statistics."""
@@ -307,6 +318,7 @@ def substations_type_stats(
 # ------------------------------------------------------------------
 
 @router.get("/power-plants", response_model=list[GPKGPowerPlantResponse])
+@cache_response("infra-plants", ttl=300)
 def list_power_plants(
     limit: int = Query(default=200, le=5000),
     offset: int = Query(default=0, ge=0),
@@ -318,6 +330,7 @@ def list_power_plants(
         None, description="Filter by operator (case-insensitive contains)",
     ),
     min_output_mw: Optional[float] = Query(None),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """List power plants with optional spatial and attribute filters.
@@ -406,8 +419,10 @@ def power_plants_geojson(
 
 
 @router.get("/power-plants/source-stats")
+@cache_response("infra-source-stats", ttl=3600)
 def power_plants_source_stats(
     bbox: Optional[BBox] = Depends(parse_bbox),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Get power plant source/fuel distribution with total capacity."""

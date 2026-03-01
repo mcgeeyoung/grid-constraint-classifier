@@ -157,6 +157,36 @@ def invalidate_iso_cache(iso_code: str):
         logger.warning("Cache invalidation error: %s", e)
 
 
+def invalidate_hc_cache():
+    """Invalidate all hosting capacity caches.
+
+    Call after HC data ingestion to refresh utility/feeder listings.
+    """
+    r = get_redis()
+    if not r:
+        return
+
+    prefixes = [
+        "gcc:hc-utilities:*",
+        "gcc:hc-records:*",
+        "gcc:hc-geojson:*",
+        "gcc:hc-summary:*",
+        "gcc:hc-ingestion-runs:*",
+    ]
+
+    cleared = 0
+    try:
+        for pattern in prefixes:
+            keys = list(r.scan_iter(match=pattern, count=200))
+            if keys:
+                r.delete(*keys)
+                cleared += len(keys)
+        if cleared:
+            logger.info("Cleared %d HC cache keys", cleared)
+    except Exception as e:
+        logger.warning("HC cache invalidation error: %s", e)
+
+
 def invalidate_all():
     """Clear the entire GCC cache namespace."""
     r = get_redis()

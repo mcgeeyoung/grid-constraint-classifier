@@ -2,8 +2,10 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
+
+from app.cache import cache_response
 
 from app.api.v1.spatial import BBox, parse_bbox
 from app.database import get_db
@@ -27,7 +29,8 @@ router = APIRouter(prefix="/api/v1")
 # ------------------------------------------------------------------
 
 @router.get("/utilities", response_model=list[UtilityResponse])
-def list_utilities(db: Session = Depends(get_db)):
+@cache_response("hc-utilities", ttl=3600)
+def list_utilities(request: Request = None, db: Session = Depends(get_db)):
     """List all utilities with summary stats."""
     rows = (
         db.query(Utility, HostingCapacitySummary, ISO)
@@ -68,6 +71,7 @@ def list_utilities(db: Session = Depends(get_db)):
     "/utilities/{code}/hosting-capacity",
     response_model=list[HostingCapacityResponse],
 )
+@cache_response("hc-records", ttl=300)
 def list_hosting_capacity(
     code: str,
     limit: int = Query(default=200, le=5000),
@@ -79,6 +83,7 @@ def list_hosting_capacity(
     min_capacity_mw: Optional[float] = Query(
         None, description="Minimum hosting_capacity_mw",
     ),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """List hosting capacity records for a utility with optional filters.
@@ -135,11 +140,13 @@ def list_hosting_capacity(
 # ------------------------------------------------------------------
 
 @router.get("/utilities/{code}/hosting-capacity/geojson")
+@cache_response("hc-geojson", ttl=300)
 def hosting_capacity_geojson(
     code: str,
     limit: int = Query(default=5000, le=50000),
     bbox: Optional[BBox] = Depends(parse_bbox),
     constraint: Optional[str] = Query(None),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Export hosting capacity records as a GeoJSON FeatureCollection.
@@ -195,8 +202,10 @@ def hosting_capacity_geojson(
     "/utilities/{code}/hosting-capacity/summary",
     response_model=HCSummaryResponse,
 )
+@cache_response("hc-summary", ttl=3600)
 def hosting_capacity_summary(
     code: str,
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Get aggregated hosting capacity summary for a utility."""
@@ -232,9 +241,11 @@ def hosting_capacity_summary(
     "/utilities/{code}/ingestion-runs",
     response_model=list[HCIngestionRunResponse],
 )
+@cache_response("hc-ingestion-runs", ttl=300)
 def list_ingestion_runs(
     code: str,
     limit: int = Query(default=10, le=100),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """List recent ingestion runs for a utility."""
