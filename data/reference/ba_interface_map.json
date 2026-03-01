@@ -8,8 +8,18 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "MALIN_5_N101", "node_name": "Malin", "gridstatus_verified": true},
-      {"rto": "CAISO", "node_id": "CAPTJACK_5_N101", "node_name": "Captain Jack", "gridstatus_verified": true}
+      {
+        "rto": "CAISO",
+        "node_id": "MALIN_5_N101",
+        "node_name": "Malin",
+        "gridstatus_verified": true
+      },
+      {
+        "rto": "CAISO",
+        "node_id": "CAPTJACK_5_N101",
+        "node_name": "Captain Jack",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 38.58,
     "longitude": -121.49
@@ -23,8 +33,18 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"},
-      {"rto": "CAISO", "node_id": "MCCULLGH_5_N101", "node_name": "McCullough (near Mead)"}
+      {
+        "rto": "CAISO",
+        "node_id": "PALOVRDE_5_N101",
+        "node_name": "Palo Verde",
+        "gridstatus_verified": true
+      },
+      {
+        "rto": "CAISO",
+        "node_id": "MCCULLGH_5_N101",
+        "node_name": "McCullough (near Mead)",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 33.45,
     "longitude": -112.07
@@ -38,7 +58,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+      {
+        "rto": "CAISO",
+        "node_id": "PALOVRDE_5_N101",
+        "node_name": "Palo Verde",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 33.43,
     "longitude": -111.94
@@ -52,7 +77,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "MCCULLGH_5_N101", "node_name": "McCullough (near Eldorado)"}
+      {
+        "rto": "CAISO",
+        "node_id": "MCCULLGH_5_N101",
+        "node_name": "McCullough (near Eldorado)",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 36.17,
     "longitude": -115.14
@@ -66,7 +96,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "SYLMARDC_7_N001", "node_name": "Sylmar DC", "gridstatus_verified": false}
+      {
+        "rto": "CAISO",
+        "node_id": "SYLMARDC_7_N001",
+        "node_name": "Sylmar DC",
+        "gridstatus_verified": false
+      }
     ],
     "latitude": 34.05,
     "longitude": -118.24
@@ -80,7 +115,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "MCCULLGH_5_N101", "node_name": "McCullough (near Eldorado)"}
+      {
+        "rto": "CAISO",
+        "node_id": "MCCULLGH_5_N101",
+        "node_name": "McCullough (near Eldorado)",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 32.79,
     "longitude": -115.57
@@ -94,8 +134,18 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"},
-      {"rto": "CAISO", "node_id": "MCCULLGH_5_N101", "node_name": "McCullough (near Mead)"}
+      {
+        "rto": "CAISO",
+        "node_id": "PALOVRDE_5_N101",
+        "node_name": "Palo Verde",
+        "gridstatus_verified": true
+      },
+      {
+        "rto": "CAISO",
+        "node_id": "MCCULLGH_5_N101",
+        "node_name": "McCullough (near Mead)",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 33.45,
     "longitude": -112.07
@@ -109,7 +159,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "MALIN_5_N101", "node_name": "Malin"}
+      {
+        "rto": "CAISO",
+        "node_id": "MALIN_5_N101",
+        "node_name": "Malin",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 45.52,
     "longitude": -122.68
@@ -123,7 +178,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "MALIN_5_N101", "node_name": "Malin"}
+      {
+        "rto": "CAISO",
+        "node_id": "MALIN_5_N101",
+        "node_name": "Malin",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 45.52,
     "longitude": -122.68
@@ -137,7 +197,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "MALIN_5_N101", "node_name": "Malin"}
+      {
+        "rto": "CAISO",
+        "node_id": "MALIN_5_N101",
+        "node_name": "Malin",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 45.52,
     "longitude": -122.68
@@ -151,7 +216,12 @@
     "rto_neighbor": "PJM",
     "rto_neighbor_secondary": "MISO",
     "interface_points": [
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 33.75,
     "longitude": -84.39
@@ -165,7 +235,12 @@
     "rto_neighbor": "PJM",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 35.23,
     "longitude": -80.84
@@ -179,7 +254,12 @@
     "rto_neighbor": "PJM",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 35.77,
     "longitude": -78.64
@@ -193,7 +273,12 @@
     "rto_neighbor": "PJM",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 35.59,
     "longitude": -82.55
@@ -207,9 +292,14 @@
     "rto_neighbor": "PJM",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
-    "latitude": 34.00,
+    "latitude": 34.0,
     "longitude": -81.04
   },
   {
@@ -221,7 +311,12 @@
     "rto_neighbor": "PJM",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 33.92,
     "longitude": -79.99
@@ -235,7 +330,12 @@
     "rto_neighbor": "PJM",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 28.54,
     "longitude": -81.38
@@ -249,7 +349,12 @@
     "rto_neighbor": "PJM",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 25.76,
     "longitude": -80.19
@@ -263,10 +368,15 @@
     "rto_neighbor": "PJM",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 28.75,
-    "longitude": -82.50
+    "longitude": -82.5
   },
   {
     "ba_code": "TVA",
@@ -277,8 +387,18 @@
     "rto_neighbor": "MISO",
     "rto_neighbor_secondary": "PJM",
     "interface_points": [
-      {"rto": "MISO", "node_id": "TVA", "node_name": "MISO-TVA Interface", "gridstatus_verified": true},
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "MISO",
+        "node_id": "TVA",
+        "node_name": "MISO-TVA Interface",
+        "gridstatus_verified": true
+      },
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 35.05,
     "longitude": -85.31
@@ -292,8 +412,18 @@
     "rto_neighbor": "MISO",
     "rto_neighbor_secondary": "SPP",
     "interface_points": [
-      {"rto": "MISO", "node_id": "AECI", "node_name": "MISO-AECI Interface", "gridstatus_verified": true},
-      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub", "gridstatus_verified": false}
+      {
+        "rto": "MISO",
+        "node_id": "AECI",
+        "node_name": "MISO-AECI Interface",
+        "gridstatus_verified": true
+      },
+      {
+        "rto": "SPP",
+        "node_id": "SPPSOUTH_HUB",
+        "node_name": "SPP South Hub",
+        "gridstatus_verified": false
+      }
     ],
     "latitude": 38.58,
     "longitude": -92.17
@@ -307,8 +437,18 @@
     "rto_neighbor": "MISO",
     "rto_neighbor_secondary": "PJM",
     "interface_points": [
-      {"rto": "MISO", "node_id": "LGEE", "node_name": "MISO-LGEE Interface", "gridstatus_verified": true},
-      {"rto": "PJM", "node_id": "2156111904", "node_name": "PJM SOUTH Interface", "gridstatus_verified": true}
+      {
+        "rto": "MISO",
+        "node_id": "LGEE",
+        "node_name": "MISO-LGEE Interface",
+        "gridstatus_verified": true
+      },
+      {
+        "rto": "PJM",
+        "node_id": "2156111904",
+        "node_name": "PJM SOUTH Interface",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 38.25,
     "longitude": -85.76
@@ -322,7 +462,11 @@
     "rto_neighbor": "SPP",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub (nearest to PSCO/CO)"}
+      {
+        "rto": "SPP",
+        "node_id": "SPPSOUTH_HUB",
+        "node_name": "SPP South Hub (nearest to PSCO/CO)"
+      }
     ],
     "latitude": 39.74,
     "longitude": -104.99
@@ -336,7 +480,11 @@
     "rto_neighbor": "SPP",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub"}
+      {
+        "rto": "SPP",
+        "node_id": "SPPSOUTH_HUB",
+        "node_name": "SPP South Hub"
+      }
     ],
     "latitude": 39.74,
     "longitude": -104.99
@@ -350,7 +498,11 @@
     "rto_neighbor": "SPP",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub (nearest to OK)"}
+      {
+        "rto": "SPP",
+        "node_id": "SPPSOUTH_HUB",
+        "node_name": "SPP South Hub (nearest to OK)"
+      }
     ],
     "latitude": 36.15,
     "longitude": -95.99
@@ -364,9 +516,13 @@
     "rto_neighbor": "SPP",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub (nearest to OK)"}
+      {
+        "rto": "SPP",
+        "node_id": "SPPSOUTH_HUB",
+        "node_name": "SPP South Hub (nearest to OK)"
+      }
     ],
-    "latitude": 36.30,
+    "latitude": 36.3,
     "longitude": -95.29
   },
   {
@@ -378,7 +534,11 @@
     "rto_neighbor": "SPP",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "SPP", "node_id": "SPPSOUTH_HUB", "node_name": "SPP South Hub (nearest to MO/OK)"}
+      {
+        "rto": "SPP",
+        "node_id": "SPPSOUTH_HUB",
+        "node_name": "SPP South Hub (nearest to MO/OK)"
+      }
     ],
     "latitude": 37.22,
     "longitude": -93.29
@@ -392,7 +552,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+      {
+        "rto": "CAISO",
+        "node_id": "PALOVRDE_5_N101",
+        "node_name": "Palo Verde",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 40.76,
     "longitude": -111.89
@@ -407,7 +572,7 @@
     "rto_neighbor_secondary": null,
     "interface_points": [],
     "latitude": 46.87,
-    "longitude": -114.00
+    "longitude": -114.0
   },
   {
     "ba_code": "AVA",
@@ -502,7 +667,7 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [],
-    "latitude": 47.40,
+    "latitude": 47.4,
     "longitude": -120.19
   },
   {
@@ -718,7 +883,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+      {
+        "rto": "CAISO",
+        "node_id": "PALOVRDE_5_N101",
+        "node_name": "Palo Verde",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 32.22,
     "longitude": -110.97
@@ -732,7 +902,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+      {
+        "rto": "CAISO",
+        "node_id": "PALOVRDE_5_N101",
+        "node_name": "Palo Verde",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 31.76,
     "longitude": -106.49
@@ -746,7 +921,12 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "PALOVRDE_5_N101", "node_name": "Palo Verde"}
+      {
+        "rto": "CAISO",
+        "node_id": "PALOVRDE_5_N101",
+        "node_name": "Palo Verde",
+        "gridstatus_verified": true
+      }
     ],
     "latitude": 35.08,
     "longitude": -106.65
@@ -772,7 +952,11 @@
     "rto_neighbor": "CAISO",
     "rto_neighbor_secondary": null,
     "interface_points": [
-      {"rto": "CAISO", "node_id": "NOB_5_N101", "node_name": "North of Boundary"}
+      {
+        "rto": "CAISO",
+        "node_id": "NOB_5_N101",
+        "node_name": "North of Boundary"
+      }
     ],
     "latitude": 38.58,
     "longitude": -121.49
@@ -822,7 +1006,7 @@
     "rto_neighbor": null,
     "rto_neighbor_secondary": null,
     "interface_points": [],
-    "latitude": 40.00,
+    "latitude": 40.0,
     "longitude": -76.31
   },
   {
