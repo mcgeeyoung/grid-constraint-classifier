@@ -1,0 +1,11 @@
+utility_code: pacific_power
+utility_name: "Pacific Power"
+parent_company: "PacifiCorp"
+iso_id: null
+states: [OR, WA, CA]
+data_source_type: unavailable
+requires_auth: false
+
+# Custom portal
+service_url: null
+layer_index: null

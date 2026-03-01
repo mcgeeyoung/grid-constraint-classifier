@@ -1,0 +1,11 @@
+utility_code: idaho_power
+utility_name: "Idaho Power"
+parent_company: "IDACORP"
+iso_id: null
+states: [ID, OR]
+data_source_type: unavailable
+requires_auth: false
+
+# Custom portal
+service_url: null
+layer_index: null

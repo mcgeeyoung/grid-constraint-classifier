@@ -1,0 +1,11 @@
+utility_code: ladwp
+utility_name: "Los Angeles Department of Water and Power"
+parent_company: null
+iso_id: null
+states: [CA]
+data_source_type: unavailable
+requires_auth: false
+
+# Custom portal, not ArcGIS-based
+service_url: null
+layer_index: null

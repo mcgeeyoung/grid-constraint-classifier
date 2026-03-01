@@ -1,0 +1,11 @@
+utility_code: nv_energy
+utility_name: "NV Energy"
+parent_company: "Berkshire Hathaway Energy"
+iso_id: null
+states: [NV]
+data_source_type: unavailable
+requires_auth: true
+
+# Custom portal requiring authentication
+service_url: null
+layer_index: null

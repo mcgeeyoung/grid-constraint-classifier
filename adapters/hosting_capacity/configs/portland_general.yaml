@@ -1,0 +1,12 @@
+utility_code: portland_general
+utility_name: "Portland General Electric"
+parent_company: null
+iso_id: null
+states: [OR]
+data_source_type: unavailable
+requires_auth: false
+
+# Uses Mapbox-based map, not ArcGIS. Requires custom scraper.
+# See: https://portlandgeneral.com/about/who-we-are/resource-planning/distributed-energy-resources
+service_url: null
+layer_index: null

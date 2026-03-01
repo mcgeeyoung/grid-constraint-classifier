@@ -1,0 +1,11 @@
+utility_code: luma
+utility_name: "LUMA Energy"
+parent_company: null
+iso_id: null
+states: [PR]
+data_source_type: unavailable
+requires_auth: false
+
+# Custom portal
+service_url: null
+layer_index: null

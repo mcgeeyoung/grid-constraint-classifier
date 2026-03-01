@@ -1,0 +1,11 @@
+utility_code: burlington_electric
+utility_name: "Burlington Electric Department"
+parent_company: null
+iso_id: isone
+states: [VT]
+data_source_type: unavailable
+requires_auth: false
+
+# Custom portal
+service_url: null
+layer_index: null

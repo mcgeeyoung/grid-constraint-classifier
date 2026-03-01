@@ -1,0 +1,26 @@
+utility_code: consumers
+utility_name: "Consumers Energy"
+parent_company: "CMS Energy"
+iso_id: miso
+states: [MI]
+data_source_type: arcgis_feature
+requires_auth: false
+
+# Consumers Energy Hosting Capacity (public ArcGIS Online)
+service_url: "https://services.arcgis.com/pMKZSKRjMQBVDRPw/arcgis/rest/services/HostingCapacity/FeatureServer"
+layer_index: 0
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+field_map:
+  FEEDER_ID: feeder_id_external
+  FEEDER_NAME: feeder_name
+  SUBSTATION: substation_name
+  HOSTING_CAPACITY_KW: hosting_capacity_mw
+  EXISTING_GEN_KW: installed_dg_mw
+  REMAINING_HC_KW: remaining_capacity_mw
+  LIMITING_FACTOR: constraining_metric
+  VOLTAGE: voltage_kv

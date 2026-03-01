@@ -1,0 +1,26 @@
+utility_code: central_hudson
+utility_name: "Central Hudson Gas & Electric"
+parent_company: null
+iso_id: nyiso
+states: [NY]
+data_source_type: arcgis_feature
+requires_auth: false
+
+# Central Hudson was in Wave 4 table (NY, ArcGIS, NYISO)
+service_url: "https://services.arcgis.com/PwY9ZJmOaKRnJYrU/arcgis/rest/services/Central_Hudson_Hosting_Capacity/FeatureServer"
+layer_index: 0
+page_size: 2000
+out_sr: 4326
+capacity_unit: kw
+
+url_discovery_method: static
+
+field_map:
+  FEEDER_ID: feeder_id_external
+  FEEDER_NAME: feeder_name
+  SUBSTATION: substation_name
+  HC_KW: hosting_capacity_mw
+  EXISTING_DG_KW: installed_dg_mw
+  REMAINING_KW: remaining_capacity_mw
+  CONSTRAINT_TYPE: constraining_metric
+  VOLTAGE: voltage_kv

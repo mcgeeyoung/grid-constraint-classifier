@@ -1,0 +1,12 @@
+utility_code: pseg
+utility_name: "PSE&G"
+parent_company: "PSEG"
+iso_id: pjm
+states: [NJ]
+data_source_type: unavailable
+requires_auth: false
+
+# Hosted in an iframe, not a standard ArcGIS endpoint. Requires custom scraper.
+# Both DG and EV hosting capacity maps available via embedded viewer.
+service_url: null
+layer_index: null

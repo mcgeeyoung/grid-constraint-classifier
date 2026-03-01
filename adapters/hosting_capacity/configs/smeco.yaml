@@ -1,0 +1,11 @@
+utility_code: smeco
+utility_name: "Southern Maryland Electric Cooperative"
+parent_company: null
+iso_id: pjm
+states: [MD]
+data_source_type: unavailable
+requires_auth: false
+
+# Custom portal
+service_url: null
+layer_index: null

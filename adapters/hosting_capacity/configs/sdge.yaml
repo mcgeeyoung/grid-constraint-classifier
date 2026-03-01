@@ -1,0 +1,12 @@
+utility_code: sdge
+utility_name: "San Diego Gas & Electric"
+parent_company: "Sempra"
+iso_id: caiso
+states: [CA]
+data_source_type: unavailable
+requires_auth: true
+
+# Custom portal requiring registration. Mark unavailable until auth flow implemented.
+# See: https://www.sdge.com/more-information/environment/integration-capacity-analysis
+service_url: null
+layer_index: null

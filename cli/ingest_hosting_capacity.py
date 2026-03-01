@@ -5,10 +5,12 @@ Usage:
   python -m cli.ingest_hosting_capacity --utility pge
   python -m cli.ingest_hosting_capacity --utility all
   python -m cli.ingest_hosting_capacity --utility all --category arcgis_feature
+  python -m cli.ingest_hosting_capacity --utility all --wave 5
   python -m cli.ingest_hosting_capacity --utility pge --force
   python -m cli.ingest_hosting_capacity --utility pge --dry-run
   python -m cli.ingest_hosting_capacity --list-utilities
   python -m cli.ingest_hosting_capacity --utility pge --discover
+  python -m cli.ingest_hosting_capacity seed-utilities
 """
 
 import argparse
@@ -29,6 +31,26 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+# Wave assignments per the hosting capacity integration plan
+WAVE_MAP: dict[int, list[str]] = {
+    1: ["pge"],
+    2: ["sce", "sdge"],
+    3: ["pepco", "bge", "ace", "dpl", "comed", "peco"],
+    4: ["dominion", "nationalgrid", "eversource", "coned", "oru", "central_hudson"],
+    5: [
+        "xcel_mn", "xcel_co", "dte", "nyseg_rge",
+        "ameren", "consumers", "duke", "jcpl", "potomac_edison",
+        "cmp", "united_illuminating",
+    ],
+    7: [
+        "sdge", "georgia_power", "hawaiian_electric", "portland_general",
+        "pseg", "pseg_li", "nv_energy", "ladwp", "puget_sound", "avista",
+        "green_mountain", "liberty", "rhode_island_energy", "unitil",
+        "versant", "idaho_power", "pacific_power", "burlington_electric",
+        "smeco", "choptank", "luma",
+    ],
+}
 
 
 def main():
@@ -55,10 +77,22 @@ def main():
         "--category", help="Filter by data_source_type (e.g. arcgis_feature)",
     )
     parser.add_argument(
+        "--wave", type=int, choices=[1, 2, 3, 4, 5, 7],
+        help="Filter by rollout wave (1-5, 7)",
+    )
+    parser.add_argument(
+        "command", nargs="?", default=None,
+        help="Subcommand: seed-utilities",
+    )
+    parser.add_argument(
         "--data-dir", default="data", type=Path,
         help="Base data directory (default: data)",
     )
     args = parser.parse_args()
+
+    if args.command == "seed-utilities":
+        _seed_utilities()
+        return
 
     if args.list_utilities:
         _print_utility_list()
@@ -73,8 +107,16 @@ def main():
 
     if args.utility == "all":
         utilities = list_hc_utilities()
+        configs_dir = Path(__file__).resolve().parent.parent / "adapters" / "hosting_capacity" / "configs"
+
+        # Filter by wave
+        if args.wave:
+            wave_codes = set(WAVE_MAP.get(args.wave, []))
+            utilities = [c for c in utilities if c in wave_codes]
+            logger.info(f"Filtered to {len(utilities)} utilities in wave {args.wave}")
+
+        # Filter by category
         if args.category:
-            configs_dir = Path(__file__).resolve().parent.parent / "adapters" / "hosting_capacity" / "configs"
             filtered = []
             for code in utilities:
                 cfg = UtilityHCConfig.from_yaml(configs_dir / f"{code}.yaml")
@@ -82,6 +124,17 @@ def main():
                     filtered.append(code)
             utilities = filtered
             logger.info(f"Filtered to {len(utilities)} utilities with category={args.category}")
+
+        # Skip unavailable utilities unless explicitly requested by --category
+        if not args.category:
+            available = []
+            for code in utilities:
+                cfg = UtilityHCConfig.from_yaml(configs_dir / f"{code}.yaml")
+                if cfg.data_source_type != "unavailable":
+                    available.append(code)
+                else:
+                    logger.info(f"Skipping {code} (unavailable)")
+            utilities = available
 
         results = {}
         for code in utilities:
@@ -155,6 +208,14 @@ def _ingest_single(utility_code: str, args) -> dict:
         writer.close()
 
 
+def _get_wave(code: str) -> str:
+    """Return wave number for a utility code."""
+    for wave, codes in WAVE_MAP.items():
+        if code in codes:
+            return str(wave)
+    return "-"
+
+
 def _print_utility_list():
     """Print a table of all configured utilities."""
     configs_dir = (
@@ -163,17 +224,95 @@ def _print_utility_list():
     )
     codes = list_hc_utilities()
 
-    print(f"\n{'Code':<12} {'Name':<30} {'Type':<16} {'ISO':<8} {'States'}")
-    print("-" * 80)
+    print(f"\n{'Code':<20} {'Name':<32} {'Type':<16} {'Wave':<5} {'ISO':<8} {'States'}")
+    print("-" * 100)
     for code in codes:
         cfg = UtilityHCConfig.from_yaml(configs_dir / f"{code}.yaml")
         states = ", ".join(cfg.states) if cfg.states else ""
         iso = cfg.iso_id or "-"
+        wave = _get_wave(code)
         print(
-            f"{cfg.utility_code:<12} {cfg.utility_name:<30} "
-            f"{cfg.data_source_type:<16} {iso:<8} {states}"
+            f"{cfg.utility_code:<20} {cfg.utility_name:<32} "
+            f"{cfg.data_source_type:<16} {wave:<5} {iso:<8} {states}"
         )
-    print(f"\nTotal: {len(codes)} utilities configured\n")
+
+    by_type = {}
+    for code in codes:
+        cfg = UtilityHCConfig.from_yaml(configs_dir / f"{code}.yaml")
+        by_type[cfg.data_source_type] = by_type.get(cfg.data_source_type, 0) + 1
+    breakdown = ", ".join(f"{v} {k}" for k, v in sorted(by_type.items()))
+    print(f"\nTotal: {len(codes)} utilities ({breakdown})\n")
+
+
+def _seed_utilities():
+    """Register all configured utilities in the database."""
+    from app.database import SessionLocal
+    from app.models.utility import Utility
+
+    configs_dir = (
+        Path(__file__).resolve().parent.parent
+        / "adapters" / "hosting_capacity" / "configs"
+    )
+    codes = list_hc_utilities()
+    db = SessionLocal()
+
+    try:
+        created = 0
+        updated = 0
+        for code in codes:
+            cfg = UtilityHCConfig.from_yaml(configs_dir / f"{code}.yaml")
+            existing = db.query(Utility).filter_by(utility_code=code).first()
+
+            if existing:
+                existing.utility_name = cfg.utility_name
+                existing.parent_company = cfg.parent_company
+                existing.states = cfg.states
+                existing.data_source_type = cfg.data_source_type
+                existing.requires_auth = cfg.requires_auth
+                existing.service_url = cfg.service_url
+                existing.config_json = {
+                    "layer_index": cfg.layer_index,
+                    "page_size": cfg.page_size,
+                    "capacity_unit": cfg.capacity_unit,
+                    "field_map": cfg.field_map,
+                    "url_discovery_method": cfg.url_discovery_method,
+                    "url_pattern": cfg.url_pattern,
+                    "wave": _get_wave(code),
+                }
+                updated += 1
+            else:
+                utility = Utility(
+                    utility_code=cfg.utility_code,
+                    utility_name=cfg.utility_name,
+                    parent_company=cfg.parent_company,
+                    states=cfg.states,
+                    data_source_type=cfg.data_source_type,
+                    requires_auth=cfg.requires_auth,
+                    service_url=cfg.service_url,
+                    config_json={
+                        "layer_index": cfg.layer_index,
+                        "page_size": cfg.page_size,
+                        "capacity_unit": cfg.capacity_unit,
+                        "field_map": cfg.field_map,
+                        "url_discovery_method": cfg.url_discovery_method,
+                        "url_pattern": cfg.url_pattern,
+                        "wave": _get_wave(code),
+                    },
+                )
+                db.add(utility)
+                created += 1
+
+        db.commit()
+        total = db.query(Utility).count()
+        logger.info(
+            f"Seeded utilities: {created} created, {updated} updated, {total} total"
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to seed utilities: {e}")
+        raise
+    finally:
+        db.close()
 
 
 def _discover_utility(utility_code: str):

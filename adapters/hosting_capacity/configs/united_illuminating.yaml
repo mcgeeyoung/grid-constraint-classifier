@@ -1,0 +1,28 @@
+utility_code: united_illuminating
+utility_name: "United Illuminating"
+parent_company: "Avangrid"
+iso_id: isone
+states: [CT]
+data_source_type: arcgis_feature
+requires_auth: false
+
+# Avangrid family. DG hosting capacity only (EV capacity is Wave 7/custom)
+service_url: "https://services.arcgis.com/c0HK6TaWF3mGiNhc/arcgis/rest/services/UI_HostingCapacity/FeatureServer"
+layer_index: 0
+page_size: 2000
+out_sr: 4326
+capacity_unit: mw
+
+url_discovery_method: static
+
+field_map:
+  CIRCUIT: feeder_id_external
+  SUBSTATION: substation_name
+  FEEDER_NAME: feeder_name
+  MAX_HC_MVA: hosting_capacity_mw
+  CONN_DG_MVA: installed_dg_mw
+  QUEUED_DG_MVA: queued_dg_mw
+  HEADROOM_MVA: remaining_capacity_mw
+  LIMITING_ELEMENT: constraining_metric
+  KV: voltage_kv
+  NUMPHASES: phase_config

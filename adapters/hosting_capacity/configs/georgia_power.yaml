@@ -1,0 +1,11 @@
+utility_code: georgia_power
+utility_name: "Georgia Power"
+parent_company: "Southern Company"
+iso_id: null
+states: [GA]
+data_source_type: unavailable
+requires_auth: true
+
+# ArcGIS endpoint exists but requires authentication (Southern Company SSO)
+service_url: null
+layer_index: null

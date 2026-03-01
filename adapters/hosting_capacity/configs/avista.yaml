@@ -1,0 +1,11 @@
+utility_code: avista
+utility_name: "Avista Corporation"
+parent_company: null
+iso_id: null
+states: [WA, ID, OR]
+data_source_type: unavailable
+requires_auth: false
+
+# Custom portal
+service_url: null
+layer_index: null

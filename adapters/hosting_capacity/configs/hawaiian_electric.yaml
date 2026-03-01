@@ -1,0 +1,12 @@
+utility_code: hawaiian_electric
+utility_name: "Hawaiian Electric"
+parent_company: null
+iso_id: null
+states: [HI]
+data_source_type: unavailable
+requires_auth: false
+
+# Proprietary portal, not ArcGIS-based. Separate DG and EV maps.
+# See: https://www.hawaiianelectric.com/clean-energy-hawaii/integration-tools-and-resources/hosting-capacity
+service_url: null
+layer_index: null
