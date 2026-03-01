@@ -4,8 +4,10 @@ parent_company: null
 iso_id: null
 states: [WA]
 data_source_type: unavailable
-requires_auth: false
+requires_auth: true
 
-# Custom portal
+# HC Heat Map (ArcGIS): https://pugetsoundenergy.maps.arcgis.com/apps/webappviewer/index.html?id=980fc190ffd648489a492f8363a1d2cc
+# Access requested 2026-03-01 via solarstorageRFPmailbox@pse.com
+# Waiting for link/credentials. Once received, inspect Network tab for FeatureServer/MapServer URLs.
 service_url: null
 layer_index: null

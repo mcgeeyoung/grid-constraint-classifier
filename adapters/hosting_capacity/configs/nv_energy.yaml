@@ -6,6 +6,12 @@ states: [NV]
 data_source_type: unavailable
 requires_auth: true
 
-# Custom portal requiring authentication
-service_url: null
-layer_index: null
+# DRP Portal: https://drp.nvenergy.com/ (account created 2026-03-01)
+# MapServer: https://services.nvenergy.com/GISSvc/1.0/retrieveMapInfoDRP/arcgis/rest/services/DRP/DRP_WebApp/MapServer
+# Layer 22: Sections HCA GHC - Generation Hosting Capacity (polyline)
+#   Fields: SYN_FEEDER_ID, SYN_SUB_NAME, FDR_VLT, GHC, LHC, DER, GHC_LF, LHC_LF, BANK_NAME, DRP_YEAR
+# Layer 18: Substations (378 points)
+# Layer 49: Feeders
+# BLOCKED: Enterprise SSL cert + session auth from portal required. Needs custom adapter.
+service_url: "https://services.nvenergy.com/GISSvc/1.0/retrieveMapInfoDRP/arcgis/rest/services/DRP/DRP_WebApp/MapServer"
+layer_index: 22

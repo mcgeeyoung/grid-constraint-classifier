@@ -1,7 +1,7 @@
 utility_code: avista
 utility_name: "Avista Corporation"
 parent_company: null
-iso_id: null
+iso_id: null  # Not in an RTO; Avista balancing authority
 states: [WA, ID, OR]
 data_source_type: arcgis_feature
 requires_auth: false
