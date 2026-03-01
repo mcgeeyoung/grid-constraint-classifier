@@ -30,6 +30,7 @@ from .interconnection_queue import InterconnectionQueue
 from .docket_watchlist import DocketWatch
 from .data_coverage import DataCoverage
 from .monitor_event import MonitorEvent
+from .extraction_review import ExtractionReview
 from .gpkg import GPKGPowerLine, GPKGSubstation, GPKGPowerPlant
 
 __all__ = [
@@ -69,6 +70,7 @@ __all__ = [
     "DocketWatch",
     "DataCoverage",
     "MonitorEvent",
+    "ExtractionReview",
     "GPKGPowerLine",
     "GPKGSubstation",
     "GPKGPowerPlant",

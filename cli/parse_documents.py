@@ -50,6 +50,10 @@ def main():
     parser.add_argument("--max-pages", type=int, help="Max PDF pages to process")
     parser.add_argument("--triage-only", action="store_true", help="Only classify, don't parse")
     parser.add_argument("--save-to-db", action="store_true", help="Save extractions to database")
+    parser.add_argument(
+        "--queue-review", action="store_true",
+        help="Queue low-confidence extractions for human review instead of skipping",
+    )
     parser.add_argument("--output-json", type=Path, help="Save results to JSON file")
 
     args = parser.parse_args()
@@ -97,7 +101,7 @@ def main():
         _save_json(results, args.output_json)
 
     if args.save_to_db and any(r.has_extractions for r in results):
-        _save_to_db(results, args.utility)
+        _save_to_db(results, args.utility, queue_review=args.queue_review)
 
 
 def _triage_only(file_path: Path, filing_type: str = None) -> DocumentParseResult:
@@ -244,10 +248,20 @@ def _save_json(results: list[DocumentParseResult], output_path: Path):
     logger.info(f"Results saved to {output_path}")
 
 
-def _save_to_db(results: list[DocumentParseResult], utility_name: str = None):
-    """Save LLM extractions to the database as structured records."""
+def _save_to_db(
+    results: list[DocumentParseResult],
+    utility_name: str = None,
+    queue_review: bool = False,
+):
+    """Save LLM extractions to the database as structured records.
+
+    High/medium confidence extractions go directly to production tables.
+    Low/unverified confidence extractions are queued for review when
+    --queue-review is set, otherwise skipped.
+    """
     from app.database import SessionLocal
     from app.models import GridConstraint, LoadForecast, ResourceNeed, Utility
+    from app.models.extraction_review import ExtractionReview
 
     session = SessionLocal()
     try:
@@ -261,10 +275,41 @@ def _save_to_db(results: list[DocumentParseResult], utility_name: str = None):
             )
 
         saved = 0
+        queued = 0
         for result in results:
             for ext in result.extractions:
-                if ext.confidence.value == "low":
-                    logger.info(f"Skipping low-confidence {ext.extraction_type.value}")
+                needs_review = ext.confidence.value in ("low", "unverified")
+
+                if needs_review and queue_review:
+                    # Queue for human review
+                    review_item = ExtractionReview(
+                        utility_id=utility.id if utility else None,
+                        extraction_type=ext.extraction_type.value,
+                        extracted_data=ext.data,
+                        confidence=ext.confidence.value,
+                        source_file=result.file_path,
+                        raw_text_snippet=(
+                            ext.raw_text_snippet[:2000]
+                            if ext.raw_text_snippet else None
+                        ),
+                        source_page=ext.source_page,
+                        llm_model=ext.llm_model,
+                        extraction_notes=ext.notes,
+                        review_status="pending",
+                    )
+                    session.add(review_item)
+                    queued += 1
+                    logger.info(
+                        f"Queued {ext.extraction_type.value} for review "
+                        f"(confidence={ext.confidence.value})"
+                    )
+                    continue
+
+                if needs_review:
+                    logger.info(
+                        f"Skipping low-confidence {ext.extraction_type.value} "
+                        f"(use --queue-review to queue for human review)"
+                    )
                     continue
 
                 try:
@@ -273,7 +318,7 @@ def _save_to_db(results: list[DocumentParseResult], utility_name: str = None):
                     logger.warning(f"Failed to save {ext.extraction_type.value}: {e}")
 
         session.commit()
-        logger.info(f"Saved {saved} records to DB")
+        logger.info(f"Saved {saved} records to DB, queued {queued} for review")
 
     except Exception as e:
         session.rollback()

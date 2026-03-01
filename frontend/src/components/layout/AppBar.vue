@@ -36,6 +36,12 @@
 
     <template v-slot:append>
       <ISOSelector />
+      <v-btn icon to="/review" title="Review Queue">
+        <v-icon>mdi-clipboard-check-outline</v-icon>
+      </v-btn>
+      <v-btn icon to="/congestion" title="Import Congestion">
+        <v-icon>mdi-transmission-tower-import</v-icon>
+      </v-btn>
       <v-btn icon to="/overview" title="Overview">
         <v-icon>mdi-view-dashboard</v-icon>
       </v-btn>

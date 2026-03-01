@@ -25,6 +25,7 @@ from app.api.v1.hosting_capacity_routes import router as hc_router
 from app.api.v1.congestion_routes import router as congestion_router
 from app.api.v1.monitor_routes import router as monitor_router
 from app.api.v1.gpkg_routes import router as gpkg_router
+from app.api.v1.review_routes import router as review_router
 from app.spatial_sync import register_spatial_sync
 
 app = FastAPI(
@@ -64,6 +65,7 @@ app.include_router(hc_router)
 app.include_router(congestion_router)
 app.include_router(monitor_router)
 app.include_router(gpkg_router)
+app.include_router(review_router)
 
 
 @app.get("/health")
