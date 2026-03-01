@@ -18,6 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # Override DATABASE_URL before any app imports
 os.environ["DATABASE_URL"] = "sqlite://"
+# Point Redis to a non-existent port so caching is disabled during tests
+os.environ["REDIS_URL"] = "redis://localhost:16379/0"
 
 import pandas as pd
 from sqlalchemy import create_engine, String, event

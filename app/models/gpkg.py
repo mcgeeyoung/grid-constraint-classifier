@@ -44,7 +44,7 @@ class GPKGPowerLine(Base):
     disused: Mapped[Optional[bool]] = mapped_column(Boolean)
     frequency: Mapped[Optional[str]] = mapped_column(String(50))
     start_date: Mapped[Optional[str]] = mapped_column(String(50))
-    geom = mapped_column(Geometry("LINESTRING", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("LINESTRING", srid=4326), nullable=True, deferred=True)
 
     def __repr__(self) -> str:
         return f"<GPKGPowerLine(id={self.id}, name={self.name!r}, {self.max_voltage_kv}kV)>"
@@ -79,7 +79,7 @@ class GPKGSubstation(Base):
     start_date: Mapped[Optional[str]] = mapped_column(String(50))
     centroid_lat: Mapped[Optional[float]] = mapped_column(Float)
     centroid_lon: Mapped[Optional[float]] = mapped_column(Float)
-    geom = mapped_column(Geometry("GEOMETRY", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("GEOMETRY", srid=4326), nullable=True, deferred=True)
 
     def __repr__(self) -> str:
         return f"<GPKGSubstation(id={self.id}, name={self.name!r}, type={self.substation_type!r})>"
@@ -112,7 +112,7 @@ class GPKGPowerPlant(Base):
     start_date: Mapped[Optional[str]] = mapped_column(String(50))
     centroid_lat: Mapped[Optional[float]] = mapped_column(Float)
     centroid_lon: Mapped[Optional[float]] = mapped_column(Float)
-    geom = mapped_column(Geometry("GEOMETRY", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("GEOMETRY", srid=4326), nullable=True, deferred=True)
 
     def __repr__(self) -> str:
         return f"<GPKGPowerPlant(id={self.id}, name={self.name!r}, source={self.source!r}, {self.output_mw}MW)>"

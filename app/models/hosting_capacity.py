@@ -94,7 +94,7 @@ class HostingCapacityRecord(Base):
     # Geometry
     centroid_lat: Mapped[Optional[float]] = mapped_column(Float)
     centroid_lon: Mapped[Optional[float]] = mapped_column(Float)
-    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True, deferred=True)
     geometry_json: Mapped[Optional[dict]] = mapped_column(JSON)
 
     # Provenance

@@ -28,7 +28,7 @@ class DataCenter(Base):
     capacity_mw: Mapped[Optional[float]] = mapped_column(Float)
     lat: Mapped[Optional[float]] = mapped_column(Float)
     lon: Mapped[Optional[float]] = mapped_column(Float)
-    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True, deferred=True)
     state_code: Mapped[Optional[str]] = mapped_column(String(5))
     county: Mapped[Optional[str]] = mapped_column(String(100))
     operator: Mapped[Optional[str]] = mapped_column(String(200))

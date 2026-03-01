@@ -27,7 +27,7 @@ class GridConstraint(Base):
     constraint_type: Mapped[str] = mapped_column(String(50), nullable=False)
     location_type: Mapped[Optional[str]] = mapped_column(String(50))
     location_name: Mapped[Optional[str]] = mapped_column(String(300))
-    location_geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
+    location_geom = mapped_column(Geometry("POINT", srid=4326), nullable=True, deferred=True)
 
     current_capacity_mw: Mapped[Optional[float]] = mapped_column(Float)
     forecasted_load_mw: Mapped[Optional[float]] = mapped_column(Float)

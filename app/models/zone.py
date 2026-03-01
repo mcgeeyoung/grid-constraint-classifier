@@ -24,7 +24,7 @@ class Zone(Base):
     centroid_lon: Mapped[Optional[float]] = mapped_column(Float)
     states: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
     boundary_geojson: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    boundary_geom = mapped_column(Geometry("MULTIPOLYGON", srid=4326), nullable=True)
+    boundary_geom = mapped_column(Geometry("MULTIPOLYGON", srid=4326), nullable=True, deferred=True)
 
     # Relationships
     iso: Mapped["ISO"] = relationship(back_populates="zones")

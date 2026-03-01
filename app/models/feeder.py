@@ -23,7 +23,7 @@ class Feeder(Base):
     peak_loading_pct: Mapped[Optional[float]] = mapped_column(Float)
     voltage_kv: Mapped[Optional[float]] = mapped_column(Float)
     geometry_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    geom = mapped_column(Geometry("LINESTRING", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("LINESTRING", srid=4326), nullable=True, deferred=True)
 
     # Relationships
     substation: Mapped["Substation"] = relationship(back_populates="feeders")

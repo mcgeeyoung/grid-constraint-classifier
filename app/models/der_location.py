@@ -31,7 +31,7 @@ class DERLocation(Base):
     capacity_mw: Mapped[float] = mapped_column(Float, nullable=False)
     lat: Mapped[Optional[float]] = mapped_column(Float)
     lon: Mapped[Optional[float]] = mapped_column(Float)
-    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True, deferred=True)
     wattcarbon_asset_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     source: Mapped[str] = mapped_column(String(30), nullable=False, default="hypothetical")
 

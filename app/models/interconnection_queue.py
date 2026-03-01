@@ -38,7 +38,7 @@ class InterconnectionQueue(Base):
     state: Mapped[Optional[str]] = mapped_column(String(2))
     county: Mapped[Optional[str]] = mapped_column(String(100))
     point_of_interconnection: Mapped[Optional[str]] = mapped_column(String(300))
-    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True, deferred=True)
     latitude: Mapped[Optional[float]] = mapped_column(Float)
     longitude: Mapped[Optional[float]] = mapped_column(Float)
 

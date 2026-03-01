@@ -25,7 +25,7 @@ class Pnode(Base):
     node_name: Mapped[Optional[str]] = mapped_column(String(100))
     lat: Mapped[Optional[float]] = mapped_column(Float)
     lon: Mapped[Optional[float]] = mapped_column(Float)
-    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("POINT", srid=4326), nullable=True, deferred=True)
 
     # Relationships
     iso: Mapped["ISO"] = relationship(back_populates="pnodes")

@@ -25,7 +25,7 @@ class TransmissionLine(Base):
     sub_2: Mapped[Optional[str]] = mapped_column(String(200))
     shape_length: Mapped[Optional[float]] = mapped_column(Float)
     geometry_json: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-    geom = mapped_column(Geometry("MULTILINESTRING", srid=4326), nullable=True)
+    geom = mapped_column(Geometry("MULTILINESTRING", srid=4326), nullable=True, deferred=True)
 
     # Relationships
     iso: Mapped["ISO"] = relationship(back_populates="transmission_lines")

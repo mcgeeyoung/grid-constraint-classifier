@@ -52,7 +52,11 @@ app.add_middleware(
 )
 
 # Register PostGIS geometry sync (lat/lon -> geom on insert/update)
-register_spatial_sync()
+# Skip gracefully when PostGIS extension is not available
+try:
+    register_spatial_sync()
+except Exception:
+    pass
 
 # Include API routes
 app.include_router(v1_router)
