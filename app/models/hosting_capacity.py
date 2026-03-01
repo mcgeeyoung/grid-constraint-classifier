@@ -37,6 +37,7 @@ class HCIngestionRun(Base):
     records_written: Mapped[Optional[int]] = mapped_column(Integer)
     error_message: Mapped[Optional[str]] = mapped_column(String(1000))
     source_url: Mapped[Optional[str]] = mapped_column(String(500))
+    source_hash: Mapped[Optional[str]] = mapped_column(String(64))  # SHA-256 of cached parquet
 
     # Relationships
     utility: Mapped["Utility"] = relationship(back_populates="ingestion_runs")

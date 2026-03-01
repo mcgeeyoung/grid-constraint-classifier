@@ -67,6 +67,19 @@ class HostingCapacityWriter:
             logger.info(f"Created utility record: {config.utility_code}")
         return util
 
+    def get_last_hash(self, utility_id: int) -> Optional[str]:
+        """Return source_hash from the latest completed ingestion run for this utility."""
+        run = (
+            self.db.query(HCIngestionRun)
+            .filter(
+                HCIngestionRun.utility_id == utility_id,
+                HCIngestionRun.status == "completed",
+            )
+            .order_by(HCIngestionRun.completed_at.desc())
+            .first()
+        )
+        return run.source_hash if run else None
+
     def start_run(self, utility: Utility, source_url: str) -> HCIngestionRun:
         """Create an ingestion run record."""
         run = HCIngestionRun(
@@ -85,64 +98,60 @@ class HostingCapacityWriter:
         df: pd.DataFrame,
         utility: Utility,
         run: HCIngestionRun,
-        batch_size: int = 2000,
+        batch_size: int = 5000,
     ) -> int:
-        """Batch-insert hosting capacity records.
+        """Batch-insert hosting capacity records using SQLAlchemy Core.
 
         Uses latest-wins strategy: clears previous records for this utility
-        before inserting the new batch.
+        before inserting the new batch. Core insert avoids ORM object
+        instantiation overhead for 2M+ records.
         """
-        # Clear previous records for this utility (latest-wins)
-        deleted = (
-            self.db.query(HostingCapacityRecord)
-            .filter(
-                HostingCapacityRecord.utility_id == utility.id,
-                HostingCapacityRecord.ingestion_run_id != run.id,
+        table = HostingCapacityRecord.__table__
+
+        # Clear previous records for this utility (latest-wins) via Core
+        result = self.db.execute(
+            table.delete().where(
+                table.c.utility_id == utility.id,
+                table.c.ingestion_run_id != run.id,
             )
-            .delete()
         )
-        if deleted:
-            logger.info(f"Cleared {deleted} previous HC records for {utility.utility_code}")
+        if result.rowcount:
+            logger.info(f"Cleared {result.rowcount} previous HC records for {utility.utility_code}")
         self.db.commit()
 
-        count = 0
-        batch: list[HostingCapacityRecord] = []
-
+        # Build record dicts from DataFrame
+        records = []
         for _, row in df.iterrows():
-            record = HostingCapacityRecord(
-                utility_id=utility.id,
-                ingestion_run_id=run.id,
-                feeder_id_external=row["feeder_id_external"],
-                feeder_name=_safe_str(row.get("feeder_name")),
-                substation_name=_safe_str(row.get("substation_name")),
-                hosting_capacity_mw=_safe_float(row.get("hosting_capacity_mw")),
-                hosting_capacity_min_mw=_safe_float(row.get("hosting_capacity_min_mw")),
-                hosting_capacity_max_mw=_safe_float(row.get("hosting_capacity_max_mw")),
-                installed_dg_mw=_safe_float(row.get("installed_dg_mw")),
-                queued_dg_mw=_safe_float(row.get("queued_dg_mw")),
-                remaining_capacity_mw=_safe_float(row.get("remaining_capacity_mw")),
-                constraining_metric=row.get("constraining_metric"),
-                voltage_kv=_safe_float(row.get("voltage_kv")),
-                phase_config=row.get("phase_config"),
-                is_overhead=_safe_bool(row.get("is_overhead")),
-                is_network=_safe_bool(row.get("is_network")),
-                centroid_lat=_safe_float(row.get("centroid_lat")),
-                centroid_lon=_safe_float(row.get("centroid_lon")),
-                geometry_json=row.get("geometry_json"),
-                raw_attributes=row.get("raw_attributes"),
-            )
-            batch.append(record)
-            count += 1
+            records.append({
+                "utility_id": utility.id,
+                "ingestion_run_id": run.id,
+                "feeder_id_external": row["feeder_id_external"],
+                "feeder_name": _safe_str(row.get("feeder_name")),
+                "substation_name": _safe_str(row.get("substation_name")),
+                "hosting_capacity_mw": _safe_float(row.get("hosting_capacity_mw")),
+                "hosting_capacity_min_mw": _safe_float(row.get("hosting_capacity_min_mw")),
+                "hosting_capacity_max_mw": _safe_float(row.get("hosting_capacity_max_mw")),
+                "installed_dg_mw": _safe_float(row.get("installed_dg_mw")),
+                "queued_dg_mw": _safe_float(row.get("queued_dg_mw")),
+                "remaining_capacity_mw": _safe_float(row.get("remaining_capacity_mw")),
+                "constraining_metric": row.get("constraining_metric"),
+                "voltage_kv": _safe_float(row.get("voltage_kv")),
+                "phase_config": row.get("phase_config"),
+                "is_overhead": _safe_bool(row.get("is_overhead")),
+                "is_network": _safe_bool(row.get("is_network")),
+                "centroid_lat": _safe_float(row.get("centroid_lat")),
+                "centroid_lon": _safe_float(row.get("centroid_lon")),
+                "geometry_json": row.get("geometry_json"),
+                "raw_attributes": row.get("raw_attributes"),
+            })
 
-            if len(batch) >= batch_size:
-                self.db.bulk_save_objects(batch)
-                self.db.commit()
-                logger.debug(f"  Wrote batch of {len(batch)} records")
-                batch = []
-
-        if batch:
-            self.db.bulk_save_objects(batch)
+        # Batch insert using Core (no ORM object instantiation)
+        count = len(records)
+        for i in range(0, count, batch_size):
+            batch = records[i:i + batch_size]
+            self.db.execute(table.insert(), batch)
             self.db.commit()
+            logger.debug(f"  Wrote batch of {len(batch)} records ({i + len(batch)}/{count})")
 
         run.records_written = count
         utility.last_ingested_at = datetime.now(timezone.utc)

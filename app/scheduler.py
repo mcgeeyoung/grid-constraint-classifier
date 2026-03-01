@@ -399,43 +399,78 @@ def job_hc_refresh():
         configs_dir = Path(__file__).resolve().parent.parent / "adapters" / "hosting_capacity" / "configs"
         utilities = list_hc_utilities()
 
-        # Skip unavailable utilities
+        # Skip unavailable or explicitly disabled utilities
         available = []
         for code in utilities:
             cfg = UtilityHCConfig.from_yaml(configs_dir / f"{code}.yaml")
-            if cfg.data_source_type != "unavailable":
+            if cfg.data_source_type != "unavailable" and not cfg.skip:
                 available.append(code)
+            elif cfg.skip:
+                logger.info(f"  {code}: skipped (disabled in config)")
 
-        for code in available:
-            checked += 1
-            try:
-                adapter = get_hc_adapter(code)
-                df = adapter.pull_hosting_capacity(force=False)
+        import hashlib
+        from concurrent.futures import ThreadPoolExecutor, as_completed
 
-                if df.empty:
-                    continue
+        def _fetch_one(code):
+            """Fetch HC data for one utility (thread-safe, no DB access)."""
+            adapter = get_hc_adapter(code)
+            df = adapter.pull_hosting_capacity(force=False)
+            source_hash = None
+            if not df.empty:
+                cache_path = adapter.get_cache_path()
+                if cache_path.exists():
+                    source_hash = hashlib.sha256(cache_path.read_bytes()).hexdigest()
+            return code, df, adapter, source_hash
 
-                writer = HostingCapacityWriter()
+        # Phase 1: Parallel fetch (I/O-bound, no DB access)
+        fetch_results = {}
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            futures = {pool.submit(_fetch_one, code): code for code in available}
+            for future in as_completed(futures):
+                code = futures[future]
                 try:
-                    utility = writer.ensure_utility(adapter.config)
-                    run = writer.start_run(utility, adapter.resolve_current_url())
-                    run.records_fetched = len(df)
-                    count = writer.write_records(df, utility, run)
-                    writer.compute_summary(utility)
-                    writer.complete_run(run)
-                    updated += count
-                    logger.info(f"  {code}: {count} records")
+                    code, df, adapter, source_hash = future.result()
+                    fetch_results[code] = (df, adapter, source_hash)
                 except Exception as e:
-                    errors.append(f"{code}: {e}")
-                    logger.warning(f"  {code} write failed: {e}")
-                finally:
-                    writer.close()
+                    errors.append(f"{code}: fetch failed: {e}")
+                    logger.warning(f"  {code} fetch failed: {e}")
 
+        # Phase 2: Sequential write (DB contention-free)
+        for code in available:
+            if code not in fetch_results:
+                continue
+            df, adapter, source_hash = fetch_results[code]
+            checked += 1
+
+            if df.empty:
+                logger.info(f"  {code}: empty, skipping")
+                continue
+
+            writer = HostingCapacityWriter()
+            try:
+                utility = writer.ensure_utility(adapter.config)
+
+                # Hash check: skip write if data unchanged
+                if source_hash:
+                    last_hash = writer.get_last_hash(utility.id)
+                    if last_hash == source_hash:
+                        logger.info(f"  {code}: unchanged (hash match), skipping write")
+                        continue
+
+                run = writer.start_run(utility, adapter.resolve_current_url())
+                run.records_fetched = len(df)
+                if source_hash:
+                    run.source_hash = source_hash
+                count = writer.write_records(df, utility, run)
+                writer.compute_summary(utility)
+                writer.complete_run(run)
+                updated += count
+                logger.info(f"  {code}: {count} records")
             except Exception as e:
                 errors.append(f"{code}: {e}")
-                logger.warning(f"  {code} failed: {e}")
-
-            time.sleep(1)  # Rate limit between utilities
+                logger.warning(f"  {code} write failed: {e}")
+            finally:
+                writer.close()
 
     except ImportError as e:
         errors.append(f"Import error: {e}")

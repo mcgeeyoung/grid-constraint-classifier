@@ -49,6 +49,9 @@ class UtilityHCConfig:
     url_discovery_method: str = "static"  # static, quarterly_name, service_catalog
     url_pattern: Optional[str] = None
 
+    # Skip flag for broken/disabled endpoints
+    skip: bool = False
+
     @classmethod
     def from_yaml(cls, yaml_path: Path) -> "UtilityHCConfig":
         """Load config from a YAML file."""

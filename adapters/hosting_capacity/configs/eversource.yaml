@@ -5,6 +5,7 @@ iso_id: isone
 states: [CT, MA, NH]
 data_source_type: arcgis_map
 requires_auth: false
+skip: true  # Server unresponsive, times out after 6 min with 0 records
 
 # Self-hosted MapServer (response times can be slow)
 # DG_Hosting/GenerationCapacityExternalMapProd
