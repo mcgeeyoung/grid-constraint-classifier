@@ -36,10 +36,11 @@ export async function getDERGridScores(
   lat: number,
   lon: number,
   derType: string,
+  isoCode?: string,
 ): Promise<DERGridScores> {
-  const { data } = await client.get<DERGridScores>('/profiles/der-grid-scores', {
-    params: { lat, lon, der_type: derType },
-  })
+  const params: Record<string, any> = { lat, lon, der_type: derType }
+  if (isoCode) params.iso_code = isoCode
+  const { data } = await client.get<DERGridScores>('/profiles/der-grid-scores', { params })
   return data
 }
 

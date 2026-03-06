@@ -285,6 +285,7 @@ async def get_der_grid_scores(
     lat: float = Query(...),
     lon: float = Query(...),
     der_type: str = Query("solar"),
+    iso_code: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
     """DER profile analysis at a location across all grid hierarchy levels.
@@ -322,9 +323,15 @@ async def get_der_grid_scores(
         if nearest_sub.iso_id:
             iso_obj = db.query(ISO).get(nearest_sub.iso_id)
 
-    # If no substation found, try to resolve ISO from zones
+    # If no substation found, use the iso_code hint from the frontend
+    if not iso_obj and iso_code:
+        iso_obj = db.query(ISO).filter(
+            func.lower(ISO.iso_code) == iso_code.lower()
+        ).first()
+
+    # Last resort fallback
     if not iso_obj:
-        iso_obj = db.query(ISO).first()  # fallback
+        iso_obj = db.query(ISO).filter(ISO.is_rto == True).first()
 
     # Get latest pipeline run for this ISO
     pipeline_run = None

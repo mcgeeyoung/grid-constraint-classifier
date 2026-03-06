@@ -214,12 +214,13 @@ export const useEnrichmentStore = defineStore('enrichment', () => {
   }
 
   // ---- DER Viewer Actions ----
-  async function loadDERGridScores(lat: number, lon: number, derType: string) {
+  async function loadDERGridScores(lat: number, lon: number, derType: string, isoCode?: string) {
     isDERViewerLoading.value = true
     derViewerError.value = null
     selectedViewerDERType.value = derType
     try {
-      derGridScores.value = await getDERGridScores(lat, lon, derType)
+      const iso = isoCode ?? selectionStore.selectedISO ?? undefined
+      derGridScores.value = await getDERGridScores(lat, lon, derType, iso)
     } catch (err: any) {
       derGridScores.value = null
       const status = err?.response?.status
