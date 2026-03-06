@@ -19,6 +19,7 @@ from app.schemas.hosting_capacity_schemas import (
     HCSummaryResponse,
     HCIngestionRunResponse,
     HCNearbyResponse,
+    HCProfileResponse,
 )
 
 router = APIRouter(prefix="/api/v1")
@@ -31,10 +32,10 @@ router = APIRouter(prefix="/api/v1")
 @router.get("/utilities", response_model=list[UtilityResponse])
 @cache_response("hc-utilities", ttl=3600)
 def list_utilities(request: Request = None, db: Session = Depends(get_db)):
-    """List all utilities with summary stats."""
+    """List utilities that have hosting capacity data."""
     rows = (
         db.query(Utility, HostingCapacitySummary, ISO)
-        .outerjoin(
+        .join(
             HostingCapacitySummary,
             Utility.id == HostingCapacitySummary.utility_id,
         )
@@ -272,6 +273,130 @@ def list_ingestion_runs(
         )
         for r in runs
     ]
+
+
+# ------------------------------------------------------------------
+# 12x24 HC Availability Profile
+# ------------------------------------------------------------------
+
+@router.get(
+    "/utilities/{code}/hosting-capacity/profile-12x24",
+    response_model=HCProfileResponse,
+)
+@cache_response("hc-profile", ttl=3600)
+def hosting_capacity_profile_12x24(
+    code: str,
+    year: int = Query(default=2024, ge=2020, le=2030),
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
+    """Estimated 12x24 HC availability index based on ISO load shape.
+
+    Computes a normalized load profile from EIA-930 hourly demand data for
+    the utility's parent ISO, inverts it, and returns an availability index
+    (0-100) for each (month, hour). High values = low load = more HC headroom.
+    """
+    import pandas as pd
+    from app.models.congestion import BAHourlyData
+    from sqlalchemy import extract
+
+    util = _get_utility(db, code)
+
+    if not util.iso_id:
+        raise HTTPException(
+            404,
+            f"Utility '{code}' has no associated ISO; cannot compute load profile",
+        )
+
+    iso = db.query(ISO).filter(ISO.id == util.iso_id).first()
+    if not iso:
+        raise HTTPException(404, f"ISO not found for utility '{code}'")
+
+    # Query hourly demand: first try the ISO directly, then aggregate child BAs
+    hourly_q = (
+        db.query(
+            BAHourlyData.timestamp_utc,
+            BAHourlyData.demand_mw,
+        )
+        .filter(
+            BAHourlyData.ba_id == iso.id,
+            extract("year", BAHourlyData.timestamp_utc) == year,
+            BAHourlyData.demand_mw.isnot(None),
+        )
+    )
+    rows = hourly_q.all()
+
+    # If no rows for the ISO itself, try aggregating child BAs
+    if not rows:
+        from sqlalchemy import func
+
+        child_ids = [c.id for c in iso.child_bas] if iso.child_bas else []
+        if not child_ids:
+            raise HTTPException(
+                404,
+                f"No hourly demand data for ISO '{iso.iso_code}' or its child BAs in {year}",
+            )
+
+        rows = (
+            db.query(
+                BAHourlyData.timestamp_utc,
+                func.sum(BAHourlyData.demand_mw).label("demand_mw"),
+            )
+            .filter(
+                BAHourlyData.ba_id.in_(child_ids),
+                extract("year", BAHourlyData.timestamp_utc) == year,
+                BAHourlyData.demand_mw.isnot(None),
+            )
+            .group_by(BAHourlyData.timestamp_utc)
+            .all()
+        )
+
+    if not rows:
+        raise HTTPException(
+            404,
+            f"No hourly demand data available for ISO '{iso.iso_code}' in {year}",
+        )
+
+    # Build DataFrame and compute 12x24 profile
+    df = pd.DataFrame(rows, columns=["timestamp_utc", "demand_mw"])
+
+    # Convert UTC to ISO's local timezone for correct month/hour grouping
+    local_tz = iso.timezone if iso.timezone and iso.timezone != "UTC" else "US/Eastern"
+    df["timestamp_utc"] = pd.to_datetime(df["timestamp_utc"], utc=True)
+    df["local_time"] = df["timestamp_utc"].dt.tz_convert(local_tz)
+    df["month"] = df["local_time"].dt.month
+    df["hour"] = df["local_time"].dt.hour
+
+    pivot = df.groupby(["month", "hour"])["demand_mw"].mean().reset_index()
+    peak_demand = pivot["demand_mw"].max()
+
+    if peak_demand <= 0:
+        raise HTTPException(500, "Peak demand is zero; cannot normalize")
+
+    pivot["normalized_load"] = pivot["demand_mw"] / peak_demand
+    pivot["availability"] = (1 - pivot["normalized_load"]) * 100
+
+    # Build the 12x24 dict: month "1"-"12" → list of 24 hourly values
+    profile: dict[str, list[float]] = {}
+    for month in range(1, 13):
+        month_data = pivot[pivot["month"] == month].sort_values("hour")
+        if len(month_data) == 0:
+            profile[str(month)] = [0.0] * 24
+        else:
+            profile[str(month)] = [round(v, 1) for v in month_data["availability"].tolist()]
+
+    # Find peak availability (lowest load)
+    peak_row = pivot.loc[pivot["availability"].idxmax()]
+
+    return HCProfileResponse(
+        utility_code=util.utility_code,
+        utility_name=util.utility_name,
+        iso_code=iso.iso_code,
+        year=year,
+        profile_12x24=profile,
+        peak_month=int(peak_row["month"]),
+        peak_hour=int(peak_row["hour"]),
+    )
 
 
 # ------------------------------------------------------------------

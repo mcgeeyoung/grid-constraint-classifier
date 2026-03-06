@@ -52,7 +52,8 @@ LAYER_CONFIG = {
         "srid": 4326,
         "attributes": (
             "substation_name, bank_name, facility_rating_mw, "
-            "facility_loading_mw, peak_loading_pct, facility_type"
+            "facility_loading_mw, peak_loading_pct, facility_type, "
+            "lat, lon"
         ),
         "id_col": "id",
         "iso_filter": "direct",

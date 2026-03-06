@@ -1,0 +1,161 @@
+/* ============================================================
+   Grid Dashboard – Dark Mode Design Tokens
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --bg-base: #0d0d14;
+  --bg-surface-1: #14141f;
+  --bg-surface-2: #1c1c2a;
+  --bg-surface-3: #252536;
+
+  /* Glass */
+  --glass-bg: rgba(14, 14, 31, 0.72);
+  --glass-blur: blur(12px);
+
+  /* Text */
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-tertiary: rgba(255, 255, 255, 0.38);
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Accent */
+  --accent-cyan: #22d3ee;
+  --accent-purple: #a78bfa;
+
+  /* Severity */
+  --severity-critical: #ef4444;
+  --severity-elevated: #f59e0b;
+  --severity-moderate: #eab308;
+  --severity-low: #22c55e;
+  --severity-none: #6b7280;
+
+  /* Constraint types */
+  --constraint-congestion: #38bdf8;
+  --constraint-loading: #fb923c;
+  --constraint-capacity: #4ade80;
+  --constraint-import: #c084fc;
+
+  /* Value tiers */
+  --value-premium: #22c55e;
+  --value-high: #4ade80;
+  --value-moderate: #facc15;
+  --value-low: #6b7280;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ============================================================
+   Global Base
+   ============================================================ */
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.dark-card {
+  background: var(--bg-surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.section-header {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.kpi-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.data-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* ============================================================
+   MapLibre Popup Dark Overrides
+   ============================================================ */
+
+.maplibregl-popup-content {
+  background: var(--bg-surface-2) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  padding: 10px 12px !important;
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+}
+
+.maplibregl-popup-close-button {
+  color: var(--text-secondary) !important;
+  font-size: 18px !important;
+}
+
+.maplibregl-popup-close-button:hover {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+}
+
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: var(--bg-surface-2) !important;
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: var(--bg-surface-2) !important;
+}
+.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--bg-surface-2) !important;
+}
+.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--bg-surface-2) !important;
+}
+
+/* ============================================================
+   Scrollbar Dark Style
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.20);
+}

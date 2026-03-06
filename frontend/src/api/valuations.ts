@@ -1,94 +1,71 @@
-import client from './client'
-
-export interface GeoResolution {
-  lat: number
-  lon: number
-  iso_code: string | null
-  zone_code: string | null
-  substation_name: string | null
-  substation_distance_km: number | null
-  nearest_pnode_name: string | null
-  pnode_distance_km: number | null
-  feeder_id: number | null
-  circuit_id: number | null
-  resolution_depth: string
-  confidence: string
-  errors: string[]
-}
-
-export interface ValuationResult {
-  zone_congestion_value: number
-  pnode_multiplier: number
-  substation_loading_value: number
-  feeder_capacity_value: number
-  total_constraint_relief_value: number
-  coincidence_factor: number
-  effective_capacity_mw: number
-  value_per_kw_year: number
-  value_tier: string
-  value_breakdown: Record<string, any>
-  geo_resolution: GeoResolution
-}
-
-export interface DERLocation {
-  id: number
-  iso_code: string | null
-  zone_code: string | null
-  substation_name: string | null
-  der_type: string
-  eac_category: string | null
-  capacity_mw: number
-  lat: number | null
-  lon: number | null
-  source: string
-  wattcarbon_asset_id: string | null
-  resolution_depth?: string | null
-}
+import client, { v1Client } from './client'
+import type {
+  ValueStack,
+  DERComparisonItem,
+  LocationRanking,
+} from '@/types/constraints'
 
 export async function prospectiveValuation(
   lat: number,
   lon: number,
   derType: string,
-  capacityMw: number,
-): Promise<ValuationResult> {
-  const { data } = await client.post<ValuationResult>('/valuations/prospective', {
+  capacityMw?: number,
+): Promise<ValueStack> {
+  const { data } = await client.post<ValueStack>('/valuations/prospective', {
     lat,
     lon,
     der_type: derType,
-    capacity_mw: capacityMw,
+    capacity_mw: capacityMw ?? 1.0,
   })
   return data
 }
 
-export async function geoResolve(lat: number, lon: number): Promise<GeoResolution> {
-  const { data } = await client.get<GeoResolution>('/geo/resolve', {
+export async function compareDERTypes(
+  lat: number,
+  lon: number,
+): Promise<{ geo_resolution: any; comparisons: DERComparisonItem[] }> {
+  const { data } = await client.get('/valuations/compare', {
     params: { lat, lon },
   })
   return data
 }
 
-export async function fetchDERLocations(
-  isoCode?: string | string[],
-  zoneCode?: string,
-  derType?: string,
-): Promise<DERLocation[]> {
-  const params: Record<string, string> = {}
-  if (isoCode) {
-    params.iso_id = Array.isArray(isoCode) ? isoCode.join(',') : isoCode
-  }
-  if (zoneCode) params.zone_code = zoneCode
-  if (derType) params.der_type = derType
-  const { data } = await client.get<DERLocation[]>('/der-locations', { params })
+export async function valueRankings(
+  isoCode: string,
+  derType: string,
+  params?: { limit?: number; offset?: number },
+): Promise<LocationRanking[]> {
+  const { data } = await client.get<LocationRanking[]>('/valuations/rankings', {
+    params: { iso_code: isoCode, der_type: derType, ...params },
+  })
   return data
 }
 
+export interface BatchItem {
+  lat: number
+  lon: number
+  der_type: string
+  capacity_mw?: number
+}
+
+export async function batchValuation(
+  items: BatchItem[],
+  apiKey: string,
+): Promise<any[]> {
+  const { data } = await client.post('/valuations/batch', { items }, {
+    headers: { 'X-API-Key': apiKey },
+  })
+  return data
+}
+
+// Legacy: create DER location (still on v1)
 export async function createDERLocation(
   lat: number,
   lon: number,
   derType: string,
   capacityMw: number,
-): Promise<DERLocation> {
-  const { data } = await client.post<DERLocation>('/der-locations', {
+): Promise<any> {
+  const { data } = await v1Client.post('/der-locations', {
     lat,
     lon,
     der_type: derType,

@@ -19,7 +19,7 @@ from app.schemas.hierarchy_schemas import (
     FeederResponse,
     HierarchyScoreResponse,
 )
-from app.schemas.responses import SubstationLoadshapeHourResponse
+from app.schemas.responses import SubstationLoadshapeHourResponse, SubstationProfile12x24Response
 
 router = APIRouter(prefix="/api/v1")
 
@@ -79,6 +79,32 @@ def list_substations(
         )
         for sub, zone, pnode in results
     ]
+
+
+@router.get("/substations/nearest")
+def find_nearest_substation(
+    lat: float = Query(...),
+    lon: float = Query(...),
+    radius_km: float = Query(1.0, le=10),
+    db: Session = Depends(get_db),
+):
+    """Find the nearest DB substation to a lat/lon within a radius."""
+    deg_offset = radius_km / 111.0
+    subs = (
+        db.query(Substation)
+        .filter(
+            Substation.lat.isnot(None),
+            Substation.lat.between(lat - deg_offset, lat + deg_offset),
+            Substation.lon.between(lon - deg_offset, lon + deg_offset),
+        )
+        .all()
+    )
+    if not subs:
+        return None
+
+    # Find closest by Euclidean distance (good enough at this scale)
+    best = min(subs, key=lambda s: (s.lat - lat) ** 2 + (s.lon - lon) ** 2)
+    return {"id": best.id, "substation_name": best.substation_name}
 
 
 @router.get("/substations/{substation_id}", response_model=SubstationDetailResponse)
@@ -184,6 +210,59 @@ def get_substation_loadshape(
         )
         for row in rows
     ]
+
+
+@router.get("/substations/{substation_id}/profile-12x24", response_model=SubstationProfile12x24Response)
+def get_substation_profile_12x24(
+    substation_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get 12x24 load profile for a substation.
+
+    Returns a dict with keys "1"-"12" (months), each a list of 24 hourly values
+    representing average high load in kW.
+    """
+    sub = db.query(Substation).get(substation_id)
+    if not sub:
+        raise HTTPException(404, f"Substation {substation_id} not found")
+
+    rows = (
+        db.query(
+            SubstationLoadProfile.month,
+            SubstationLoadProfile.hour,
+            func.avg(SubstationLoadProfile.load_high_kw).label("avg_high"),
+        )
+        .filter(SubstationLoadProfile.substation_id == substation_id)
+        .group_by(SubstationLoadProfile.month, SubstationLoadProfile.hour)
+        .order_by(SubstationLoadProfile.month, SubstationLoadProfile.hour)
+        .all()
+    )
+
+    if not rows:
+        raise HTTPException(404, f"No load profile data for substation {substation_id}")
+
+    profile: dict[str, list[float]] = {}
+    for m in range(1, 13):
+        profile[str(m)] = [0.0] * 24
+
+    peak_val = 0.0
+    peak_month = 1
+    peak_hour = 0
+    for row in rows:
+        val = float(row.avg_high or 0)
+        profile[str(row.month)][row.hour] = val
+        if val > peak_val:
+            peak_val = val
+            peak_month = row.month
+            peak_hour = row.hour
+
+    return SubstationProfile12x24Response(
+        substation_id=substation_id,
+        substation_name=sub.substation_name,
+        profile_12x24=profile,
+        peak_month=peak_month,
+        peak_hour=peak_hour,
+    )
 
 
 @router.get("/hierarchy-scores", response_model=list[HierarchyScoreResponse])

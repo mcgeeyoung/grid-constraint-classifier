@@ -1,50 +1,24 @@
 """Import Congestion pipeline models.
 
-Four tables supporting the congestion analysis workflow:
-- BalancingAuthority: reference table for ~61 US non-RTO BAs
+Three tables supporting the congestion analysis workflow:
 - InterfaceLMP: raw hourly LMP at RTO interface/scheduling points
-- BAHourlyData: hourly EIA-930 operational data per BA
-- CongestionScore: computed congestion metrics per BA per period
+- BAHourlyData: hourly EIA-930 operational data per BA (FK to isos table)
+- CongestionScore: computed congestion metrics per BA per period (FK to isos table)
+
+Note: BalancingAuthority has been merged into the ISO table. BA records are
+ISO rows with ba_code set and is_rto=False.
 """
 
 from typing import Optional
 from datetime import date, datetime
 
 from sqlalchemy import (
-    String, Float, Integer, Boolean, Date, DateTime, JSON,
+    String, Float, Integer, Date, DateTime, JSON,
     ForeignKey, Index, BigInteger,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
-
-
-class BalancingAuthority(Base):
-    """Reference table: all US non-RTO balancing authorities with interface mappings."""
-
-    __tablename__ = "balancing_authorities"
-    __table_args__ = (
-        Index("ix_ba_code", "ba_code", unique=True),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    ba_code: Mapped[str] = mapped_column(String(10), unique=True, nullable=False)
-    ba_name: Mapped[Optional[str]] = mapped_column(String(200))
-    region: Mapped[Optional[str]] = mapped_column(String(50))
-    interconnection: Mapped[Optional[str]] = mapped_column(String(20))
-    is_rto: Mapped[bool] = mapped_column(Boolean, default=False)
-    rto_neighbor: Mapped[Optional[str]] = mapped_column(String(10))
-    rto_neighbor_secondary: Mapped[Optional[str]] = mapped_column(String(10))
-    interface_points: Mapped[Optional[dict]] = mapped_column(JSON)
-    latitude: Mapped[Optional[float]] = mapped_column(Float)
-    longitude: Mapped[Optional[float]] = mapped_column(Float)
-    transfer_limit_mw: Mapped[Optional[float]] = mapped_column(Float)
-    transfer_limit_method: Mapped[Optional[str]] = mapped_column(String(20))
-    ba_extra: Mapped[Optional[dict]] = mapped_column(JSON)
-
-    # Relationships
-    hourly_data: Mapped[list["BAHourlyData"]] = relationship(back_populates="ba")
-    congestion_scores: Mapped[list["CongestionScore"]] = relationship(back_populates="ba")
 
 
 class InterfaceLMP(Base):
@@ -74,6 +48,7 @@ class InterfaceLMP(Base):
 class BAHourlyData(Base):
     """Hourly operational data per BA from EIA-930.
 
+    FK points to isos table (BA records have ba_code set, is_rto=False).
     LMP data is NOT stored here. Join to InterfaceLMP via the BA's
     interface_points mapping + timestamp for economic analysis.
     """
@@ -85,14 +60,14 @@ class BAHourlyData(Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    ba_id: Mapped[int] = mapped_column(ForeignKey("balancing_authorities.id"), nullable=False)
+    ba_id: Mapped[int] = mapped_column(ForeignKey("isos.id"), nullable=False)
     timestamp_utc: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     demand_mw: Mapped[Optional[float]] = mapped_column(Float)
     net_generation_mw: Mapped[Optional[float]] = mapped_column(Float)
     total_interchange_mw: Mapped[Optional[float]] = mapped_column(Float)
     net_imports_mw: Mapped[Optional[float]] = mapped_column(Float)
 
-    ba: Mapped["BalancingAuthority"] = relationship(back_populates="hourly_data")
+    iso: Mapped["ISO"] = relationship(back_populates="ba_hourly_data")
 
 
 class CongestionScore(Base):
@@ -104,7 +79,7 @@ class CongestionScore(Base):
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    ba_id: Mapped[int] = mapped_column(ForeignKey("balancing_authorities.id"), nullable=False)
+    ba_id: Mapped[int] = mapped_column(ForeignKey("isos.id"), nullable=False)
     period_start: Mapped[date] = mapped_column(Date, nullable=False)
     period_end: Mapped[date] = mapped_column(Date, nullable=False)
     period_type: Mapped[Optional[str]] = mapped_column(String(10))
@@ -131,4 +106,8 @@ class CongestionScore(Base):
     hours_with_lmp_data: Mapped[Optional[int]] = mapped_column(Integer)
     data_quality_flag: Mapped[Optional[str]] = mapped_column(String(20))
 
-    ba: Mapped["BalancingAuthority"] = relationship(back_populates="congestion_scores")
+    iso: Mapped["ISO"] = relationship(back_populates="congestion_scores")
+
+
+# Avoid circular imports
+from .iso import ISO  # noqa: E402

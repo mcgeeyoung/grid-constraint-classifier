@@ -26,6 +26,12 @@ from app.api.v1.congestion_routes import router as congestion_router
 from app.api.v1.monitor_routes import router as monitor_router
 from app.api.v1.gpkg_routes import router as gpkg_router
 from app.api.v1.review_routes import router as review_router
+# New refocused API routes
+from app.api.constraints import router as constraints_router
+from app.api.valuations import router as valuations_router
+from app.api.profiles import router as profiles_router
+from app.api.enrichment import router as enrichment_router
+from app.api.admin import router as admin_router
 from app.spatial_sync import register_spatial_sync
 
 app = FastAPI(
@@ -58,7 +64,14 @@ try:
 except Exception:
     pass
 
-# Include API routes
+# Include new refocused API routes (constraint profiles, valuations, profiles, enrichment)
+app.include_router(constraints_router)
+app.include_router(valuations_router)
+app.include_router(profiles_router)
+app.include_router(enrichment_router)
+app.include_router(admin_router)
+
+# Legacy v1 routes (kept during transition, will be removed after verification)
 app.include_router(v1_router)
 app.include_router(valuation_router)
 app.include_router(hierarchy_router)

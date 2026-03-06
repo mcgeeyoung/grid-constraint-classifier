@@ -1,4 +1,4 @@
-import client from './client'
+import { v1Client as client } from './client'
 
 export interface Substation {
   id: number
@@ -80,6 +80,31 @@ export async function fetchSubstationLoadshape(
   const params: Record<string, number> = {}
   if (month !== undefined) params.month = month
   const { data } = await client.get<SubstationLoadshapeHour[]>(`/substations/${substationId}/loadshape`, { params })
+  return data
+}
+
+export interface SubstationProfile12x24 {
+  substation_id: number
+  substation_name: string | null
+  profile_12x24: Record<string, number[]>
+  peak_month: number
+  peak_hour: number
+}
+
+export async function fetchSubstationProfile(
+  substationId: number,
+): Promise<SubstationProfile12x24> {
+  const { data } = await client.get<SubstationProfile12x24>(
+    `/substations/${substationId}/profile-12x24`,
+  )
+  return data
+}
+
+export async function findNearestSubstation(
+  lat: number,
+  lon: number,
+): Promise<{ id: number; substation_name: string } | null> {
+  const { data } = await client.get('/substations/nearest', { params: { lat, lon } })
   return data
 }
 

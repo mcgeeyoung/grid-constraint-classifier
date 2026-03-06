@@ -1,53 +1,97 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { prospectiveValuation, createDERLocation, type ValuationResult } from '@/api/valuations'
+import {
+  prospectiveValuation,
+  compareDERTypes,
+  valueRankings,
+  createDERLocation,
+} from '@/api/valuations'
+import {
+  getConstraintProfile,
+  getDERProfile,
+  listDERProfiles,
+  getIntersection,
+  zoneLoadshape,
+} from '@/api/profiles'
+import type {
+  ValueStack,
+  DERComparisonItem,
+  LocationRanking,
+  ConstraintProfile,
+  DERProfile,
+  Intersection,
+  LoadshapeHour,
+} from '@/types/constraints'
 
 export interface ComparisonEntry {
   lat: number
   lon: number
   derType: string
-  capacityMw: number
-  result: ValuationResult
+  result: ValueStack
 }
 
-export const useValuationStore = defineStore('valuation', () => {
-  const sitingResult = ref<ValuationResult | null>(null)
-  const isLoading = ref(false)
+export const useValuationStore = defineStore('valuations', () => {
+  const valueStack = ref<ValueStack | null>(null)
+  const derComparison = ref<DERComparisonItem[]>([])
+  const rankings = ref<LocationRanking[]>([])
+  const isComputing = ref(false)
   const error = ref<string | null>(null)
 
-  // Preserve the inputs that produced the current result
-  const lastDerType = ref<string>('solar')
+  // Current inputs
+  const selectedDERType = ref<string>('solar')
   const lastCapacityMw = ref<number>(1.0)
 
-  // Site comparison list (max 10)
+  // Site comparison
   const comparisonList = ref<ComparisonEntry[]>([])
   const selectedComparisonIndex = ref<number | null>(null)
 
-  async function runSitingValuation(
+  async function computeProspective(
     lat: number,
     lon: number,
     derType: string,
-    capacityMw: number,
+    capacityMw = 1.0,
   ) {
-    isLoading.value = true
+    isComputing.value = true
     error.value = null
-    sitingResult.value = null
-    lastDerType.value = derType
+    valueStack.value = null
+    selectedDERType.value = derType
     lastCapacityMw.value = capacityMw
     try {
-      sitingResult.value = await prospectiveValuation(lat, lon, derType, capacityMw)
+      valueStack.value = await prospectiveValuation(lat, lon, derType, capacityMw)
     } catch (e: any) {
       error.value = e.response?.data?.detail || e.message || 'Valuation failed'
     } finally {
-      isLoading.value = false
+      isComputing.value = false
+    }
+  }
+
+  async function loadDERComparison(lat: number, lon: number) {
+    isComputing.value = true
+    try {
+      const result = await compareDERTypes(lat, lon)
+      derComparison.value = result.comparisons
+    } catch {
+      derComparison.value = []
+    } finally {
+      isComputing.value = false
+    }
+  }
+
+  async function loadRankings(isoCode: string, derType: string) {
+    isComputing.value = true
+    try {
+      rankings.value = await valueRankings(isoCode, derType)
+    } catch {
+      rankings.value = []
+    } finally {
+      isComputing.value = false
     }
   }
 
   function addToComparison() {
-    if (!sitingResult.value?.geo_resolution) return
+    if (!valueStack.value?.geo_resolution) return
     if (comparisonList.value.length >= 10) return
-    const geo = sitingResult.value.geo_resolution
-    // Check for duplicate (same lat/lon)
+    const geo = valueStack.value.geo_resolution
     const exists = comparisonList.value.some(
       e => Math.abs(e.lat - geo.lat) < 0.0001 && Math.abs(e.lon - geo.lon) < 0.0001,
     )
@@ -55,9 +99,8 @@ export const useValuationStore = defineStore('valuation', () => {
     comparisonList.value.push({
       lat: geo.lat,
       lon: geo.lon,
-      derType: lastDerType.value,
-      capacityMw: lastCapacityMw.value,
-      result: { ...sitingResult.value },
+      derType: selectedDERType.value,
+      result: { ...valueStack.value },
     })
   }
 
@@ -77,12 +120,12 @@ export const useValuationStore = defineStore('valuation', () => {
 
   function selectComparison(index: number) {
     selectedComparisonIndex.value = index
-    sitingResult.value = comparisonList.value[index].result
+    valueStack.value = comparisonList.value[index].result
   }
 
   function isInComparison(): boolean {
-    if (!sitingResult.value?.geo_resolution) return false
-    const geo = sitingResult.value.geo_resolution
+    if (!valueStack.value?.geo_resolution) return false
+    const geo = valueStack.value.geo_resolution
     return comparisonList.value.some(
       e => Math.abs(e.lat - geo.lat) < 0.0001 && Math.abs(e.lon - geo.lon) < 0.0001,
     )
@@ -103,19 +146,91 @@ export const useValuationStore = defineStore('valuation', () => {
   }
 
   function clear() {
-    sitingResult.value = null
+    valueStack.value = null
     error.value = null
+    derComparison.value = []
+  }
+
+  // ---- Profile state (from profileStore) ----
+  const constraintProfile = ref<ConstraintProfile | null>(null)
+  const derProfile = ref<DERProfile | null>(null)
+  const derProfiles = ref<DERProfile[]>([])
+  const intersection = ref<Intersection | null>(null)
+  const loadshape = ref<LoadshapeHour[]>([])
+  const isProfileLoading = ref(false)
+
+  async function loadConstraintProfile(profileId: number) {
+    isProfileLoading.value = true
+    try {
+      constraintProfile.value = await getConstraintProfile(profileId)
+    } catch {
+      constraintProfile.value = null
+    } finally {
+      isProfileLoading.value = false
+    }
+  }
+
+  async function loadDERProfile(derType: string) {
+    isProfileLoading.value = true
+    try {
+      derProfile.value = await getDERProfile(derType)
+    } catch {
+      derProfile.value = null
+    } finally {
+      isProfileLoading.value = false
+    }
+  }
+
+  async function loadAllDERProfiles() {
+    try {
+      derProfiles.value = await listDERProfiles()
+    } catch {
+      derProfiles.value = []
+    }
+  }
+
+  async function loadIntersection(constraintProfileId: number, derType: string) {
+    isProfileLoading.value = true
+    try {
+      intersection.value = await getIntersection(constraintProfileId, derType)
+    } catch {
+      intersection.value = null
+    } finally {
+      isProfileLoading.value = false
+    }
+  }
+
+  async function loadLoadshape(isoCode: string, zoneCode: string, month?: number) {
+    isProfileLoading.value = true
+    try {
+      loadshape.value = await zoneLoadshape(isoCode, zoneCode, month)
+    } catch {
+      loadshape.value = []
+    } finally {
+      isProfileLoading.value = false
+    }
+  }
+
+  function clearProfiles() {
+    constraintProfile.value = null
+    derProfile.value = null
+    intersection.value = null
+    loadshape.value = []
   }
 
   return {
-    sitingResult,
-    isLoading,
+    valueStack,
+    derComparison,
+    rankings,
+    isComputing,
     error,
-    lastDerType,
+    selectedDERType,
     lastCapacityMw,
     comparisonList,
     selectedComparisonIndex,
-    runSitingValuation,
+    computeProspective,
+    loadDERComparison,
+    loadRankings,
     addToComparison,
     removeFromComparison,
     clearComparison,
@@ -123,5 +238,18 @@ export const useValuationStore = defineStore('valuation', () => {
     isInComparison,
     saveDERLocation,
     clear,
+    // Profile state & actions
+    constraintProfile,
+    derProfile,
+    derProfiles,
+    intersection,
+    loadshape,
+    isProfileLoading,
+    loadConstraintProfile,
+    loadDERProfile,
+    loadAllDERProfiles,
+    loadIntersection,
+    loadLoadshape,
+    clearProfiles,
   }
 })

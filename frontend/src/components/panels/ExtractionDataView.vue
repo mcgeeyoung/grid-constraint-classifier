@@ -141,7 +141,7 @@
 
     <!-- Fallback: raw JSON -->
     <template v-else>
-      <pre class="text-caption pa-2 rounded" style="background: #f5f5f5; overflow-x: auto;">{{ JSON.stringify(data, null, 2) }}</pre>
+      <pre class="text-caption pa-2 rounded" style="background: var(--bg-surface-2); overflow-x: auto;">{{ JSON.stringify(data, null, 2) }}</pre>
     </template>
   </div>
 </template>

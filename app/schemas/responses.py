@@ -102,6 +102,14 @@ class SubstationLoadshapeHourResponse(BaseModel):
     load_high_kw: float
 
 
+class SubstationProfile12x24Response(BaseModel):
+    substation_id: int
+    substation_name: Optional[str] = None
+    profile_12x24: dict[str, list[float]]
+    peak_month: int
+    peak_hour: int
+
+
 class TransmissionLineResponse(BaseModel):
     id: int
     voltage_kv: Optional[int] = None

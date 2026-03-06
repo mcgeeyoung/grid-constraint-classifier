@@ -8,56 +8,69 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import maplibregl, { type ExpressionSpecification } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useMapStore } from '@/stores/mapStore'
-import { useIsoStore, ISO_VIEW } from '@/stores/isoStore'
-import { useHostingCapacityStore } from '@/stores/hostingCapacityStore'
+import { useSelectionStore } from '@/stores/selectionStore'
+import { useGridDataStore, ISO_VIEW } from '@/stores/gridDataStore'
+import { useEnrichmentStore } from '@/stores/enrichmentStore'
+import { allInterconnectionQueue } from '@/api/enrichment'
 import MapLegend from './MapLegend.vue'
 
 const mapStore = useMapStore()
-const isoStore = useIsoStore()
-const hcStore = useHostingCapacityStore()
+const selectionStore = useSelectionStore()
+const gridStore = useGridDataStore()
+const enrichStore = useEnrichmentStore()
 
 const mapContainer = ref<HTMLElement | null>(null)
 let map: maplibregl.Map | null = null
 let skipCenterSync = false
+let bboxMarkers: maplibregl.Marker[] = []
 
 const TILE_BASE = '/api/v1/tiles'
 
 // Data-driven style expressions (cast to avoid MapLibre TS strictness with spread)
 const classificationColor = [
   'match', ['get', 'classification'],
-  'transmission', '#e53935',
-  'generation', '#1e88e5',
-  'both', '#8e24aa',
-  'unconstrained', '#43a047',
-  '#9e9e9e',
+  'transmission', '#ef4444',
+  'generation', '#38bdf8',
+  'both', '#c084fc',
+  'unconstrained', '#4ade80',
+  '#6b7280',
 ] as unknown as ExpressionSpecification
 
 const tierColor = [
   'match', ['coalesce', ['get', 'tier'], 'low'],
-  'critical', '#b71c1c',
-  'severe', '#e53935',
-  'elevated', '#ff9800',
-  'moderate', '#fdd835',
-  'low', '#66bb6a',
-  '#66bb6a',
+  'critical', '#ef4444',
+  'severe', '#f59e0b',
+  'elevated', '#eab308',
+  'moderate', '#facc15',
+  'low', '#22c55e',
+  '#22c55e',
+] as unknown as ExpressionSpecification
+
+const severityColor = [
+  'interpolate', ['linear'],
+  ['coalesce', ['get', 'severity_score'], 0],
+  0.0, '#1a2e1a',
+  0.25, '#3d2a08',
+  0.50, '#f59e0b',
+  0.75, '#ef4444',
 ] as unknown as ExpressionSpecification
 
 const dcStatusColor = [
   'match', ['coalesce', ['get', 'status'], 'operational'],
-  'operational', '#1e88e5',
-  'planned', '#ff9800',
-  'under construction', '#fdd835',
-  'proposed', '#8e24aa',
-  '#757575',
+  'operational', '#38bdf8',
+  'planned', '#fb923c',
+  'under construction', '#facc15',
+  'proposed', '#c084fc',
+  '#6b7280',
 ] as unknown as ExpressionSpecification
 
 const loadingColor = [
   'interpolate', ['linear'],
   ['coalesce', ['get', 'peak_loading_pct'], 0],
-  0, '#43a047',
-  60, '#fdd835',
-  80, '#ff9800',
-  100, '#e53935',
+  0, '#22c55e',
+  60, '#eab308',
+  80, '#f59e0b',
+  100, '#ef4444',
 ] as unknown as ExpressionSpecification
 
 const voltageColor = [
@@ -84,10 +97,10 @@ const voltageWidth = [
 const hcRemainingColor = [
   'interpolate', ['linear'],
   ['coalesce', ['get', 'remaining_capacity_mw'], 0],
-  0, '#e53935',
-  0.5, '#ff9800',
-  2, '#fdd835',
-  5, '#43a047',
+  0, '#ef4444',
+  0.5, '#fb923c',
+  2, '#facc15',
+  5, '#22c55e',
 ] as unknown as ExpressionSpecification
 
 // Cluster-aware radius: scales by point_count when clustered, uses base sizing for individuals
@@ -113,7 +126,7 @@ function initMap() {
 
   map = new maplibregl.Map({
     container: mapContainer.value,
-    style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+    style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
     center: [mapStore.center.lng, mapStore.center.lat],
     zoom: mapStore.zoom,
   })
@@ -146,8 +159,8 @@ const INFRA_TILE_LAYERS = [
 
 function tileUrl(layer: string): string {
   const base = `${window.location.origin}${TILE_BASE}/${layer}/{z}/{x}/{y}.mvt`
-  if (isoStore.selectedISOs.length > 0) {
-    return `${base}?iso_id=${isoStore.selectedISOs.join(',')}`
+  if (selectionStore.selectedISOs.length > 0) {
+    return `${base}?iso_id=${selectionStore.selectedISOs.join(',')}`
   }
   return base
 }
@@ -183,6 +196,7 @@ function addTileSources() {
     type: 'geojson',
     data: { type: 'FeatureCollection', features: [] },
   })
+
 }
 
 function updateTileSourceUrls() {
@@ -199,13 +213,19 @@ function addLayers() {
   if (!map) return
 
   // --- Zone boundaries (fill + outline) ---
+  const initialZoneColor = mapStore.zoneColorMode === 'severity'
+    ? severityColor
+    : mapStore.zoneColorMode === 'value'
+      ? classificationColor // value mode uses transmission_score; will be set by watcher
+      : classificationColor
+
   map.addLayer({
     id: 'zones-fill',
     type: 'fill',
     source: 'zones-source',
     'source-layer': 'zones',
     paint: {
-      'fill-color': classificationColor,
+      'fill-color': initialZoneColor,
       'fill-opacity': 0.15,
     },
     layout: {
@@ -219,9 +239,9 @@ function addLayers() {
     source: 'zones-source',
     'source-layer': 'zones',
     paint: {
-      'line-color': classificationColor,
+      'line-color': initialZoneColor,
       'line-width': 1.5,
-      'line-opacity': 0.6,
+      'line-opacity': 0.8,
     },
     layout: {
       visibility: mapStore.showZones ? 'visible' : 'none',
@@ -263,12 +283,12 @@ function addLayers() {
     paint: {
       'circle-radius': clusterAwareRadius(3, 6, 10),
       'circle-color': loadingColor,
-      'circle-stroke-color': '#ffffff',
+      'circle-stroke-color': 'rgba(0,0,0,0.3)',
       'circle-stroke-width': 1,
       'circle-opacity': 0.8,
     },
     layout: {
-      visibility: mapStore.showSubstations ? 'visible' : 'none',
+      visibility: mapStore.showInfraSubstations ? 'visible' : 'none',
     },
   })
 
@@ -284,7 +304,7 @@ function addLayers() {
       'text-size': 11,
       'text-font': ['Open Sans Bold'],
       'text-allow-overlap': true,
-      visibility: mapStore.showSubstations ? 'visible' : 'none',
+      visibility: mapStore.showInfraSubstations ? 'visible' : 'none',
     },
     paint: {
       'text-color': '#ffffff',
@@ -300,7 +320,7 @@ function addLayers() {
     paint: {
       'circle-radius': clusterAwareRadius(3, 6, 10),
       'circle-color': tierColor,
-      'circle-stroke-color': '#ffffff',
+      'circle-stroke-color': 'rgba(0,0,0,0.3)',
       'circle-stroke-width': 0.5,
       'circle-opacity': 0.7,
     },
@@ -337,7 +357,7 @@ function addLayers() {
     paint: {
       'circle-radius': clusterAwareRadius(4, 8, 14),
       'circle-color': dcStatusColor,
-      'circle-stroke-color': '#ffffff',
+      'circle-stroke-color': 'rgba(0,0,0,0.3)',
       'circle-stroke-width': 1,
       'circle-opacity': 0.8,
     },
@@ -373,8 +393,8 @@ function addLayers() {
     'source-layer': 'der_locations',
     paint: {
       'circle-radius': clusterAwareRadius(3, 5, 9),
-      'circle-color': '#ff7043',
-      'circle-stroke-color': '#ffffff',
+      'circle-color': '#fb923c',
+      'circle-stroke-color': 'rgba(0,0,0,0.3)',
       'circle-stroke-width': 0.5,
       'circle-opacity': 0.7,
     },
@@ -412,10 +432,10 @@ function addLayers() {
       'line-color': [
         'interpolate', ['linear'],
         ['coalesce', ['get', 'peak_loading_pct'], 0],
-        0, '#43a047',
-        60, '#fdd835',
-        80, '#ff9800',
-        100, '#e53935',
+        0, '#22c55e',
+        60, '#eab308',
+        80, '#f59e0b',
+        100, '#ef4444',
       ] as unknown as ExpressionSpecification,
       'line-width': [
         'case',
@@ -458,8 +478,8 @@ function addLayers() {
       visibility: mapStore.showTransmissionLines ? 'visible' : 'none',
     },
     paint: {
-      'text-color': '#333333',
-      'text-halo-color': '#ffffff',
+      'text-color': 'rgba(255,255,255,0.8)',
+      'text-halo-color': 'rgba(0,0,0,0.6)',
       'text-halo-width': 1.5,
     },
   })
@@ -477,7 +497,7 @@ function addLayers() {
         12, 8,
       ] as unknown as ExpressionSpecification,
       'circle-color': hcRemainingColor,
-      'circle-stroke-color': '#ffffff',
+      'circle-stroke-color': 'rgba(0,0,0,0.3)',
       'circle-stroke-width': 0.5,
       'circle-opacity': 0.8,
     },
@@ -551,13 +571,14 @@ function addLayers() {
       visibility: mapStore.showInfraLines ? 'visible' : 'none',
     },
     paint: {
-      'text-color': '#5c35a0',
-      'text-halo-color': '#ffffff',
+      'text-color': 'rgba(167,139,250,0.8)',
+      'text-halo-color': 'rgba(0,0,0,0.6)',
       'text-halo-width': 1.5,
     },
   })
 
   // --- Infrastructure substations (polygon outlines + fill) ---
+  // Grey/muted — substations with DB data get colored point circles on top
   map.addLayer({
     id: 'infra-substations-fill',
     type: 'fill',
@@ -565,16 +586,8 @@ function addLayers() {
     'source-layer': 'gpkg_substations',
     minzoom: 9,
     paint: {
-      'fill-color': [
-        'match', ['coalesce', ['get', 'substation_type'], 'unknown'],
-        'transmission', '#1565c0',
-        'distribution', '#43a047',
-        'generation', '#e53935',
-        'industrial', '#ff9800',
-        'switching', '#8e24aa',
-        '#757575',
-      ] as unknown as ExpressionSpecification,
-      'fill-opacity': 0.25,
+      'fill-color': '#666666',
+      'fill-opacity': 0.2,
     },
     layout: {
       visibility: mapStore.showInfraSubstations ? 'visible' : 'none',
@@ -588,17 +601,9 @@ function addLayers() {
     'source-layer': 'gpkg_substations',
     minzoom: 9,
     paint: {
-      'line-color': [
-        'match', ['coalesce', ['get', 'substation_type'], 'unknown'],
-        'transmission', '#1565c0',
-        'distribution', '#43a047',
-        'generation', '#e53935',
-        'industrial', '#ff9800',
-        'switching', '#8e24aa',
-        '#757575',
-      ] as unknown as ExpressionSpecification,
-      'line-width': 1.5,
-      'line-opacity': 0.7,
+      'line-color': '#888888',
+      'line-width': 1,
+      'line-opacity': 0.5,
     },
     layout: {
       visibility: mapStore.showInfraSubstations ? 'visible' : 'none',
@@ -621,8 +626,8 @@ function addLayers() {
       visibility: mapStore.showInfraSubstations ? 'visible' : 'none',
     },
     paint: {
-      'text-color': '#333333',
-      'text-halo-color': '#ffffff',
+      'text-color': 'rgba(255,255,255,0.5)',
+      'text-halo-color': 'rgba(0,0,0,0.6)',
       'text-halo-width': 1,
     },
   })
@@ -699,11 +704,17 @@ function addLayers() {
       visibility: mapStore.showInfraPowerPlants ? 'visible' : 'none',
     },
     paint: {
-      'text-color': '#1b5e20',
-      'text-halo-color': '#ffffff',
+      'text-color': 'rgba(74,222,128,0.8)',
+      'text-halo-color': 'rgba(0,0,0,0.6)',
       'text-halo-width': 1,
     },
   })
+
+  // Move DB substations (colored circles) above infrastructure polygons
+  // so they visually indicate "has data" on top of grey OSM outlines
+  map.moveLayer('substations')
+  map.moveLayer('substations-count')
+
 }
 
 function setupInteractivity() {
@@ -714,6 +725,7 @@ function setupInteractivity() {
     'zones-fill', 'substations', 'pnodes', 'data-centers', 'der-locations',
     'transmission-lines', 'feeders', 'hosting-capacity',
     'infra-power-lines', 'infra-substations-fill', 'infra-power-plants-fill',
+    'ba-markers-circle', 'iq-markers-circle',
   ]
 
   for (const layerId of interactiveLayers) {
@@ -763,25 +775,48 @@ function setupInteractivity() {
     }
   })
 
+  // Layers that take priority over zone-fill clicks (point features above polygons)
+  const pointLayers = [
+    'substations', 'pnodes', 'data-centers', 'feeders', 'hosting-capacity',
+    'ba-markers-circle', 'iq-markers-circle',
+    'infra-substations-fill', 'infra-power-plants-fill',
+  ]
+
   // Click on zone
   map.on('click', 'zones-fill', (e) => {
+    // Don't handle zone click if a point feature was also clicked
+    const activePt = pointLayers.filter(l => map!.getLayer(l))
+    const hits = map!.queryRenderedFeatures(e.point, { layers: activePt })
+    if (hits.length > 0) return
+
     if (e.features && e.features.length > 0) {
       const props = e.features[0].properties
       mapStore.selectedZoneCode = props.zone_code
+      selectionStore.selectZone(props.zone_code)
     }
   })
 
-  // Click on substation
+  // Click on substation (DB point layer)
   map.on('click', 'substations', (e) => {
     if (e.features && e.features.length > 0) {
-      const props = e.features[0].properties
-      mapStore.selectedSubstationId = props.id ?? null
+      ;(e.originalEvent as any)._substationHandled = true
+      const feature = e.features[0]
+      // Feature ID is in feature.id (MVT feature ID), not properties.id
+      const featureId = feature.id as number | undefined
+      if (featureId) {
+        gridStore.selectSubstation(featureId)
+      } else {
+        // Clustered or missing ID — use proximity lookup
+        gridStore.selectSubstationByLocation(e.lngLat.lat, e.lngLat.lng)
+      }
     }
   })
 
   // Click on pnode — show popup
   map.on('click', 'pnodes', (e) => {
     if (!map || !e.features || e.features.length === 0) return
+    // Don't show pnode popup if a substation was clicked at the same point
+    if ((e.originalEvent as any)._substationHandled) return
     const props = e.features[0].properties
     const coords = (e.features[0].geometry as any).coordinates.slice()
     new maplibregl.Popup({ closeButton: true, maxWidth: '260px' })
@@ -841,7 +876,7 @@ function setupInteractivity() {
       .addTo(map)
   })
 
-  // Click on hosting capacity feeder — show popup
+  // Click on hosting capacity feeder — show popup + select in store
   map.on('click', 'hosting-capacity', (e) => {
     if (!map || !e.features || e.features.length === 0) return
     const props = e.features[0].properties
@@ -860,6 +895,10 @@ function setupInteractivity() {
         Voltage: ${props.voltage_kv ? props.voltage_kv + ' kV' : 'N/A'}
       `)
       .addTo(map)
+
+    // Drive the detail panel
+    const feeder = enrichStore.hcFeeders.find(f => f.id === props.id)
+    if (feeder) enrichStore.selectFeederItem(feeder)
   })
 
   // Hover highlight for infrastructure power lines
@@ -897,19 +936,25 @@ function setupInteractivity() {
       .addTo(map)
   })
 
-  // Click on infrastructure substation
+  // Click on infrastructure substation — try to match to DB substation
   map.on('click', 'infra-substations-fill', (e) => {
     if (!map || !e.features || e.features.length === 0) return
-    const props = e.features[0].properties
-    new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
-      .setLngLat(e.lngLat)
-      .setHTML(`
-        <strong>${props.name || 'Substation'}</strong><br/>
-        Type: ${props.substation_type || 'N/A'}<br/>
-        Voltage: ${props.max_voltage_kv ? props.max_voltage_kv + ' kV' : 'N/A'}<br/>
-        Operator: ${props.operator || 'N/A'}
-      `)
-      .addTo(map)
+    // Try to open SubstationPanel via proximity match
+    gridStore.selectSubstationByLocation(e.lngLat.lat, e.lngLat.lng).then(match => {
+      if (!match && map) {
+        // No DB match — show basic popup
+        const props = e.features![0].properties
+        new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <strong>${props.name || 'Substation'}</strong><br/>
+            Type: ${props.substation_type || 'N/A'}<br/>
+            Voltage: ${props.max_voltage_kv ? props.max_voltage_kv + ' kV' : 'N/A'}<br/>
+            Operator: ${props.operator || 'N/A'}
+          `)
+          .addTo(map)
+      }
+    })
   })
 
   // Click on infrastructure power plant
@@ -928,6 +973,36 @@ function setupInteractivity() {
       .addTo(map)
   })
 
+  // Click on BA marker
+  map.on('click', 'ba-markers-circle', (e) => {
+    if (e.features && e.features.length > 0) {
+      const props = e.features[0].properties
+      if (props.ba_code) {
+        gridStore.selectBA(props.ba_code)
+      }
+    }
+  })
+
+  // Click on IQ marker - show popup
+  map.on('click', 'iq-markers-circle', (e) => {
+    if (e.features && e.features.length > 0 && map) {
+      const feat = e.features[0]
+      const coords = (feat.geometry as any).coordinates.slice()
+      const p = feat.properties
+      new maplibregl.Popup({ closeButton: true, maxWidth: '240px' })
+        .setLngLat(coords)
+        .setHTML(`
+          <div style="font-size: 13px;">
+            <strong>${p.project_name || 'Unnamed'}</strong><br/>
+            ${p.generation_type || '-'} | ${p.capacity_mw ?? '-'} MW<br/>
+            Status: ${p.queue_status || '-'}<br/>
+            ${p.proposed_online_date ? 'Online: ' + p.proposed_online_date : ''}
+          </div>
+        `)
+        .addTo(map)
+    }
+  })
+
   // Click on map background (for siting)
   map.on('click', (e) => {
     // Only trigger if no feature was clicked
@@ -936,7 +1011,66 @@ function setupInteractivity() {
     })
     if (features.length === 0) {
       mapStore.setClickedPoint({ lat: e.lngLat.lat, lng: e.lngLat.lng })
+      selectionStore.clickMap(e.lngLat.lat, e.lngLat.lng)
     }
+  })
+
+  // Add empty GeoJSON sources for BA markers and IQ markers
+  map.addSource('ba-markers-source', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] },
+  })
+  map.addLayer({
+    id: 'ba-markers-circle',
+    type: 'circle',
+    source: 'ba-markers-source',
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': [
+        'interpolate', ['linear'], ['get', 'peak_import_ratio'],
+        0, 4,
+        100, 12,
+      ],
+      'circle-color': [
+        'interpolate', ['linear'], ['get', 'congestion_score'],
+        0, '#22c55e',
+        0.3, '#eab308',
+        0.6, '#f59e0b',
+        0.9, '#ef4444',
+      ],
+      'circle-stroke-width': 1,
+      'circle-stroke-color': 'rgba(0,0,0,0.3)',
+      'circle-opacity': 0.8,
+    },
+  })
+
+  map.addSource('iq-markers-source', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] },
+  })
+  map.addLayer({
+    id: 'iq-markers-circle',
+    type: 'circle',
+    source: 'iq-markers-source',
+    layout: { visibility: 'none' },
+    paint: {
+      'circle-radius': [
+        'interpolate', ['linear'], ['coalesce', ['get', 'capacity_mw'], 1],
+        1, 4,
+        100, 10,
+        500, 14,
+      ],
+      'circle-color': [
+        'match', ['get', 'queue_status'],
+        'active', '#22c55e',
+        'completed', '#38bdf8',
+        'withdrawn', '#6b7280',
+        '#fb923c',
+      ],
+      'circle-stroke-width': 1.5,
+      'circle-stroke-color': 'rgba(0,0,0,0.3)',
+      'circle-opacity': 0.8,
+    },
   })
 }
 
@@ -963,19 +1097,24 @@ watch(() => mapStore.showDERs, (v) => {
   setLayerVisibility('der-locations', v)
   setLayerVisibility('der-locations-count', v)
 })
-// Switch zone color mode between classification and value (transmission_score)
+// Switch zone color mode between classification, value, and severity
 watch(() => mapStore.zoneColorMode, (mode) => {
   if (!map) return
-  const color = mode === 'value'
-    ? [
-        'interpolate', ['linear'],
-        ['coalesce', ['get', 'transmission_score'], 0],
-        0, '#43a047',
-        30, '#fdd835',
-        60, '#ff9800',
-        100, '#e53935',
-      ] as unknown as ExpressionSpecification
-    : classificationColor
+  let color: ExpressionSpecification
+  if (mode === 'severity') {
+    color = severityColor
+  } else if (mode === 'value') {
+    color = [
+      'interpolate', ['linear'],
+      ['coalesce', ['get', 'transmission_score'], 0],
+      0, '#22c55e',
+      30, '#eab308',
+      60, '#f59e0b',
+      100, '#ef4444',
+    ] as unknown as ExpressionSpecification
+  } else {
+    color = classificationColor
+  }
   if (map.getLayer('zones-fill')) {
     map.setPaintProperty('zones-fill', 'fill-color', color)
   }
@@ -995,6 +1134,7 @@ watch(() => mapStore.showAssets, (v) => {
 })
 watch(() => mapStore.showHostingCapacity, (v) => {
   setLayerVisibility('hosting-capacity', v)
+  if (!v) clearBboxMarkers()
 })
 // Infrastructure layers (GeoPackage/OSM)
 watch(() => mapStore.showInfraLines, (v) => {
@@ -1005,6 +1145,9 @@ watch(() => mapStore.showInfraSubstations, (v) => {
   setLayerVisibility('infra-substations-fill', v)
   setLayerVisibility('infra-substations-outline', v)
   setLayerVisibility('infra-substations-label', v)
+  // Also toggle the primary substations point layer
+  setLayerVisibility('substations', v)
+  setLayerVisibility('substations-count', v)
 })
 watch(() => mapStore.showInfraPowerPlants, (v) => {
   setLayerVisibility('infra-power-plants-fill', v)
@@ -1012,8 +1155,76 @@ watch(() => mapStore.showInfraPowerPlants, (v) => {
   setLayerVisibility('infra-power-plants-label', v)
 })
 
-// Update HC GeoJSON source when feeders are loaded in the store
-watch(() => hcStore.feeders, (feeders) => {
+// BA markers: toggle visibility and load data
+watch(() => mapStore.showBAMarkers, (v) => {
+  setLayerVisibility('ba-markers-circle', v)
+  if (v && gridStore.bas.length === 0) {
+    gridStore.loadCongestionData()
+  }
+})
+
+// Update BA markers GeoJSON when data loads
+watch(() => [gridStore.mappableBAs, gridStore.scoresByBA] as const, ([bas, scores]) => {
+  if (!map || !map.getSource('ba-markers-source')) return
+  const features = bas
+    .filter(ba => ba.latitude != null && ba.longitude != null)
+    .map(ba => {
+      const score = scores.get(ba.ba_code)
+      return {
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [ba.longitude!, ba.latitude!],
+        },
+        properties: {
+          ba_code: ba.ba_code,
+          ba_name: ba.ba_name,
+          congestion_score: score?.congestion_opportunity_score ?? 0,
+          peak_import_ratio: score?.max_import_pct_of_load ?? 0,
+        },
+      }
+    })
+  const source = map.getSource('ba-markers-source') as maplibregl.GeoJSONSource
+  source.setData({ type: 'FeatureCollection', features })
+})
+
+// IQ markers: toggle visibility and load data on first enable
+let iqLoaded = false
+watch(() => mapStore.showInterconnectionQueue, async (v) => {
+  setLayerVisibility('iq-markers-circle', v)
+  if (v && !iqLoaded) {
+    iqLoaded = true
+    try {
+      const projects = await allInterconnectionQueue()
+      const features = projects
+        .filter(p => p.lat != null && p.lon != null)
+        .map(p => ({
+          type: 'Feature' as const,
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [p.lon!, p.lat!],
+          },
+          properties: {
+            project_name: p.project_name ?? '',
+            generation_type: p.generation_type ?? '',
+            capacity_mw: p.capacity_mw ?? 0,
+            queue_status: p.queue_status ?? 'unknown',
+            proposed_online_date: p.proposed_online_date ?? '',
+          },
+        }))
+      if (!map) return
+      const source = map.getSource('iq-markers-source') as maplibregl.GeoJSONSource
+      if (source) {
+        source.setData({ type: 'FeatureCollection', features })
+      }
+    } catch (e) {
+      console.error('Failed to load interconnection queue:', e)
+    }
+  }
+})
+
+// Update HC GeoJSON source when filtered feeders change
+watch(() => enrichStore.filteredFeeders, (feeders) => {
   if (!map || !map.getSource('hosting-capacity-source')) return
   const features = feeders
     .filter(f => f.centroid_lat != null && f.centroid_lon != null)
@@ -1038,8 +1249,79 @@ watch(() => hcStore.feeders, (feeders) => {
   source.setData({ type: 'FeatureCollection', features })
 })
 
+// Zoom to utility extent and draw bbox outline when feeders load
+function clearBboxMarkers() {
+  for (const m of bboxMarkers) m.remove()
+  bboxMarkers = []
+}
+
+function drawBboxOutline(bounds: [[number, number], [number, number]]) {
+  clearBboxMarkers()
+  if (!map) return
+  const [[w, s], [e, n]] = bounds
+
+  // Create a positioned SVG overlay for the bbox rectangle
+  const el = document.createElement('div')
+  el.className = 'hc-bbox-overlay'
+  // Use a marker at SW corner; the SVG will stretch to cover the bbox
+  const marker = new maplibregl.Marker({ element: el, anchor: 'bottom-left' })
+    .setLngLat([w, s])
+    .addTo(map)
+  bboxMarkers.push(marker)
+
+  // Update the overlay size on each render frame
+  function updateOverlay() {
+    if (!map || !el.parentElement) return
+    const sw = map.project([w, s])
+    const ne = map.project([e, n])
+    const width = Math.abs(ne.x - sw.x)
+    const height = Math.abs(sw.y - ne.y)
+    el.style.width = `${width}px`
+    el.style.height = `${height}px`
+    el.style.border = '3px dashed #22d3ee'
+    el.style.backgroundColor = 'rgba(34, 211, 238, 0.06)'
+    el.style.pointerEvents = 'none'
+    el.style.transformOrigin = 'bottom left'
+  }
+
+  updateOverlay()
+  map.on('move', updateOverlay)
+  // Store cleanup ref
+  ;(marker as any)._hcCleanup = () => map?.off('move', updateOverlay)
+}
+
+watch(() => enrichStore.hcFeeders, (feeders) => {
+  if (!map) return
+  const withCoords = feeders.filter(f => f.centroid_lat != null && f.centroid_lon != null)
+  if (withCoords.length === 0) {
+    clearBboxMarkers()
+    return
+  }
+
+  let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity
+  for (const f of withCoords) {
+    if (f.centroid_lon! < minLon) minLon = f.centroid_lon!
+    if (f.centroid_lon! > maxLon) maxLon = f.centroid_lon!
+    if (f.centroid_lat! < minLat) minLat = f.centroid_lat!
+    if (f.centroid_lat! > maxLat) maxLat = f.centroid_lat!
+  }
+
+  const padLon = (maxLon - minLon) * 0.03 || 0.05
+  const padLat = (maxLat - minLat) * 0.03 || 0.05
+  const bounds: [[number, number], [number, number]] = [
+    [minLon - padLon, minLat - padLat],
+    [maxLon + padLon, maxLat + padLat],
+  ]
+
+  drawBboxOutline(bounds)
+
+  skipCenterSync = true
+  map.fitBounds(bounds, { padding: 40, duration: 1200 })
+  setTimeout(() => { skipCenterSync = false }, 1500)
+})
+
 // Update tile sources and pan when ISO selection changes
-watch(() => [...isoStore.selectedISOs], (isos, oldIsos) => {
+watch(() => [...selectionStore.selectedISOs], (isos, oldIsos) => {
   if (!map) return
 
   // Refresh tile source URLs with new ISO filter
@@ -1057,11 +1339,23 @@ watch(() => [...isoStore.selectedISOs], (isos, oldIsos) => {
   }
 })
 
+// Fly to BA centroid when a balancing authority is selected
+watch(() => selectionStore.selectedBACode, (baCode) => {
+  if (!map || !baCode) return
+  const ba = gridStore.bas.find(b => b.ba_code === baCode)
+  if (ba?.latitude != null && ba?.longitude != null) {
+    skipCenterSync = true
+    map.flyTo({ center: [ba.longitude, ba.latitude], zoom: 7, duration: 1200 })
+    setTimeout(() => { skipCenterSync = false }, 1500)
+  }
+})
+
 onMounted(() => {
   initMap()
 })
 
 onBeforeUnmount(() => {
+  clearBboxMarkers()
   if (map) {
     map.remove()
     map = null

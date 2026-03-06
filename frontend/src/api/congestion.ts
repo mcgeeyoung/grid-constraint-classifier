@@ -55,8 +55,17 @@ export interface HourlyData {
   import_utilization: number | null
 }
 
+export interface BAProfile {
+  ba_code: string
+  ba_name: string | null
+  year: number
+  profile_12x24: Record<string, number[]>
+  peak_month: number
+  peak_hour: number
+}
+
 export async function fetchBAs(rtoOnly = false): Promise<BA[]> {
-  const { data } = await client.get<BA[]>('/congestion/bas', {
+  const { data } = await client.get<BA[]>('/v1/congestion/bas', {
     params: { rto_only: rtoOnly },
   })
   return data
@@ -66,7 +75,7 @@ export async function fetchScores(
   periodType = 'year',
   year?: number,
 ): Promise<CongestionScore[]> {
-  const { data } = await client.get<CongestionScore[]>('/congestion/scores', {
+  const { data } = await client.get<CongestionScore[]>('/v1/congestion/scores', {
     params: { period_type: periodType, year },
   })
   return data
@@ -78,7 +87,7 @@ export async function fetchBAScores(
   year?: number,
 ): Promise<CongestionScore[]> {
   const { data } = await client.get<CongestionScore[]>(
-    `/congestion/scores/${baCode}`,
+    `/v1/congestion/scores/${baCode}`,
     { params: { period_type: periodType, year } },
   )
   return data
@@ -89,7 +98,18 @@ export async function fetchDurationCurve(
   year = 2024,
 ): Promise<DurationCurve> {
   const { data } = await client.get<DurationCurve>(
-    `/congestion/duration-curve/${baCode}`,
+    `/v1/congestion/duration-curve/${baCode}`,
+    { params: { year } },
+  )
+  return data
+}
+
+export async function fetchBAProfile(
+  baCode: string,
+  year = 2024,
+): Promise<BAProfile> {
+  const { data } = await client.get<BAProfile>(
+    `/v1/congestion/profile-12x24/${baCode}`,
     { params: { year } },
   )
   return data
@@ -101,7 +121,7 @@ export async function fetchHourlyData(
   end: string,
 ): Promise<HourlyData[]> {
   const { data } = await client.get<HourlyData[]>(
-    `/congestion/hourly/${baCode}`,
+    `/v1/congestion/hourly/${baCode}`,
     { params: { start, end } },
   )
   return data

@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 def cmd_seed_bas(args):
     """Load BA reference data from JSON into balancing_authorities table."""
     from app.database import SessionLocal
-    from app.models.congestion import BalancingAuthority
+    from app.models.iso import ISO
 
     ref_path = Path(__file__).resolve().parent.parent / "data" / "reference" / "ba_interface_map.json"
     if not ref_path.exists():
@@ -48,7 +48,7 @@ def cmd_seed_bas(args):
         created = 0
         updated = 0
         for entry in ba_data:
-            existing = db.query(BalancingAuthority).filter_by(
+            existing = db.query(ISO).filter_by(
                 ba_code=entry["ba_code"]
             ).first()
 
@@ -65,7 +65,12 @@ def cmd_seed_bas(args):
                 existing.longitude = entry.get("longitude")
                 updated += 1
             else:
-                ba = BalancingAuthority(
+                ba = ISO(
+                    iso_code=entry["ba_code"],
+                    iso_name=entry["ba_name"],
+                    timezone="UTC",
+                    has_decomposition=False,
+                    has_node_pricing=False,
                     ba_code=entry["ba_code"],
                     ba_name=entry["ba_name"],
                     region=entry.get("region"),
@@ -81,7 +86,7 @@ def cmd_seed_bas(args):
                 created += 1
 
         db.commit()
-        total = db.query(BalancingAuthority).count()
+        total = db.query(ISO).filter(ISO.ba_code.isnot(None)).count()
         logger.info(
             f"Seeded BAs: {created} created, {updated} updated, {total} total"
         )
@@ -99,7 +104,8 @@ def cmd_ingest_eia(args):
 
     from app.config import settings
     from app.database import SessionLocal
-    from app.models.congestion import BalancingAuthority, BAHourlyData
+    from app.models.iso import ISO
+    from app.models.congestion import BAHourlyData
     from adapters.eia_client import EIAClient
 
     if not settings.EIA_API_KEY:
@@ -112,9 +118,9 @@ def cmd_ingest_eia(args):
     try:
         # Resolve BA list
         if args.ba == "all":
-            bas = db.query(BalancingAuthority).filter_by(is_rto=False).all()
+            bas = db.query(ISO).filter(ISO.ba_code.isnot(None), ISO.is_rto == False).all()
         else:
-            ba = db.query(BalancingAuthority).filter_by(ba_code=args.ba).first()
+            ba = db.query(ISO).filter_by(ba_code=args.ba).first()
             if not ba:
                 logger.error(f"BA '{args.ba}' not found in database. Run seed-bas first.")
                 sys.exit(1)
@@ -196,11 +202,12 @@ def cmd_estimate_limits(args):
     import numpy as np
 
     from app.database import SessionLocal
-    from app.models.congestion import BalancingAuthority, BAHourlyData
+    from app.models.iso import ISO
+    from app.models.congestion import BAHourlyData
 
     db = SessionLocal()
     try:
-        bas = db.query(BalancingAuthority).filter_by(is_rto=False).all()
+        bas = db.query(ISO).filter(ISO.ba_code.isnot(None), ISO.is_rto == False).all()
         updated = 0
         for ba in bas:
             imports = (
@@ -237,7 +244,8 @@ def cmd_ingest_lmp(args):
     from datetime import date
 
     from app.database import SessionLocal
-    from app.models.congestion import BalancingAuthority, InterfaceLMP
+    from app.models.iso import ISO
+    from app.models.congestion import InterfaceLMP
     from adapters.congestion_lmp import GridStatusLMPAdapter, RTO_CONFIG
 
     rto = args.rto.upper()
@@ -260,9 +268,9 @@ def cmd_ingest_lmp(args):
     try:
         # Collect unique node IDs for this RTO from BA interface_points
         # Match both rto_neighbor and rto_neighbor_secondary
-        bas = db.query(BalancingAuthority).filter(
-            (BalancingAuthority.rto_neighbor == rto) |
-            (BalancingAuthority.rto_neighbor_secondary == rto)
+        bas = db.query(ISO).filter(
+            (ISO.rto_neighbor == rto) |
+            (ISO.rto_neighbor_secondary == rto)
         ).all()
 
         node_ids = set()
@@ -370,7 +378,8 @@ def cmd_compute_scores(args):
     import pandas as pd
 
     from app.database import SessionLocal
-    from app.models.congestion import BalancingAuthority, BAHourlyData, CongestionScore, InterfaceLMP
+    from app.models.iso import ISO
+    from app.models.congestion import BAHourlyData, CongestionScore, InterfaceLMP
     from core.congestion_calculator import compute_congestion_metrics
 
     year = args.year
@@ -378,7 +387,7 @@ def cmd_compute_scores(args):
 
     db = SessionLocal()
     try:
-        bas = db.query(BalancingAuthority).filter_by(is_rto=False).all()
+        bas = db.query(ISO).filter(ISO.ba_code.isnot(None), ISO.is_rto == False).all()
         computed = 0
         skipped = 0
         lmp_enriched = 0

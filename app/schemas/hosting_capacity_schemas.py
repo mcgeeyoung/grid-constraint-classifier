@@ -74,6 +74,19 @@ class HCIngestionRunResponse(BaseModel):
         from_attributes = True
 
 
+class HCProfileResponse(BaseModel):
+    utility_code: str
+    utility_name: str
+    iso_code: Optional[str] = None
+    year: int
+    profile_12x24: dict[str, list[float]]  # month "1"-"12" → list of 24 hourly values
+    peak_month: int
+    peak_hour: int
+
+    class Config:
+        from_attributes = True
+
+
 class HCNearbyResponse(BaseModel):
     id: int
     utility_code: str

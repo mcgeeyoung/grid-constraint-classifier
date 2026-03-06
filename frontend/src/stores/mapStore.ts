@@ -6,11 +6,9 @@ export interface LatLng {
   lng: number
 }
 
-export type ZoneColorMode = 'classification' | 'value'
-export type MapEngine = 'leaflet' | 'maplibre'
+export type ZoneColorMode = 'classification' | 'value' | 'severity'
 
 export const useMapStore = defineStore('map', () => {
-  const mapEngine = ref<MapEngine>('maplibre')
   const center = ref<LatLng>({ lat: 39.8, lng: -98.5 })
   const zoom = ref(5)
   const clickedPoint = ref<LatLng | null>(null)
@@ -25,6 +23,8 @@ export const useMapStore = defineStore('map', () => {
   const showFeeders = ref(true)
   const showAssets = ref(false)
   const showHostingCapacity = ref(false)
+  const showInterconnectionQueue = ref(false)
+  const showBAMarkers = ref(false)
 
   // GeoPackage infrastructure layers (OSM data)
   const showInfraLines = ref(false)
@@ -32,15 +32,16 @@ export const useMapStore = defineStore('map', () => {
   const showInfraPowerPlants = ref(false)
 
   // Zone color mode
-  const zoneColorMode = ref<ZoneColorMode>('classification')
+  const zoneColorMode = ref<ZoneColorMode>('severity')
 
   // Filters
-  const filterClassifications = ref<string[]>([]) // empty = show all
-  const filterTiers = ref<string[]>([]) // empty = show all
+  const filterClassifications = ref<string[]>([])
+  const filterTiers = ref<string[]>([])
   const filterDerType = ref<string | null>(null)
-  const filterMinLoading = ref<number>(0) // 0 = no filter
+  const filterMinLoading = ref<number>(0)
 
-  // Selected entities for side panel
+  // Selection state kept here for backward compat with GridMapGL
+  // Will be fully migrated to selectionStore in Phase 2
   const selectedZoneCode = ref<string | null>(null)
   const selectedSubstationId = ref<number | null>(null)
   const selectedAssetId = ref<string | null>(null)
@@ -61,7 +62,6 @@ export const useMapStore = defineStore('map', () => {
   }
 
   return {
-    mapEngine,
     center,
     zoom,
     clickedPoint,
@@ -74,6 +74,8 @@ export const useMapStore = defineStore('map', () => {
     showFeeders,
     showAssets,
     showHostingCapacity,
+    showInterconnectionQueue,
+    showBAMarkers,
     showInfraLines,
     showInfraSubstations,
     showInfraPowerPlants,

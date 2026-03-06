@@ -8,12 +8,13 @@ from sqlalchemy.orm import Session
 from app.cache import cache_response
 
 from app.database import get_db
+from app.models.iso import ISO
 from app.models.congestion import (
-    BalancingAuthority,
     BAHourlyData,
     CongestionScore,
 )
 from app.schemas.congestion_schemas import (
+    BAProfileResponse,
     BAResponse,
     CongestionScoreResponse,
     DurationCurveResponse,
@@ -21,6 +22,46 @@ from app.schemas.congestion_schemas import (
 )
 
 router = APIRouter(prefix="/api/v1/congestion")
+
+
+def _resolve_ba_timezone(db: Session, ba: ISO) -> str:
+    """Resolve a BA's local timezone by walking the ISO hierarchy.
+
+    Checks: BA own tz → parent ISO tz → canonical ISO record (by iso_code) → default.
+    """
+    if ba.timezone and ba.timezone != "UTC":
+        return ba.timezone
+
+    # Check parent ISO
+    if ba.parent_iso_id:
+        parent = db.query(ISO).filter(ISO.id == ba.parent_iso_id).first()
+        if parent:
+            if parent.timezone and parent.timezone != "UTC":
+                return parent.timezone
+            # Parent is also UTC (BA-unified record) - look for canonical ISO
+            # e.g., PJM BA record (id=107, tz=UTC) → parent id=8 (iso_code=pjm, tz=US/Eastern)
+            if parent.parent_iso_id:
+                grandparent = db.query(ISO).filter(ISO.id == parent.parent_iso_id).first()
+                if grandparent and grandparent.timezone and grandparent.timezone != "UTC":
+                    return grandparent.timezone
+            # Try matching by iso_code (lowercase version)
+            canonical = db.query(ISO).filter(
+                ISO.iso_code == parent.iso_code.lower(),
+                ISO.id != parent.id,
+            ).first()
+            if canonical and canonical.timezone and canonical.timezone != "UTC":
+                return canonical.timezone
+
+    # Try matching BA's own iso_code to a canonical ISO
+    if ba.iso_code:
+        canonical = db.query(ISO).filter(
+            ISO.iso_code == ba.iso_code.lower(),
+            ISO.id != ba.id,
+        ).first()
+        if canonical and canonical.timezone and canonical.timezone != "UTC":
+            return canonical.timezone
+
+    return "US/Eastern"
 
 
 @router.get("/bas", response_model=list[BAResponse])
@@ -31,10 +72,10 @@ def list_bas(
     db: Session = Depends(get_db),
 ):
     """List all balancing authorities with metadata."""
-    query = db.query(BalancingAuthority)
+    query = db.query(ISO).filter(ISO.ba_code.isnot(None))
     if rto_only:
-        query = query.filter(BalancingAuthority.is_rto.is_(True))
-    return query.order_by(BalancingAuthority.ba_code).all()
+        query = query.filter(ISO.is_rto.is_(True))
+    return query.order_by(ISO.ba_code).all()
 
 
 @router.get("/scores", response_model=list[CongestionScoreResponse])
@@ -47,8 +88,8 @@ def list_scores(
 ):
     """Get ranked congestion scores for all BAs."""
     query = (
-        db.query(CongestionScore, BalancingAuthority)
-        .join(BalancingAuthority, CongestionScore.ba_id == BalancingAuthority.id)
+        db.query(CongestionScore, ISO)
+        .join(ISO, CongestionScore.ba_id == ISO.id)
         .filter(CongestionScore.period_type == period_type)
     )
     if year:
@@ -95,7 +136,7 @@ def get_ba_scores(
     db: Session = Depends(get_db),
 ):
     """Get congestion scores for a specific BA."""
-    ba = db.query(BalancingAuthority).filter_by(ba_code=ba_code.upper()).first()
+    ba = db.query(ISO).filter_by(ba_code=ba_code.upper()).first()
     if not ba:
         raise HTTPException(status_code=404, detail=f"BA '{ba_code}' not found")
 
@@ -136,6 +177,81 @@ def get_ba_scores(
     ]
 
 
+@router.get("/profile-12x24/{ba_code}", response_model=BAProfileResponse)
+@cache_response("congestion-profile", ttl=3600)
+def get_ba_profile(
+    ba_code: str,
+    year: int = Query(2024, description="Year for 12x24 profile"),
+    request: Request = None,
+    db: Session = Depends(get_db),
+):
+    """Get 12x24 import utilization heatmap profile for a BA."""
+    import pandas as pd
+
+    ba = db.query(ISO).filter_by(ba_code=ba_code.upper()).first()
+    if not ba:
+        raise HTTPException(status_code=404, detail=f"BA '{ba_code}' not found")
+
+    if not ba.transfer_limit_mw or ba.transfer_limit_mw <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No transfer limit set for {ba_code}. Run estimate-limits first.",
+        )
+
+    hourly = (
+        db.query(BAHourlyData)
+        .filter(
+            BAHourlyData.ba_id == ba.id,
+            BAHourlyData.timestamp_utc >= f"{year}-01-01",
+            BAHourlyData.timestamp_utc < f"{year + 1}-01-01",
+        )
+        .all()
+    )
+
+    if not hourly:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No hourly data for {ba_code} in {year}",
+        )
+
+    df = pd.DataFrame([{
+        "timestamp_utc": h.timestamp_utc,
+        "net_imports_mw": h.net_imports_mw,
+    } for h in hourly])
+
+    # Convert UTC to BA's local timezone for correct month/hour grouping
+    local_tz = _resolve_ba_timezone(db, ba)
+
+    df["timestamp_utc"] = pd.to_datetime(df["timestamp_utc"], utc=True)
+    df["local_time"] = df["timestamp_utc"].dt.tz_convert(local_tz)
+    df["month"] = df["local_time"].dt.month
+    df["hour"] = df["local_time"].dt.hour
+    df["utilization"] = (df["net_imports_mw"] / ba.transfer_limit_mw * 100).clip(0, 100)
+
+    grouped = df.groupby(["month", "hour"])["utilization"].mean()
+
+    profile: dict[str, list[float]] = {}
+    for m in range(1, 13):
+        row = []
+        for h in range(24):
+            val = grouped.get((m, h), 0.0)
+            row.append(round(float(val), 2))
+        profile[str(m)] = row
+
+    peak_idx = grouped.idxmax()
+    peak_month = int(peak_idx[0])
+    peak_hour = int(peak_idx[1])
+
+    return BAProfileResponse(
+        ba_code=ba.ba_code,
+        ba_name=ba.ba_name,
+        year=year,
+        profile_12x24=profile,
+        peak_month=peak_month,
+        peak_hour=peak_hour,
+    )
+
+
 @router.get("/duration-curve/{ba_code}", response_model=DurationCurveResponse)
 @cache_response("congestion-duration", ttl=3600)
 def get_duration_curve(
@@ -147,7 +263,7 @@ def get_duration_curve(
     """Get import utilization duration curve (sorted descending) for charting."""
     from core.congestion_calculator import compute_duration_curve
 
-    ba = db.query(BalancingAuthority).filter_by(ba_code=ba_code.upper()).first()
+    ba = db.query(ISO).filter_by(ba_code=ba_code.upper()).first()
     if not ba:
         raise HTTPException(status_code=404, detail=f"BA '{ba_code}' not found")
 
@@ -199,7 +315,7 @@ def get_hourly(
     db: Session = Depends(get_db),
 ):
     """Get hourly operational data for a BA over a date range."""
-    ba = db.query(BalancingAuthority).filter_by(ba_code=ba_code.upper()).first()
+    ba = db.query(ISO).filter_by(ba_code=ba_code.upper()).first()
     if not ba:
         raise HTTPException(status_code=404, detail=f"BA '{ba_code}' not found")
 

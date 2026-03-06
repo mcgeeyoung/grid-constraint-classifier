@@ -58,6 +58,15 @@ class DurationCurveResponse(BaseModel):
     hours_count: int
 
 
+class BAProfileResponse(BaseModel):
+    ba_code: str
+    ba_name: Optional[str] = None
+    year: int
+    profile_12x24: dict[str, list[float]]
+    peak_month: int
+    peak_hour: int
+
+
 class HourlyDataResponse(BaseModel):
     timestamp_utc: datetime
     demand_mw: Optional[float] = None

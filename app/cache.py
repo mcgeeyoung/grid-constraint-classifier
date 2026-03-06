@@ -6,7 +6,9 @@ helper functions for cache invalidation.
 Falls back gracefully when Redis is unavailable (no caching, no errors).
 """
 
+import asyncio
 import hashlib
+import inspect
 import json
 import logging
 from functools import wraps
@@ -70,60 +72,77 @@ def cache_response(prefix: str, ttl: int = 300):
     Note: The decorated function MUST accept a `request: Request` parameter
     (FastAPI injects this automatically when declared).
     """
+    def _extract_request(args, kwargs):
+        request = kwargs.get("request")
+        if request is None:
+            for arg in args:
+                if isinstance(arg, Request):
+                    request = arg
+                    break
+        return request
+
+    def _try_cache_read(request):
+        r = get_redis()
+        if r and request:
+            cache_key = _build_cache_key(prefix, request)
+            try:
+                cached = r.get(cache_key)
+                if cached is not None:
+                    return JSONResponse(
+                        content=json.loads(cached),
+                        headers={"X-Cache": "HIT"},
+                    ), cache_key, r
+            except Exception as e:
+                logger.debug("Cache read error: %s", e)
+            return None, cache_key, r
+        return None, None, r
+
+    def _serialize(obj):
+        """Recursively serialize Pydantic models and ORM objects within dicts/lists."""
+        if hasattr(obj, 'model_dump'):
+            return obj.model_dump()
+        elif hasattr(obj, 'dict') and not hasattr(obj, '__table__'):
+            return obj.dict()
+        elif hasattr(obj, '__table__'):
+            # SQLAlchemy ORM object: extract column values
+            return {c.key: getattr(obj, c.key) for c in obj.__table__.columns}
+        elif isinstance(obj, dict):
+            return {k: _serialize(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_serialize(item) for item in obj]
+        return obj
+
+    def _try_cache_write(r, cache_key, result):
+        if r and cache_key and result is not None:
+            try:
+                serialized = _serialize(result)
+                r.setex(cache_key, ttl, json.dumps(serialized, default=str))
+            except Exception as e:
+                logger.debug("Cache write error: %s", e)
+
     def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            request = kwargs.get("request")
-            if request is None:
-                # Try to find Request in positional args
-                for arg in args:
-                    if isinstance(arg, Request):
-                        request = arg
-                        break
-
-            r = get_redis()
-            cache_key = None
-
-            # Try to read from cache
-            if r and request:
-                cache_key = _build_cache_key(prefix, request)
-                try:
-                    cached = r.get(cache_key)
-                    if cached is not None:
-                        return JSONResponse(
-                            content=json.loads(cached),
-                            headers={"X-Cache": "HIT"},
-                        )
-                except Exception as e:
-                    logger.debug("Cache read error: %s", e)
-
-            # Execute the actual endpoint
-            result = func(*args, **kwargs)
-
-            # Store in cache
-            if r and cache_key and result is not None:
-                try:
-                    # Convert Pydantic models / lists to JSON-serializable form
-                    if isinstance(result, list):
-                        serialized = [
-                            item.model_dump() if hasattr(item, 'model_dump')
-                            else item.dict() if hasattr(item, 'dict')
-                            else item
-                            for item in result
-                        ]
-                    elif hasattr(result, 'model_dump'):
-                        serialized = result.model_dump()
-                    elif hasattr(result, 'dict'):
-                        serialized = result.dict()
-                    else:
-                        serialized = result
-
-                    r.setex(cache_key, ttl, json.dumps(serialized, default=str))
-                except Exception as e:
-                    logger.debug("Cache write error: %s", e)
-
-            return result
-        return wrapper
+        if inspect.iscoroutinefunction(func):
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                request = _extract_request(args, kwargs)
+                cached_response, cache_key, r = _try_cache_read(request)
+                if cached_response:
+                    return cached_response
+                result = await func(*args, **kwargs)
+                _try_cache_write(r, cache_key, result)
+                return result
+            return async_wrapper
+        else:
+            @wraps(func)
+            def sync_wrapper(*args, **kwargs):
+                request = _extract_request(args, kwargs)
+                cached_response, cache_key, r = _try_cache_read(request)
+                if cached_response:
+                    return cached_response
+                result = func(*args, **kwargs)
+                _try_cache_write(r, cache_key, result)
+                return result
+            return sync_wrapper
     return decorator
 
 
@@ -172,6 +191,7 @@ def invalidate_hc_cache():
         "gcc:hc-geojson:*",
         "gcc:hc-summary:*",
         "gcc:hc-ingestion-runs:*",
+        "gcc:hc-profile:*",
     ]
 
     cleared = 0

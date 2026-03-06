@@ -46,7 +46,7 @@ export interface HCSummary {
 }
 
 export async function fetchUtilities(): Promise<HCUtility[]> {
-  const { data } = await client.get<HCUtility[]>('/utilities')
+  const { data } = await client.get<HCUtility[]>('/v1/utilities')
   return data
 }
 
@@ -59,7 +59,7 @@ export async function fetchHostingCapacity(
   if (options?.limit) params.limit = options.limit
   if (options?.constraint) params.constraint = options.constraint
   const { data } = await client.get<HCFeeder[]>(
-    `/utilities/${utilityCode}/hosting-capacity`,
+    `/v1/utilities/${utilityCode}/hosting-capacity`,
     { params },
   )
   return data
@@ -73,15 +73,36 @@ export async function fetchHostingCapacityGeoJSON(
   if (options?.bbox) params.bbox = options.bbox
   if (options?.limit) params.limit = options.limit
   const { data } = await client.get<GeoJSON.FeatureCollection>(
-    `/utilities/${utilityCode}/hosting-capacity/geojson`,
+    `/v1/utilities/${utilityCode}/hosting-capacity/geojson`,
     { params },
+  )
+  return data
+}
+
+export interface HCProfile {
+  utility_code: string
+  utility_name: string
+  iso_code: string | null
+  year: number
+  profile_12x24: Record<string, number[]>
+  peak_month: number
+  peak_hour: number
+}
+
+export async function fetchHCProfile(
+  utilityCode: string,
+  year = 2024,
+): Promise<HCProfile> {
+  const { data } = await client.get<HCProfile>(
+    `/v1/utilities/${utilityCode}/hosting-capacity/profile-12x24`,
+    { params: { year } },
   )
   return data
 }
 
 export async function fetchHCSummary(utilityCode: string): Promise<HCSummary> {
   const { data } = await client.get<HCSummary>(
-    `/utilities/${utilityCode}/hosting-capacity/summary`,
+    `/v1/utilities/${utilityCode}/hosting-capacity/summary`,
   )
   return data
 }

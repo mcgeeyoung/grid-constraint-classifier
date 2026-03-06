@@ -1,10 +1,32 @@
 <template>
-  <v-app-bar density="compact" color="surface">
+  <v-app-bar density="compact" color="transparent" flat style="background: var(--bg-base) !important; height: 40px;">
     <v-app-bar-title>
-      <router-link to="/" class="text-decoration-none text-white">
+      <router-link to="/" class="text-decoration-none" style="color: var(--text-primary);">
         Grid Constraint Classifier
       </router-link>
     </v-app-bar-title>
+
+    <!-- ISO Selector -->
+    <v-select
+      v-model="currentISO"
+      :items="isoItems"
+      item-title="label"
+      item-value="code"
+      placeholder="ISO"
+      density="compact"
+      variant="solo-filled"
+      flat
+      hide-details
+      style="max-width: 130px;"
+      class="mx-2"
+      @update:model-value="onSelectISO"
+    >
+      <template v-slot:prepend-inner>
+        <v-icon size="16">mdi-transmission-tower</v-icon>
+      </template>
+    </v-select>
+
+    <v-spacer />
 
     <!-- Search -->
     <v-autocomplete
@@ -14,15 +36,18 @@
       @update:search="searchQuery = $event ?? ''"
       item-title="label"
       item-value="id"
-      placeholder="Search zones, substations..."
+      placeholder="Search zones..."
       density="compact"
       variant="outlined"
       hide-details
       clearable
       return-object
       no-filter
+      bg-color="transparent"
+      base-color="rgba(255,255,255,0.6)"
       style="max-width: 300px;"
-      class="mx-4"
+      class="mx-2"
+      prepend-inner-icon="mdi-magnify"
       @update:model-value="onSelect"
     >
       <template v-slot:item="{ item, props }">
@@ -35,33 +60,55 @@
     </v-autocomplete>
 
     <template v-slot:append>
-      <ISOSelector />
       <v-btn icon to="/review" title="Review Queue">
         <v-icon>mdi-clipboard-check-outline</v-icon>
-      </v-btn>
-      <v-btn icon to="/congestion" title="Import Congestion">
-        <v-icon>mdi-transmission-tower-import</v-icon>
-      </v-btn>
-      <v-btn icon to="/overview" title="Overview">
-        <v-icon>mdi-view-dashboard</v-icon>
       </v-btn>
     </template>
   </v-app-bar>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import ISOSelector from '@/components/panels/ISOSelector.vue'
-import { useIsoStore } from '@/stores/isoStore'
-import { useHierarchyStore } from '@/stores/hierarchyStore'
+import { useGridDataStore } from '@/stores/gridDataStore'
+import { useSelectionStore } from '@/stores/selectionStore'
 import { useMapStore } from '@/stores/mapStore'
+import { listISOs } from '@/api/constraints'
+import { severityTierColor } from '@/utils/tierColors'
+import type { ISO } from '@/types/constraints'
 
 const router = useRouter()
-const isoStore = useIsoStore()
-const hierarchyStore = useHierarchyStore()
+const gridStore = useGridDataStore()
+const selectionStore = useSelectionStore()
 const mapStore = useMapStore()
 
+// ISO selector
+const allISOs = ref<ISO[]>([])
+const currentISO = ref<string | null>(null)
+
+const isoItems = computed(() =>
+  allISOs.value
+    .filter(iso => iso.is_rto && iso.iso_code === iso.iso_code.toLowerCase())
+    .map(iso => ({ code: iso.iso_code, label: iso.iso_code.toUpperCase() }))
+)
+
+watch(() => selectionStore.selectedISO, (val) => {
+  currentISO.value = val
+})
+
+onMounted(async () => {
+  allISOs.value = await listISOs()
+  if (selectionStore.selectedISO) {
+    currentISO.value = selectionStore.selectedISO
+  }
+})
+
+function onSelectISO(code: string | null) {
+  if (!code) return
+  gridStore.selectISO(code)
+}
+
+// Search
 const searchQuery = ref('')
 const selectedResult = ref<SearchItem | null>(null)
 
@@ -83,40 +130,19 @@ const searchResults = computed<SearchItem[]>(() => {
 
   const results: SearchItem[] = []
 
-  // Search zones
-  for (const cls of isoStore.classifications) {
-    const match = cls.zone_code.toLowerCase().includes(q) ||
-      (cls.zone_name?.toLowerCase().includes(q) ?? false)
+  for (const zone of gridStore.zones) {
+    const match = zone.zone_code.toLowerCase().includes(q) ||
+      (zone.zone_name?.toLowerCase().includes(q) ?? false)
     if (match) {
-      const zone = isoStore.zones.find((z: any) => z.zone_code === cls.zone_code)
       results.push({
-        id: `zone-${cls.zone_code}`,
-        label: `${cls.zone_code}${cls.zone_name ? ' - ' + cls.zone_name : ''}`,
+        id: `zone-${zone.zone_code}`,
+        label: `${zone.zone_code}${zone.zone_name ? ' - ' + zone.zone_name : ''}`,
         icon: 'mdi-map-marker-radius',
-        iconColor: classificationColor(cls.classification),
+        iconColor: severityTierColor(zone.severity_tier),
         type: 'zone',
-        code: cls.zone_code,
-        lat: zone?.centroid_lat ?? undefined,
-        lon: zone?.centroid_lon ?? undefined,
-      })
-    }
-    if (results.length >= 20) break
-  }
-
-  // Search substations
-  for (const sub of hierarchyStore.substations) {
-    const match = (sub.substation_name?.toLowerCase().includes(q) ?? false) ||
-      (sub.zone_code?.toLowerCase().includes(q) ?? false)
-    if (match) {
-      results.push({
-        id: `sub-${sub.id}`,
-        label: sub.substation_name ?? `Substation #${sub.id}`,
-        icon: 'mdi-flash',
-        iconColor: '#f39c12',
-        type: 'substation',
-        substationId: sub.id,
-        lat: sub.lat ?? undefined,
-        lon: sub.lon ?? undefined,
+        code: zone.zone_code,
+        lat: zone.centroid_lat ?? undefined,
+        lon: zone.centroid_lon ?? undefined,
       })
     }
     if (results.length >= 30) break
@@ -125,38 +151,23 @@ const searchResults = computed<SearchItem[]>(() => {
   return results
 })
 
-function classificationColor(cls: string): string {
-  switch (cls) {
-    case 'transmission': return '#e74c3c'
-    case 'generation': return '#3498db'
-    case 'both': return '#9b59b6'
-    case 'unconstrained': return '#2ecc71'
-    default: return 'grey'
-  }
-}
-
 function onSelect(item: SearchItem | null) {
   if (!item) return
 
-  // Navigate to dashboard if not there
   if (router.currentRoute.value.path !== '/') {
     router.push('/')
   }
 
   if (item.type === 'zone' && item.code) {
-    mapStore.selectedZoneCode = item.code
+    selectionStore.selectZone(item.code)
+    if (selectionStore.selectedISO) {
+      gridStore.loadZoneConstraints(selectionStore.selectedISO, item.code)
+    }
     if (item.lat != null && item.lon != null) {
       mapStore.panTo(item.lat, item.lon, 7)
     }
-  } else if (item.type === 'substation' && item.substationId) {
-    mapStore.selectedSubstationId = item.substationId
-    hierarchyStore.selectSubstation(item.substationId)
-    if (item.lat != null && item.lon != null) {
-      mapStore.panTo(item.lat, item.lon, 10)
-    }
   }
 
-  // Clear search
   selectedResult.value = null
   searchQuery.value = ''
 }

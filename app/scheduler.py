@@ -652,12 +652,13 @@ def job_eia_930_update():
     try:
         from adapters.eia_client import EIAClient
         from app.database import SessionLocal
-        from app.models import BalancingAuthority, BAHourlyData
+        from app.models import ISO, BAHourlyData
 
         session = SessionLocal()
         try:
-            bas = session.query(BalancingAuthority).filter(
-                BalancingAuthority.is_rto == False,
+            bas = session.query(ISO).filter(
+                ISO.ba_code.isnot(None),
+                ISO.is_rto == False,
             ).all()
 
             client = EIAClient()

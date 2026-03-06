@@ -1,7 +1,7 @@
 <template>
-  <div style="height: calc(100vh - 48px); display: flex;">
+  <div style="height: calc(100vh - 40px); display: flex;">
     <!-- Queue list (left) -->
-    <div style="width: 420px; border-right: 1px solid #ddd; overflow-y: auto; background: #ffffff;">
+    <div style="width: 420px; border-right: 1px solid var(--border-default); overflow-y: auto; background: var(--bg-surface-1);">
       <div class="pa-3 pb-0">
         <div class="d-flex align-center justify-space-between">
           <h2 class="text-subtitle-1 font-weight-bold">Review Queue</h2>
@@ -107,7 +107,7 @@
     </div>
 
     <!-- Detail panel (right) -->
-    <div style="flex: 1; overflow-y: auto; background: #fafafa;">
+    <div style="flex: 1; overflow-y: auto; background: var(--bg-base);">
       <div v-if="!store.selectedItem" class="d-flex align-center justify-center" style="height: 100%;">
         <div class="text-center text-medium-emphasis">
           <v-icon size="48" color="grey-lighten-1">mdi-clipboard-check-outline</v-icon>
@@ -177,7 +177,7 @@
             <div
               v-if="store.selectedItem.raw_text_snippet"
               class="text-caption pa-2 rounded"
-              style="background: #f5f5f5; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto;"
+              style="background: var(--bg-surface-2); font-family: var(--font-mono); white-space: pre-wrap; max-height: 200px; overflow-y: auto;"
             >
               {{ store.selectedItem.raw_text_snippet }}
             </div>
