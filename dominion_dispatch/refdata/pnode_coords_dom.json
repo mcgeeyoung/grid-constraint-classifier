@@ -1,0 +1,17 @@
+{
+  "_source": "HIFLD Electric Substations (chadbraden 1/9/2025 vintage) for 5 of 6; OSM 'Belmont Substation' operator=Virginia Electric and Power Company for BLMNTDOM (HIFLD had no match).",
+  "_match_notes": {
+    "1348256193": "BLMNTDOM -> OSM way 666803295 'Belmont Substation', Ashburn VA",
+    "34886155":   "BRADDOCK  -> HIFLD 'BRADDOCK', Annandale VA, 230 kV",
+    "83734355":   "HAMILTN   -> HIFLD 'HAMILTON', Hamilton VA, Loudoun County",
+    "123900989":  "IDYLWOO4  -> HIFLD 'IDYLWOOD', Falls Church VA, 230 kV",
+    "34886297":   "JEFFRSON  -> HIFLD 'JEFFERSON STREET', Alexandria VA, 230 kV",
+    "34886435":   "TYSONS    -> HIFLD 'TYSONS', Vienna VA, 230 kV"
+  },
+  "1348256193": [39.0582596, -77.5401313],
+  "34886155":   [38.821865, -77.223561],
+  "83734355":   [39.146408, -77.680400],
+  "123900989":  [38.885642, -77.209608],
+  "34886297":   [38.797078, -77.054848],
+  "34886435":   [38.932028, -77.236891]
+}

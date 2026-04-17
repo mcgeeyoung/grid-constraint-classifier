@@ -33,6 +33,21 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# Curated DOM pnode coords (HIFLD substations + OSM fallback). Loaded once
+# at import; safe if missing (empty dict, map falls back to no pnode markers).
+_PNODE_COORDS_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "dominion_dispatch" / "refdata" / "pnode_coords_dom.json"
+)
+_DOM_PNODE_COORDS: dict[str, tuple[float, float]] = {}
+if _PNODE_COORDS_PATH.is_file():
+    from dominion_dispatch.pnode_coords import load_pnode_coords_json
+    try:
+        _DOM_PNODE_COORDS = load_pnode_coords_json(_PNODE_COORDS_PATH)
+    except Exception:
+        logger.exception("Failed to load %s; continuing without pnode coords",
+                         _PNODE_COORDS_PATH)
+
 
 def _run_to_response(run: DominionDaIngestionRun) -> DominionIngestionRunResponse:
     return DominionIngestionRunResponse(
@@ -275,24 +290,13 @@ def dominion_asset_map_html(
             status_code=200,
         )
 
-    # Derive pnode coords from seeded asset coords, offset slightly north so the
-    # pnode and asset markers do not stack. Demo devices are enrolled as
-    # substation pnodes; real deployments would load a curated coords source.
-    pnode_coords: dict[str, tuple[float, float]] = {}
-    for dev in devices:
-        pid = str(dev.get("primary_pnode_id") or "").strip()
-        lat = dev.get("asset_lat")
-        lon = dev.get("asset_lon")
-        if pid and lat is not None and lon is not None:
-            pnode_coords[pid] = (float(lat) + 0.005, float(lon))
-
     with TemporaryDirectory() as td:
         out = Path(td) / "dominion_assets.html"
         build_dom_program_asset_nodal_map(
             devices,
             project_root=settings.PROJECT_ROOT,
             output_html=out,
-            pnode_coords=pnode_coords,
+            pnode_coords=_DOM_PNODE_COORDS,
             session=db,
             include_dom_boundary=True,
             geocode_missing_pnodes=False,
