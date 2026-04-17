@@ -76,3 +76,29 @@ class DominionDispatchRebuildResponse(BaseModel):
     ingestion_run_id: int
     rows_persisted: int
     device_count: int
+
+
+class DominionParticipationRow(BaseModel):
+    device_id_external: str
+    primary_pnode_id: Optional[str] = None
+    primary_pnode_name: Optional[str] = None
+    asset_display_name: Optional[str] = None
+    runs: int
+    total_hours: int
+    normal_hours: int
+    stressed_hours: int
+    extreme_hours: int
+    mandatory_hours: int
+    any_dispatch_hours: int
+    participation_pct: float
+    mandatory_pct: float
+    window_start: Optional[date] = None
+    window_end: Optional[date] = None
+
+
+class DominionParticipationResponse(BaseModel):
+    window_days: int
+    window_start: Optional[date] = None
+    window_end: Optional[date] = None
+    runs: int
+    devices: list[DominionParticipationRow]

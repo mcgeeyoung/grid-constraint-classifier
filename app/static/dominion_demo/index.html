@@ -73,6 +73,35 @@
         <p class="hint">Opens server-rendered HTML (devices active on as-of date).</p>
       </section>
 
+      <section class="panel wide" id="panel-participation">
+        <h2>Dispatch participation (rolling window)</h2>
+        <div class="participation-controls">
+          <label>Window (DA days)</label>
+          <input type="number" id="part-window" min="1" max="365" step="1" value="30" />
+          <button type="button" id="btn-refresh-participation">Refresh</button>
+          <span id="part-window-label" class="hint"></span>
+        </div>
+        <table class="devices participation">
+          <thead>
+            <tr>
+              <th>device_id</th>
+              <th>pnode</th>
+              <th>DA days</th>
+              <th>total hrs</th>
+              <th>any dispatch</th>
+              <th>mandatory (extreme)</th>
+              <th>optional (stressed)</th>
+              <th>normal</th>
+            </tr>
+          </thead>
+          <tbody id="participation-body"></tbody>
+        </table>
+        <p class="hint">
+          "Any dispatch" = stressed + extreme hours (program is asked to reduce).
+          "Mandatory" = extreme hours only (must execute per program policy).
+        </p>
+      </section>
+
       <section class="panel wide" id="panel-devices">
         <h2>Active devices</h2>
         <button type="button" id="btn-refresh-devices">Reload devices</button>

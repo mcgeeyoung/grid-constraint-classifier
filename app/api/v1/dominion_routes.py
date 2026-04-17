@@ -27,6 +27,8 @@ from app.schemas.dominion import (
     DominionDispatchRebuildResponse,
     DominionIngestRequest,
     DominionIngestionRunResponse,
+    DominionParticipationResponse,
+    DominionParticipationRow,
 )
 
 logger = logging.getLogger(__name__)
@@ -276,10 +278,17 @@ def dominion_asset_map_html(
         default=None,
         description="Enrollment as-of date for devices on the map",
     ),
+    window_days: int = Query(
+        default=30,
+        ge=1,
+        le=365,
+        description="Participation window (DA operating days) for popup stats",
+    ),
     db: Session = Depends(get_db),
 ):
     """Interactive Folium map (DER sites vs pnodes) for devices active on ``as_of``."""
     from dominion_dispatch.asset_map import build_dom_program_asset_nodal_map
+    from dominion_dispatch.participation import compute_participation_for_devices
     from dominion_dispatch.persist_schedule import fetch_active_devices_for_schedule
 
     d = as_of or datetime.now(timezone.utc).date()
@@ -289,6 +298,10 @@ def dominion_asset_map_html(
             "<html><body><p>No active devices for this date.</p></body></html>",
             status_code=200,
         )
+
+    device_ids = [dev["device_id_external"] for dev in devices]
+    stats = compute_participation_for_devices(db, device_ids, window_days=window_days)
+    participation = {did: s.as_dict() for did, s in stats.items()}
 
     with TemporaryDirectory() as td:
         out = Path(td) / "dominion_assets.html"
@@ -300,6 +313,77 @@ def dominion_asset_map_html(
             session=db,
             include_dom_boundary=True,
             geocode_missing_pnodes=False,
+            participation=participation,
         )
         html = out.read_text(encoding="utf-8")
     return HTMLResponse(html)
+
+
+@router.get("/dispatch/participation", response_model=DominionParticipationResponse)
+def dominion_participation(
+    as_of: Optional[date] = Query(
+        default=None,
+        description="Enrollment as-of date (defaults to today UTC)",
+    ),
+    window_days: int = Query(
+        default=30,
+        ge=1,
+        le=365,
+        description="DA operating-day window ending at the most recent ingest",
+    ),
+    db: Session = Depends(get_db),
+):
+    """Per-device dispatch participation rollup over the last ``window_days`` DA days."""
+    from dominion_dispatch.participation import compute_participation_for_devices
+    from dominion_dispatch.persist_schedule import fetch_active_devices_for_schedule
+
+    d = as_of or datetime.now(timezone.utc).date()
+    devices = fetch_active_devices_for_schedule(db, d)
+    if not devices:
+        return DominionParticipationResponse(
+            window_days=window_days, runs=0, devices=[]
+        )
+    by_id = {dev["device_id_external"]: dev for dev in devices}
+    stats = compute_participation_for_devices(
+        db, list(by_id.keys()), window_days=window_days
+    )
+
+    rows: list[DominionParticipationRow] = []
+    window_start = window_end = None
+    runs = 0
+    for did, dev in by_id.items():
+        s = stats.get(did)
+        if s is None:
+            continue
+        window_start = s.window_start
+        window_end = s.window_end
+        runs = s.runs
+        rows.append(
+            DominionParticipationRow(
+                device_id_external=did,
+                primary_pnode_id=str(dev.get("primary_pnode_id") or "") or None,
+                primary_pnode_name=dev.get("primary_pnode_name"),
+                asset_display_name=dev.get("asset_display_name"),
+                runs=s.runs,
+                total_hours=s.total_hours,
+                normal_hours=s.normal_hours,
+                stressed_hours=s.stressed_hours,
+                extreme_hours=s.extreme_hours,
+                mandatory_hours=s.mandatory_hours,
+                any_dispatch_hours=s.any_dispatch_hours,
+                participation_pct=s.participation_pct,
+                mandatory_pct=s.mandatory_pct,
+                window_start=s.window_start,
+                window_end=s.window_end,
+            )
+        )
+    # Sort: highest participation first
+    rows.sort(key=lambda r: (-r.any_dispatch_hours, r.device_id_external))
+
+    return DominionParticipationResponse(
+        window_days=window_days,
+        window_start=window_start,
+        window_end=window_end,
+        runs=runs,
+        devices=rows,
+    )

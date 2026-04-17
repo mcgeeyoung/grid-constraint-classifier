@@ -53,6 +53,7 @@ def build_dom_program_asset_nodal_map(
     include_dom_boundary: bool = True,
     geocode_missing_pnodes: bool = False,
     pnode_definitions_df: Optional[Any] = None,
+    participation: Optional[Mapping[str, Mapping[str, Any]]] = None,
 ) -> Path:
     """
     Build an interactive map with:
@@ -162,17 +163,35 @@ def build_dom_program_asset_nodal_map(
             ).add_to(fg_pnode)
 
         if site:
+            dev_id = dev.get("device_id_external") or dev.get("device_id")
+            stats = participation.get(dev_id) if participation and dev_id else None
+            if stats and stats.get("total_hours"):
+                pct = float(stats.get("participation_pct") or 0.0)
+                radius = 6 + 14 * min(pct / 50.0, 1.0)
+                popup_html = (
+                    f"<b>Asset</b> {label}<br>"
+                    f"Pnode {pid} ({dev.get('primary_pnode_name') or ''})<br>"
+                    f"<hr style='margin:4px 0'>"
+                    f"<b>Participation</b> (last {stats.get('runs', 0)} DA days, "
+                    f"{stats.get('total_hours', 0)} hrs)<br>"
+                    f"Any dispatch: {stats.get('any_dispatch_hours', 0)} hrs "
+                    f"({pct:.1f}%)<br>"
+                    f"Mandatory (extreme): {stats.get('mandatory_hours', 0)} hrs "
+                    f"({float(stats.get('mandatory_pct') or 0.0):.1f}%)<br>"
+                    f"Optional (stressed): {stats.get('stressed_hours', 0)} hrs<br>"
+                    f"Normal: {stats.get('normal_hours', 0)} hrs"
+                )
+            else:
+                radius = 8
+                popup_html = f"<b>Asset</b> {label}<br>Pnode {pid}"
             folium.CircleMarker(
                 location=[site[0], site[1]],
-                radius=8,
+                radius=radius,
                 color="#2ca02c",
                 fill=True,
                 fill_color="#98df8a",
                 weight=2,
-                popup=folium.Popup(
-                    f"<b>Asset</b> {label}<br>Pnode {pid}",
-                    max_width=280,
-                ),
+                popup=folium.Popup(popup_html, max_width=320),
             ).add_to(fg_asset)
             if plat is not None and plon is not None:
                 folium.PolyLine(

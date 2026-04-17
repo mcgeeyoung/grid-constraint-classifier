@@ -154,7 +154,88 @@ async function loadDevices() {
 
 function updateMapLink() {
   const asOf = el("map-asof").value || todayISODate();
-  el("map-link").href = `${API}/asset-map?as_of=${encodeURIComponent(asOf)}`;
+  const window_days = parseInt(el("part-window")?.value || "30", 10);
+  el("map-link").href =
+    `${API}/asset-map?as_of=${encodeURIComponent(asOf)}&window_days=${window_days}`;
+}
+
+function addCell(tr, text, opts = {}) {
+  const td = document.createElement("td");
+  if (opts.strong) {
+    const s = document.createElement("strong");
+    s.textContent = text;
+    td.appendChild(s);
+    if (opts.suffix) td.appendChild(document.createTextNode(opts.suffix));
+  } else {
+    td.textContent = text;
+  }
+  if (opts.className) td.className = opts.className;
+  tr.appendChild(td);
+  return td;
+}
+
+async function loadParticipation() {
+  const window_days = parseInt(el("part-window").value || "30", 10);
+  const asOf = el("map-asof").value || todayISODate();
+  const tbody = el("participation-body");
+  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+  const loading = document.createElement("tr");
+  const ld = document.createElement("td");
+  ld.colSpan = 8;
+  ld.className = "muted";
+  ld.textContent = "Loading…";
+  loading.appendChild(ld);
+  tbody.appendChild(loading);
+
+  try {
+    const data = await apiJson(
+      `/dispatch/participation?window_days=${window_days}&as_of=${encodeURIComponent(asOf)}`
+    );
+    const label = el("part-window-label");
+    label.textContent =
+      data.window_start && data.window_end
+        ? `${data.window_start} → ${data.window_end} (${data.runs} DA days with data)`
+        : "no dispatch data in window";
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    if (!data.devices.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 8;
+      td.className = "muted";
+      td.textContent = "No active devices for this as-of date.";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+    const pct = (v) => (v == null ? "—" : ` (${Number(v).toFixed(1)}%)`);
+    for (const r of data.devices) {
+      const tr = document.createElement("tr");
+      const pnode = r.primary_pnode_name
+        ? `${r.primary_pnode_name} (${r.primary_pnode_id})`
+        : r.primary_pnode_id || "—";
+      addCell(tr, r.device_id_external);
+      addCell(tr, pnode);
+      addCell(tr, String(r.runs));
+      addCell(tr, String(r.total_hours));
+      addCell(tr, String(r.any_dispatch_hours), {
+        strong: true,
+        suffix: pct(r.participation_pct),
+      });
+      addCell(tr, `${r.mandatory_hours}${pct(r.mandatory_pct)}`);
+      addCell(tr, String(r.stressed_hours));
+      addCell(tr, String(r.normal_hours));
+      tbody.appendChild(tr);
+    }
+  } catch (e) {
+    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 8;
+    td.className = "muted";
+    td.textContent = `Error: ${String(e.message || e)}`;
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
 }
 
 async function doIngest() {
@@ -247,10 +328,18 @@ function init() {
   el("btn-rebuild").addEventListener("click", doRebuild);
   el("btn-load-dispatch").addEventListener("click", doLoadDispatch);
   el("btn-refresh-devices").addEventListener("click", () => loadDevices().catch((e) => console.error(e)));
-  el("map-asof").addEventListener("change", updateMapLink);
+  el("map-asof").addEventListener("change", () => {
+    updateMapLink();
+    loadParticipation().catch((e) => console.error(e));
+  });
+  el("btn-refresh-participation").addEventListener("click", () =>
+    loadParticipation().catch((e) => console.error(e))
+  );
+  el("part-window").addEventListener("change", updateMapLink);
 
   loadRuns()
     .then(loadDevices)
+    .then(() => loadParticipation())
     .catch((e) => {
       el("ingest-log").textContent = String(e.message || e);
     });
