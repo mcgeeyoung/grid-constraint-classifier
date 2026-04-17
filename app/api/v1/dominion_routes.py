@@ -275,12 +275,24 @@ def dominion_asset_map_html(
             status_code=200,
         )
 
+    # Derive pnode coords from seeded asset coords, offset slightly north so the
+    # pnode and asset markers do not stack. Demo devices are enrolled as
+    # substation pnodes; real deployments would load a curated coords source.
+    pnode_coords: dict[str, tuple[float, float]] = {}
+    for dev in devices:
+        pid = str(dev.get("primary_pnode_id") or "").strip()
+        lat = dev.get("asset_lat")
+        lon = dev.get("asset_lon")
+        if pid and lat is not None and lon is not None:
+            pnode_coords[pid] = (float(lat) + 0.005, float(lon))
+
     with TemporaryDirectory() as td:
         out = Path(td) / "dominion_assets.html"
         build_dom_program_asset_nodal_map(
             devices,
             project_root=settings.PROJECT_ROOT,
             output_html=out,
+            pnode_coords=pnode_coords,
             session=db,
             include_dom_boundary=True,
             geocode_missing_pnodes=False,
