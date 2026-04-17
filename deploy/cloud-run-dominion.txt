@@ -1,0 +1,76 @@
+Dominion demo API on Google Cloud Run
+======================================
+
+For Cloud SQL creation, laptop Alembic via Auth Proxy, and dominion_devices seed SQL, see:
+  deploy/cloud-sql-postgres-setup.txt
+
+Prereqs
+-------
+- gcloud installed and authenticated; project selected.
+- Postgres reachable from Cloud Run (Cloud SQL recommended in the same region).
+- Alembic migrations already applied to that database (alembic upgrade head from your laptop).
+- dominion_devices seeded so dispatch rebuild has rows to join.
+
+Why Cloud Run fits
+------------------
+- HTTPS URL out of the box for the FastAPI app and /api/v1/dominion/*.
+- Scales to zero between demos (lower cost).
+- Dockerfile in repo root listens on $PORT (Cloud Run sets PORT, often 8080).
+
+First deploy (build from source in this directory)
+---------------------------------------------------
+From grid-constraint-classifier (repo root):
+
+  gcloud run deploy dominion-api \
+    --source . \
+    --region us-central1 \
+    --allow-unauthenticated \
+    --memory 1Gi \
+    --timeout 300 \
+    --set-env-vars "\
+DATABASE_URL=postgresql://USER:PASS@/DBNAME?host=/cloudsql/PROJECT:REGION:INSTANCE,\
+PJM_SUBSCRIPTION_KEY=your-key,\
+CORS_EXTRA_ORIGINS=https://storage.googleapis.com"
+
+Notes on the example above
+--------------------------
+- Replace dominion-api, region, DATABASE_URL, PJM key, and Cloud SQL socket path with yours.
+- If you are not using Cloud SQL Unix socket, use a normal TCP host in DATABASE_URL (and ensure
+  Cloud Run egress can reach it; VPC connector may be required for private IP).
+- For anything except a throwaway demo, put secrets in Secret Manager and use --set-secrets
+  instead of plain env vars.
+- CORS_EXTRA_ORIGINS is required for the static UI served from https://storage.googleapis.com/...
+  Add comma-separated origins if you use a custom domain for the GCS site.
+
+Cloud SQL (typical pattern)
+---------------------------
+1. Create a Cloud SQL for PostgreSQL instance (same region as Cloud Run).
+2. Create database + user; run Alembic against it once from your laptop (or Cloud Shell) with
+   a temporary authorized network or Cloud SQL Auth Proxy.
+3. Enable the Cloud SQL Admin API.
+4. Deploy with:
+
+     --add-cloudsql-instances PROJECT:REGION:INSTANCE
+
+   and DATABASE_URL using the /cloudsql/PROJECT:REGION:INSTANCE Unix socket (see Cloud SQL docs
+   for the exact SQLAlchemy URL your driver expects).
+
+5. Grant the Cloud Run default service account (or the one you use) the role
+   roles/cloudsql.client on the instance.
+
+After deploy
+------------
+- gcloud prints the service URL, e.g. https://dominion-api-xxxxx-uc.a.run.app
+- Test: https://.../health
+- Test: https://.../api/v1/dominion/ingestion-runs
+- Point the GCS static demo at: https://.../api/v1/dominion (see deploy/dominion-gcs.txt and
+  deploy/upload-dominion-demo-gcs.sh).
+
+Redeploy after code changes
+---------------------------
+Same gcloud run deploy dominion-api --source . ... command; Cloud Run rebuilds the image.
+
+Optional hardening (later)
+--------------------------
+- Remove --allow-unauthenticated and use IAM / identity-aware access.
+- Min instances > 0 only if you need to avoid cold starts for a live pitch.

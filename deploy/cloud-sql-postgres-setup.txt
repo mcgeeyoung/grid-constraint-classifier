@@ -1,0 +1,180 @@
+Cloud SQL (PostgreSQL) + Alembic + dominion_devices seed
+=========================================================
+
+Use this when Cloud Run will talk to Cloud SQL in the **same region** (e.g. us-central1).
+
+0. Pick a region
+-----------------
+Example: us-central1. Use that same value for:
+- Cloud SQL instance region
+- Cloud Run service region
+- (Later) --add-cloudsql-instances PROJECT:REGION:INSTANCE
+
+
+1. Enable APIs (once per project)
+---------------------------------
+  gcloud services enable sqladmin.googleapis.com
+
+
+2. Create the Cloud SQL instance
+--------------------------------
+Pick an **instance id** (lower case, hyphens), e.g. dominion-demo-db.
+
+Small demo tier:
+
+  gcloud sql instances create dominion-demo-db \
+    --database-version=POSTGRES_16 \
+    --tier=db-f1-micro \
+    --region=us-central1 \
+    --edition=ENTERPRISE
+
+Wait until STATUS is RUNNABLE:
+
+  gcloud sql instances describe dominion-demo-db --format="value(state)"
+
+
+3. Create a database and a login user
+-------------------------------------
+Database name (example): gridclass
+
+  gcloud sql databases create gridclass --instance=dominion-demo-db
+
+Choose a DB user (example): appuser and a strong password (avoid @ : / ? # in passwords
+or URL-encode them in DATABASE_URL later).
+
+  gcloud sql users create appuser \
+    --instance=dominion-demo-db \
+    --password='YOUR_SECURE_PASSWORD'
+
+
+4. Connect from your laptop to run Alembic (Cloud SQL Auth Proxy)
+-------------------------------------------------------------------
+You need a TCP path to Postgres before Cloud Run exists. The usual approach is the
+**Cloud SQL Auth Proxy**, which listens on localhost and tunnels to the instance.
+
+4a. Install the proxy (pick one method from Google’s doc):
+    https://cloud.google.com/sql/docs/postgres/connect-auth-proxy
+
+4b. Find your **instance connection name**:
+
+  gcloud sql instances describe dominion-demo-db --format="value(connectionName)"
+
+It looks like: PROJECT_ID:us-central1:dominion-demo-db
+
+4c. Start the proxy (separate terminal; leave it running). Example with local port 5433:
+
+  ./cloud-sql-proxy PROJECT_ID:us-central1:dominion-demo-db --port=5433
+
+4d. Build DATABASE_URL for Alembic (TCP via proxy). Password must be URL-encoded if it
+    contains special characters (@ # : etc.).
+
+  export DATABASE_URL="postgresql://appuser:YOUR_SECURE_PASSWORD@127.0.0.1:5433/gridclass"
+
+
+5. Run Alembic from the repo (your laptop)
+-------------------------------------------
+Use the same Python env where you installed this repo’s requirements (alembic, sqlalchemy,
+psycopg2-binary, etc.).
+
+  cd /path/to/grid-constraint-classifier
+  alembic upgrade head
+
+This applies **all** migrations in order (the whole app schema, including Dominion tables).
+If it errors, read the message: wrong password, proxy not running, or DB name typo are common.
+
+Verify Dominion tables exist:
+
+  # With psql installed and same host/port/user/db:
+  psql "$DATABASE_URL" -c "\dt dominion*"
+
+
+6. Seed dominion_devices (minimum row)
+--------------------------------------
+The API’s dispatch rebuild loads rows from dominion_devices that are **active** on the DA
+operating date: effective_from <= as_of AND (effective_to IS NULL OR effective_to >= as_of).
+
+You must set:
+- device_id_external (unique string)
+- pjm_load_zone_code = 'DOM' for this program
+- primary_pnode_id = a **real PJM pricing node id** (string) that appears in your DA pulls
+  for DOM; if you pick a random id, congestion may always be null for that device.
+- effective_from / effective_to window that includes your demo dates
+- created_at_utc / updated_at_utc (timestamps)
+
+Optional: primary_pnode_name, asset_lat/lon, asset_display_name, neighbor_pnode_ids (JSON array
+of strings), piecewise_curve (JSON array of {congestion, signal} knots), notes.
+
+Example using psql (edit pnode id and password path):
+
+  psql "$DATABASE_URL" <<'SQL'
+  INSERT INTO dominion_devices (
+    device_id_external,
+    pjm_load_zone_code,
+    primary_pnode_id,
+    primary_pnode_name,
+    effective_from,
+    effective_to,
+    neighbor_pnode_ids,
+    piecewise_curve,
+    notes,
+    created_at_utc,
+    updated_at_utc
+  ) VALUES (
+    'demo-device-001',
+    'DOM',
+    'REPLACE_WITH_REAL_PNODE_ID',
+    'Demo primary pnode',
+    DATE '2020-01-01',
+    NULL,
+    NULL,
+    '[{"congestion": -50, "signal": 0}, {"congestion": 50, "signal": 1}]'::json,
+    'Seeded for Dominion demo',
+    NOW(),
+    NOW()
+  );
+  SQL
+
+To find a plausible pnode id for DOM, ingest one DA day (no dominion_devices row required), then:
+
+  psql "$DATABASE_URL" -c \
+    "SELECT DISTINCT pnode_id_external FROM dominion_da_node_hourly ORDER BY 1 LIMIT 20;"
+
+6a. If you deferred seed: ingest first (laptop + proxy + PJM key)
+---------------------------------------------------------------
+From the repo root, with the proxy on 127.0.0.1:5433 and DATABASE_URL pointing at it:
+
+  export DATABASE_URL="postgresql://appuser:...@127.0.0.1:5433/gridclass"
+  export PJM_SUBSCRIPTION_KEY="..."
+  PYTHONPATH=. python -m dominion_dispatch.cli ingest-dom --date YYYY-MM-DD
+
+Then run the SELECT above, pick a pnode id, and run the INSERT in step 6 with that id.
+
+You can stop the Auth Proxy whenever you are not using psql or Alembic; start it again before
+any local DB work.
+
+
+7. What you hand to Cloud Run later
+-----------------------------------
+For Cloud Run + Unix socket (no proxy), the app uses a URL shaped like:
+
+  postgresql://appuser:PASSWORD@/gridclass?host=/cloudsql/PROJECT:REGION:INSTANCE
+
+Exact URL rules depend on your driver; this repo uses SQLAlchemy + psycopg2-binary, which is
+compatible with the standard /cloudsql/ socket path when Cloud Run has
+--add-cloudsql-instances set.
+
+Grant the **Cloud Run service account** Cloud SQL Client on the instance (Console:
+Cloud SQL → instance → Users / or IAM):
+
+  roles/cloudsql.client
+
+See deploy/cloud-run-dominion.txt for the deploy flags once DATABASE_URL is correct.
+
+
+8. Quick checklist
+------------------
+[ ] Instance RUNNABLE in same region as Cloud Run
+[ ] Database + user created
+[ ] Proxy running; alembic upgrade head succeeds
+[ ] dominion_devices has at least one row; primary_pnode_id matches real DA data for DOM
+[ ] effective_from / effective_to cover your demo operating dates

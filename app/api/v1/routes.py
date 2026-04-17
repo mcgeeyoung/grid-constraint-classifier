@@ -16,8 +16,10 @@ from app.schemas.responses import (
     PnodeScoreResponse, ZoneLMPResponse, DataCenterResponse,
     DERRecommendationResponse, PipelineRunResponse, OverviewResponse,
 )
+from app.api.v1.dominion_routes import router as dominion_router
 
 router = APIRouter(prefix="/api/v1")
+router.include_router(dominion_router, prefix="/dominion", tags=["Dominion DER demo"])
 
 
 @router.get("/isos", response_model=list[ISOResponse])

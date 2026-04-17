@@ -4,6 +4,20 @@ import os
 from pathlib import Path
 
 
+def _cors_origins() -> list[str]:
+    base = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "https://wattcarbon.github.io",
+    ]
+    extra = os.environ.get("CORS_EXTRA_ORIGINS", "")
+    for origin in extra.split(","):
+        o = origin.strip()
+        if o and o not in base:
+            base.append(o)
+    return base
+
+
 class Settings:
     """Application settings loaded from environment variables."""
 
@@ -25,11 +39,7 @@ class Settings:
     # API settings
     API_TITLE: str = "Grid Constraint Classifier API"
     API_VERSION: str = "1.0.0"
-    CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "https://wattcarbon.github.io",
-    ]
+    CORS_ORIGINS: list[str] = _cors_origins()
 
     # Pipeline credentials (optional)
     PJM_SUBSCRIPTION_KEY: str = os.environ.get("PJM_SUBSCRIPTION_KEY", "")

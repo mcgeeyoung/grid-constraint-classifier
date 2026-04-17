@@ -1,0 +1,52 @@
+Dominion demo: static UI on Google Cloud Storage + API on Cloud Run (or any HTTPS host)
+
+Overview
+--------
+- The HTML/JS/CSS under app/static/dominion_demo/ is uploaded to a GCS bucket (or prefix).
+- deploy/upload-dominion-demo-gcs.sh writes config.js so the browser calls your public API URL.
+- The FastAPI service must be reachable over HTTPS with CORS allowing the static page origin.
+
+API on Cloud Run
+----------------
+See deploy/cloud-run-dominion.txt for a full Cloud Run + Cloud SQL oriented walkthrough,
+including $PORT, memory, timeout, and CORS.
+
+Quick example (adjust names and env):
+
+  gcloud run deploy dominion-api --source . --region us-central1 \
+    --allow-unauthenticated --memory 1Gi --timeout 300 \
+    --set-env-vars DATABASE_URL=...,PJM_SUBSCRIPTION_KEY=...,CORS_EXTRA_ORIGINS=https://storage.googleapis.com
+
+Note the HTTPS service URL, e.g. https://dominion-api-xxxxx-uc.a.run.app
+
+CORS
+----
+Pages loaded from https://storage.googleapis.com/... send Origin: https://storage.googleapis.com
+Set on Cloud Run (required for static demo from GCS):
+
+  CORS_EXTRA_ORIGINS=https://storage.googleapis.com
+
+If you front the bucket with a custom domain, add it too (comma-separated), e.g.
+
+  CORS_EXTRA_ORIGINS=https://storage.googleapis.com,https://demo.example.com
+
+Upload static demo to GCS
+-------------------------
+  export GCS_DEMO_BUCKET=your-bucket-name
+  export DOMINION_API_PUBLIC_URL=https://gridclass-api-xxxxx-uc.a.run.app/api/v1/dominion
+  export GCS_DEMO_PREFIX=dominion-demo
+  ./deploy/upload-dominion-demo-gcs.sh
+
+Open:
+
+  https://storage.googleapis.com/${GCS_DEMO_BUCKET}/${GCS_DEMO_PREFIX}/index.html
+
+Bucket access (demo)
+--------------------
+Grant read access to objects (e.g. allUsers with roles/storage.objectViewer on this bucket only
+for a throwaway demo bucket), or use signed URLs / IAP for production-style access.
+
+Website config (optional)
+-------------------------
+You can use gsutil web set -m index.html on a dedicated bucket; the direct storage.googleapis.com
+URL above works without website configuration.

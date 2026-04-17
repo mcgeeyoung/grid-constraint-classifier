@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dominion DER — DA dispatch demo</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="config.js"></script>
+  </head>
+  <body>
+    <header class="hero">
+      <h1>Dominion DER program demo</h1>
+      <p class="sub">
+        Live PJM day-ahead ingest, Postgres-backed schedule, stressed vs extreme dispatch policy.
+        <span id="intro-local-only">
+          Local API (same origin): run
+          <code>uvicorn app.main:app --reload --host 0.0.0.0 --port 8000</code>
+          from repo root, then open this page from that server or <code>/dominion-demo/</code>.
+        </span>
+      </p>
+    </header>
+
+    <main class="grid">
+      <section class="panel" id="panel-ingest">
+        <h2>1. Ingest DA (PJM)</h2>
+        <label>Operating date (EPT day)</label>
+        <input type="date" id="ingest-date" />
+        <label class="inline"><input type="checkbox" id="ingest-replace" /> Replace existing run</label>
+        <button type="button" id="btn-ingest">Pull &amp; persist</button>
+        <p class="hint">Requires <code>PJM_SUBSCRIPTION_KEY</code> on the server.</p>
+        <pre id="ingest-log" class="log"></pre>
+      </section>
+
+      <section class="panel" id="panel-runs">
+        <h2>2. Ingestion runs</h2>
+        <button type="button" id="btn-refresh-runs">Refresh</button>
+        <table class="runs">
+          <thead>
+            <tr>
+              <th>id</th>
+              <th>date</th>
+              <th>status</th>
+              <th>rows</th>
+            </tr>
+          </thead>
+          <tbody id="runs-body"></tbody>
+        </table>
+      </section>
+
+      <section class="panel" id="panel-dispatch">
+        <h2>3. Dispatch schedule</h2>
+        <label>Ingestion run id</label>
+        <input type="number" id="run-id" min="1" step="1" />
+        <label class="inline"><input type="checkbox" id="policy-off" /> Disable period policy (raw program signal)</label>
+        <label class="inline"><input type="checkbox" id="stressed-peak-only" /> Stressed tier peak-only (7–22 EPT)</label>
+        <button type="button" id="btn-rebuild">Rebuild &amp; persist schedule</button>
+        <button type="button" id="btn-load-dispatch">Load chart</button>
+        <label>Device filter</label>
+        <select id="device-select"><option value="">All devices (first in list for chart)</option></select>
+        <pre id="dispatch-log" class="log"></pre>
+        <div class="tier-summary" id="tier-summary"></div>
+        <div class="chart-wrap">
+          <canvas id="chart-dispatch" height="120"></canvas>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-map">
+        <h2>4. Asset map</h2>
+        <label>As-of (enrollment)</label>
+        <input type="date" id="map-asof" />
+        <a class="button-link" id="map-link" href="#" target="_blank" rel="noopener">Open Folium map</a>
+        <p class="hint">Opens server-rendered HTML (devices active on as-of date).</p>
+      </section>
+
+      <section class="panel wide" id="panel-devices">
+        <h2>Active devices</h2>
+        <button type="button" id="btn-refresh-devices">Reload devices</button>
+        <table class="devices">
+          <thead>
+            <tr>
+              <th>device_id</th>
+              <th>pnode</th>
+              <th>asset</th>
+            </tr>
+          </thead>
+          <tbody id="devices-body"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span id="api-footer">API prefix: <code>/api/v1/dominion/</code> (same host as this page when config is null)</span>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

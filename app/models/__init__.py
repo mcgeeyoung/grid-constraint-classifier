@@ -12,6 +12,12 @@ from .data_center import DataCenter
 from .der_recommendation import DERRecommendation
 from .transmission_line import TransmissionLine
 from .substation import Substation
+from .dominion_der import (
+    DominionDaIngestionRun,
+    DominionDaNodeHourly,
+    DominionDevice,
+    DominionDispatchDeviceHour,
+)
 
 __all__ = [
     "Base",
@@ -26,4 +32,8 @@ __all__ = [
     "DERRecommendation",
     "TransmissionLine",
     "Substation",
+    "DominionDaIngestionRun",
+    "DominionDaNodeHourly",
+    "DominionDevice",
+    "DominionDispatchDeviceHour",
 ]

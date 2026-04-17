@@ -1,0 +1,36 @@
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# Python
+.venv
+venv
+env
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Docs (GitHub Pages site; not needed in container)
+docs
+
+# Local data/outputs
+data
+output
+*.sqlite
+*.db
+
+# OS / editor
+.DS_Store
+.idea
+.vscode
+
+# Docker / Cloud
+Dockerfile.local
+docker-compose*.yml
+.dockerignore
