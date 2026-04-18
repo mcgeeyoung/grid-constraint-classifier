@@ -7,6 +7,12 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from dominion_dispatch.config import (
+    DISPATCH_EXTREME_ABS_QUANTILE_DEFAULT,
+    DISPATCH_STRESSED_ABS_USD_DEFAULT,
+    DISPATCH_STRESSED_SIGNAL_FRACTION_DEFAULT,
+)
+
 
 class DominionIngestionRunResponse(BaseModel):
     id: int
@@ -66,9 +72,15 @@ class DominionDispatchRebuildRequest(BaseModel):
     ingestion_run_id: int
     replace_existing: bool = True
     no_period_policy: bool = False
-    stressed_threshold_usd: float = Field(default=2.0, ge=0.0)
-    extreme_quantile: float = Field(default=0.95, gt=0.0, lt=1.0)
-    stressed_signal_fraction: float = Field(default=0.5, ge=0.0, le=1.0)
+    stressed_threshold_usd: float = Field(
+        default=DISPATCH_STRESSED_ABS_USD_DEFAULT, ge=0.0
+    )
+    extreme_quantile: float = Field(
+        default=DISPATCH_EXTREME_ABS_QUANTILE_DEFAULT, gt=0.0, lt=1.0
+    )
+    stressed_signal_fraction: float = Field(
+        default=DISPATCH_STRESSED_SIGNAL_FRACTION_DEFAULT, ge=0.0, le=1.0
+    )
     stressed_peak_only: bool = False
 
 
