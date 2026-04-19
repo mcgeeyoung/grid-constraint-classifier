@@ -1,0 +1,93 @@
+/*
+ * WattCarbon brand theme — shared across /dominion-demo/ and /dominion-admin/.
+ *
+ * Tokens mirror brand-guidelines.md (Sherpa Blue palette, Inter + Source Serif
+ * Pro typography). Dark UI is native to the brand since Dark Sherpa Blue is
+ * already the deepest primary.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap");
+
+:root {
+  /* Primary */
+  --wc-dark-sherpa: #00232C;
+  --wc-sherpa: #003E4A;
+  --wc-light-sherpa: #346876;
+  --wc-lake: #0697B6;
+  --wc-frost: #C0F5FF;
+  --wc-pastel-azure: #F1FDFF;
+
+  /* Neutrals */
+  --wc-black: #000D0F;
+  --wc-sandy: #6C8C93;
+  --wc-dolphin: #CBCECF;
+  --wc-frozen: #EAEEEF;
+  --wc-white: #FFFFFF;
+
+  /* Accents */
+  --wc-neon: #0BD4FF;
+  --wc-honeydew: #E4FD7F;
+
+  /* Typography */
+  --wc-font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --wc-font-display: "Source Serif Pro", "SourceSerif Pro", Georgia, serif;
+
+  /* Semantic mappings for dark UI — consume these in component CSS */
+  --bg: var(--wc-dark-sherpa);
+  --panel: var(--wc-sherpa);
+  --panel-hi: var(--wc-light-sherpa);
+  --text: var(--wc-pastel-azure);
+  --text-bright: var(--wc-white);
+  --muted: var(--wc-sandy);
+  --accent: var(--wc-neon);
+  --accent-dim: var(--wc-lake);
+  --border: rgba(11, 212, 255, 0.15);
+
+  /* Performance / status colors — kept semantic so Dominion PMs read them at a glance */
+  --ok: var(--wc-honeydew);
+  --warn: var(--wc-honeydew);
+}
+
+body {
+  font-family: var(--wc-font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--wc-font-display);
+  color: var(--text-bright);
+  letter-spacing: -0.01em;
+}
+
+/* Brand header — reusable across pages */
+.wc-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.25rem 2rem 0.75rem;
+}
+
+.wc-brand-header .wc-logomark {
+  height: 36px;
+  width: auto;
+}
+
+.wc-brand-header .wc-wordmark {
+  font-family: var(--wc-font-display);
+  font-weight: 600;
+  color: var(--text-bright);
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.wc-brand-header .wc-sep {
+  color: var(--muted);
+  margin: 0 0.15rem;
+}
+
+.wc-brand-header .wc-context {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
