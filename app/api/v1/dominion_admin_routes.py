@@ -219,3 +219,139 @@ def dashboard_today(db: Session = Depends(get_db)):
         ],
         fleet_24h_signal=fleet_series,
     )
+
+
+# ───────────────────────── events list + detail ─────────────────────────
+
+
+def _zone_id_for(primary_pnode_id: str) -> Optional[str]:
+    z = zone_for_pnode(load_zones(), str(primary_pnode_id))
+    return z.id if z else None
+
+
+def _pnode_name_for(session: Session, primary_pnode_id: str) -> Optional[str]:
+    row = session.execute(
+        select(DominionDevice.primary_pnode_name)
+        .where(DominionDevice.primary_pnode_id == str(primary_pnode_id))
+        .limit(1)
+    ).scalar_one_or_none()
+    return row
+
+
+def _event_to_summary(ev, session: Session) -> AdminEventSummary:
+    return AdminEventSummary(
+        event_id=ev.event_id,
+        device_id_external=ev.device_id_external,
+        primary_pnode_id=ev.primary_pnode_id,
+        primary_pnode_name=_pnode_name_for(session, ev.primary_pnode_id),
+        zone_id=_zone_id_for(ev.primary_pnode_id),
+        operating_date=ev.operating_date,
+        start_utc=ev.start_utc,
+        end_utc=ev.end_utc,
+        duration_hours=ev.duration_hours,
+        stressed_hours=ev.stressed_hours,
+        extreme_hours=ev.extreme_hours,
+        has_mandatory=ev.has_mandatory,
+        listed_capacity_kw_avg=(
+            ev.listed_capacity_kw * ev.avg_program_signal
+            if ev.listed_capacity_kw is not None else None
+        ),
+        realized_capacity_kw_avg=ev.realized_capacity_kw_avg,
+        performance_pct=ev.performance_pct,
+        mandatory_performance_pct=ev.mandatory_performance_pct,
+    )
+
+
+@router.get("/events", response_model=AdminEventListResponse)
+def list_events(
+    window_days: int = Query(default=30, ge=1, le=365),
+    zone_id: Optional[str] = None,
+    has_mandatory: Optional[bool] = None,
+    min_perf: Optional[float] = Query(default=None, ge=0, le=100),
+    device_id_external: Optional[str] = None,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
+    latest = _latest_successful_run(db)
+    if latest is None:
+        return AdminEventListResponse(total=0, events=[])
+    window_end = latest.operating_date
+    window_start = window_end - timedelta(days=window_days - 1)
+
+    device_ids: Optional[list[str]] = None
+    if zone_id:
+        z = load_zones().by_id(zone_id)
+        if z is None:
+            raise HTTPException(404, f"Zone {zone_id} not found")
+        rows = db.execute(
+            select(DominionDevice.device_id_external).where(
+                DominionDevice.primary_pnode_id.in_(z.pnode_ids)
+            )
+        ).all()
+        device_ids = [r[0] for r in rows]
+        if not device_ids:
+            return AdminEventListResponse(
+                window_start=window_start, window_end=window_end, total=0, events=[]
+            )
+    if device_id_external:
+        device_ids = [device_id_external] if device_ids is None else (
+            [device_id_external] if device_id_external in device_ids else []
+        )
+        if not device_ids:
+            return AdminEventListResponse(
+                window_start=window_start, window_end=window_end, total=0, events=[]
+            )
+
+    events = build_events_for_window(
+        db,
+        window_start=window_start,
+        window_end=window_end,
+        device_ids=device_ids,
+    )
+    if has_mandatory is not None:
+        events = [e for e in events if e.has_mandatory == has_mandatory]
+    if min_perf is not None:
+        events = [e for e in events if (e.performance_pct or 0) >= min_perf]
+
+    events.sort(key=lambda e: e.start_utc, reverse=True)
+    total = len(events)
+    page = events[offset : offset + limit]
+    return AdminEventListResponse(
+        window_start=window_start,
+        window_end=window_end,
+        total=total,
+        events=[_event_to_summary(e, db) for e in page],
+    )
+
+
+@router.get("/events/{event_id}", response_model=AdminEventDetail)
+def get_event(event_id: str, db: Session = Depends(get_db)):
+    # Event IDs are shaped: E-YYYY-MM-DD-<device_id>-<hh>
+    # Parse the operating_date and device_id to scope the lookup cheaply.
+    parts = event_id.split("-")
+    if len(parts) < 6 or parts[0] != "E":
+        raise HTTPException(400, f"Bad event_id: {event_id}")
+    try:
+        op_date = date.fromisoformat(f"{parts[1]}-{parts[2]}-{parts[3]}")
+    except ValueError as e:
+        raise HTTPException(400, f"Bad event_id date: {e}") from e
+    start_hour_ept = parts[-1]
+    device_id = "-".join(parts[4:-1])
+
+    events = build_events_for_window(
+        db,
+        window_start=op_date,
+        window_end=op_date,
+        device_ids=[device_id],
+        include_hourly_detail=True,
+    )
+    match = next((e for e in events if e.event_id == event_id), None)
+    if match is None:
+        raise HTTPException(404, f"Event {event_id} not found")
+
+    summary = _event_to_summary(match, db)
+    return AdminEventDetail(
+        **summary.model_dump(),
+        hours=[AdminEventHour(**h) for h in match.hours],
+    )
