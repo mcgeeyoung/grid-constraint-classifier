@@ -355,3 +355,102 @@ def get_event(event_id: str, db: Session = Depends(get_db)):
         **summary.model_dump(),
         hours=[AdminEventHour(**h) for h in match.hours],
     )
+
+
+# ───────────────────────── devices/{id}/summary ─────────────────────────
+
+
+@router.get(
+    "/devices/{device_id_external}/summary", response_model=AdminDeviceSummary
+)
+def device_summary(
+    device_id_external: str,
+    window_days: int = Query(default=30, ge=1, le=365),
+    recent_limit: int = Query(default=10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    dev = db.execute(
+        select(DominionDevice).where(
+            DominionDevice.device_id_external == device_id_external
+        )
+    ).scalar_one_or_none()
+    if dev is None:
+        raise HTTPException(404, f"Device {device_id_external} not found")
+
+    latest = _latest_successful_run(db)
+    if latest is None:
+        return AdminDeviceSummary(
+            device_id_external=dev.device_id_external,
+            primary_pnode_id=dev.primary_pnode_id,
+            primary_pnode_name=dev.primary_pnode_name,
+            zone_id=_zone_id_for(dev.primary_pnode_id),
+            listed_capacity_kw=float(dev.listed_capacity_kw) if dev.listed_capacity_kw else None,
+            asset_lat=float(dev.asset_lat) if dev.asset_lat is not None else None,
+            asset_lon=float(dev.asset_lon) if dev.asset_lon is not None else None,
+            event_count=0,
+            total_dispatch_hours=0,
+            total_realized_energy_mwh=0.0,
+            recent_events=[],
+        )
+    window_end = latest.operating_date
+    window_start = window_end - timedelta(days=window_days - 1)
+
+    my_events = build_events_for_window(
+        db,
+        window_start=window_start,
+        window_end=window_end,
+        device_ids=[device_id_external],
+        include_hourly_detail=True,
+    )
+    total_hours = sum(e.duration_hours for e in my_events)
+    total_energy_mwh = sum(
+        sum(h.get("realized_kw") or 0.0 for h in e.hours) / 1000.0
+        for e in my_events
+    )
+    perfs = [e.performance_pct for e in my_events if e.performance_pct is not None]
+    mand_perfs = [
+        e.mandatory_performance_pct
+        for e in my_events
+        if e.mandatory_performance_pct is not None
+    ]
+    avg_perf = sum(perfs) / len(perfs) if perfs else None
+    avg_mand = sum(mand_perfs) / len(mand_perfs) if mand_perfs else None
+
+    # Fleet ranking: avg perf across all devices
+    all_events = build_events_for_window(
+        db, window_start=window_start, window_end=window_end
+    )
+    per_device: dict[str, list[float]] = {}
+    for e in all_events:
+        if e.performance_pct is not None:
+            per_device.setdefault(e.device_id_external, []).append(e.performance_pct)
+    fleet_avg = {d: sum(v) / len(v) for d, v in per_device.items() if v}
+    rank = None
+    if avg_perf is not None and fleet_avg:
+        ordered = sorted(fleet_avg.items(), key=lambda kv: kv[1], reverse=True)
+        rank = next((i + 1 for i, (d, _) in enumerate(ordered) if d == device_id_external), None)
+
+    my_events.sort(key=lambda e: e.start_utc, reverse=True)
+    recent = [
+        AdminDeviceRecentEvent(**_event_to_summary(e, db).model_dump())
+        for e in my_events[:recent_limit]
+    ]
+
+    return AdminDeviceSummary(
+        device_id_external=dev.device_id_external,
+        primary_pnode_id=dev.primary_pnode_id,
+        primary_pnode_name=dev.primary_pnode_name,
+        zone_id=_zone_id_for(dev.primary_pnode_id),
+        listed_capacity_kw=float(dev.listed_capacity_kw) if dev.listed_capacity_kw else None,
+        asset_lat=float(dev.asset_lat) if dev.asset_lat is not None else None,
+        asset_lon=float(dev.asset_lon) if dev.asset_lon is not None else None,
+        window_start=window_start,
+        window_end=window_end,
+        event_count=len(my_events),
+        total_dispatch_hours=total_hours,
+        avg_performance_pct=avg_perf,
+        mandatory_performance_pct=avg_mand,
+        total_realized_energy_mwh=total_energy_mwh,
+        rank_in_fleet=rank,
+        recent_events=recent,
+    )
