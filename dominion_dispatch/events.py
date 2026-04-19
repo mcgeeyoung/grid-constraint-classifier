@@ -205,3 +205,118 @@ def _hour_dict(
         "listed_kw_ask": listed_kw_ask,
         "realized_kw": realized_kw,
     }
+
+
+from sqlalchemy import and_, select
+from sqlalchemy.orm import Session
+
+from app.models.dominion_der import (
+    DominionDaIngestionRun,
+    DominionDevice,
+    DominionDispatchDeviceHour,
+)
+
+
+def fetch_hours_for_window(
+    session: Session,
+    *,
+    window_start: date,
+    window_end: date,
+    device_ids: Optional[list[str]] = None,
+) -> list[DispatchHourRow]:
+    """Pull dispatch hours joined to ingestion-run operating_date.
+
+    Returns non-normal hours only (stressed or extreme), sorted by
+    (device_id_external, interval_start_utc).
+    """
+    q = (
+        select(
+            DominionDispatchDeviceHour.device_id_external,
+            DominionDispatchDeviceHour.primary_pnode_id,
+            DominionDispatchDeviceHour.pjm_load_zone_code,
+            DominionDaIngestionRun.operating_date,
+            DominionDispatchDeviceHour.interval_start_utc,
+            DominionDispatchDeviceHour.period_tier,
+            DominionDispatchDeviceHour.dispatch_signal,
+            DominionDispatchDeviceHour.dispatch_signal_program,
+            DominionDispatchDeviceHour.resolved_congestion,
+            DominionDispatchDeviceHour.dispatch_mandatory,
+        )
+        .join(
+            DominionDaIngestionRun,
+            DominionDaIngestionRun.id == DominionDispatchDeviceHour.ingestion_run_id,
+        )
+        .where(
+            and_(
+                DominionDaIngestionRun.operating_date >= window_start,
+                DominionDaIngestionRun.operating_date <= window_end,
+                DominionDispatchDeviceHour.period_tier.in_(("stressed", "extreme")),
+            )
+        )
+        .order_by(
+            DominionDispatchDeviceHour.device_id_external,
+            DominionDispatchDeviceHour.interval_start_utc,
+        )
+    )
+    if device_ids:
+        q = q.where(DominionDispatchDeviceHour.device_id_external.in_(device_ids))
+
+    return [DispatchHourRow(**dict(r._mapping)) for r in session.execute(q).all()]
+
+
+def device_capacity_map(session: Session, device_ids: list[str]) -> dict[str, float]:
+    if not device_ids:
+        return {}
+    rows = session.execute(
+        select(DominionDevice.device_id_external, DominionDevice.listed_capacity_kw)
+        .where(DominionDevice.device_id_external.in_(device_ids))
+    ).all()
+    return {r[0]: float(r[1]) for r in rows if r[1] is not None}
+
+
+def build_events_for_window(
+    session: Session,
+    *,
+    window_start: date,
+    window_end: date,
+    device_ids: Optional[list[str]] = None,
+    include_hourly_detail: bool = False,
+) -> list[DeviceEvent]:
+    """Fetch hours, group by device, materialize events per device."""
+    rows = fetch_hours_for_window(
+        session,
+        window_start=window_start,
+        window_end=window_end,
+        device_ids=device_ids,
+    )
+    if not rows:
+        return []
+
+    all_ids = sorted({r.device_id_external for r in rows})
+    caps = device_capacity_map(session, all_ids)
+
+    events: list[DeviceEvent] = []
+    cur_id: Optional[str] = None
+    cur_rows: list[DispatchHourRow] = []
+    for r in rows:
+        if r.device_id_external != cur_id:
+            if cur_rows:
+                events.extend(
+                    build_events_from_rows(
+                        cur_rows,
+                        listed_capacity_kw=caps.get(cur_id or ""),
+                        include_hourly_detail=include_hourly_detail,
+                    )
+                )
+            cur_id = r.device_id_external
+            cur_rows = []
+        cur_rows.append(r)
+    if cur_rows:
+        events.extend(
+            build_events_from_rows(
+                cur_rows,
+                listed_capacity_kw=caps.get(cur_id or ""),
+                include_hourly_detail=include_hourly_detail,
+            )
+        )
+    return events
