@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dominion DER program · Admin</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/vue@3.4.27/dist/vue.global.prod.js"></script>
+    <script src="config.js" onerror="/* config.js is optional; see app.js */"></script>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="brand">
+        <span class="logo">D</span>
+        <span class="name">Dominion DER program <span class="badge">Admin · demo</span></span>
+      </div>
+      <nav>
+        <a href="#/" data-route="/">Dashboard</a>
+        <a href="#/history" data-route="/history">History</a>
+      </nav>
+    </header>
+    <main id="app">
+      <div class="loading">Loading…</div>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
