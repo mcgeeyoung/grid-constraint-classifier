@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Any, Optional
 
 from sqlalchemy import (
@@ -123,6 +124,9 @@ class DominionDevice(Base):
     asset_lat: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     asset_lon: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     asset_display_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    listed_capacity_kw: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(10, 2), nullable=True
+    )
     neighbor_pnode_ids: Mapped[Optional[list[Any]]] = mapped_column(JSON, nullable=True)
     piecewise_curve: Mapped[Optional[list[Any]]] = mapped_column(JSON, nullable=True)
     effective_from: Mapped[date] = mapped_column(Date, nullable=False)

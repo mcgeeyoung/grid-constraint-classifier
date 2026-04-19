@@ -44,6 +44,7 @@ class DominionDeviceResponse(BaseModel):
     asset_lat: Optional[float] = None
     asset_lon: Optional[float] = None
     asset_display_name: Optional[str] = None
+    listed_capacity_kw: Optional[float] = None
     effective_from: date
     effective_to: Optional[date] = None
 
