@@ -115,3 +115,109 @@ class DominionParticipationResponse(BaseModel):
     window_end: Optional[date] = None
     runs: int
     devices: list[DominionParticipationRow]
+
+
+# ───────────────────────── admin dashboard ─────────────────────────
+
+
+class AdminZoneSummary(BaseModel):
+    id: str
+    label: str
+    description: str
+    pnode_ids: list[str]
+    device_ids: list[str]
+    device_count: int
+    listed_capacity_kw: float
+    next_event_count_24h: int = 0
+    last_event_perf_pct: Optional[float] = None
+
+
+class AdminZoneDetail(AdminZoneSummary):
+    devices: list["DominionDeviceResponse"] = []
+
+
+class AdminEventSummary(BaseModel):
+    event_id: str
+    device_id_external: str
+    primary_pnode_id: str
+    primary_pnode_name: Optional[str] = None
+    zone_id: Optional[str] = None
+    operating_date: date
+    start_utc: datetime
+    end_utc: datetime
+    duration_hours: int
+    stressed_hours: int
+    extreme_hours: int
+    has_mandatory: bool
+    listed_capacity_kw_avg: Optional[float] = None
+    realized_capacity_kw_avg: Optional[float] = None
+    performance_pct: Optional[float] = None
+    mandatory_performance_pct: Optional[float] = None
+
+
+class AdminEventListResponse(BaseModel):
+    window_start: Optional[date] = None
+    window_end: Optional[date] = None
+    total: int
+    events: list[AdminEventSummary]
+
+
+class AdminEventHour(BaseModel):
+    hour_index: int
+    interval_start_utc: datetime
+    period_tier: Optional[str]
+    dispatch_signal_program: float
+    listed_kw_ask: Optional[float] = None
+    realized_kw: Optional[float] = None
+
+
+class AdminEventDetail(AdminEventSummary):
+    hours: list[AdminEventHour] = []
+
+
+class AdminDashboardZoneSlice(BaseModel):
+    zone_id: str
+    events: int
+    peak_kw: float
+
+
+class AdminDashboardHour(BaseModel):
+    hour_utc: datetime
+    program_signal: float
+
+
+class AdminDashboardToday(BaseModel):
+    operating_date: date
+    forecast_basis: str  # "tomorrow_da" | "most_recent_da"
+    ingestion_run_id: Optional[int] = None
+    events_forecast: int
+    peak_program_kw: float
+    peak_window_ept: Optional[list[str]] = None
+    by_zone: list[AdminDashboardZoneSlice]
+    fleet_24h_signal: list[AdminDashboardHour]
+
+
+class AdminDeviceRecentEvent(AdminEventSummary):
+    pass
+
+
+class AdminDeviceSummary(BaseModel):
+    device_id_external: str
+    primary_pnode_id: str
+    primary_pnode_name: Optional[str] = None
+    zone_id: Optional[str] = None
+    listed_capacity_kw: Optional[float] = None
+    asset_lat: Optional[float] = None
+    asset_lon: Optional[float] = None
+    window_start: Optional[date] = None
+    window_end: Optional[date] = None
+    event_count: int
+    total_dispatch_hours: int
+    avg_performance_pct: Optional[float] = None
+    mandatory_performance_pct: Optional[float] = None
+    total_realized_energy_mwh: float
+    rank_in_fleet: Optional[int] = None
+    recent_events: list[AdminDeviceRecentEvent] = []
+
+
+AdminZoneDetail.model_rebuild()
