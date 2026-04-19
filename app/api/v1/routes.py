@@ -17,9 +17,11 @@ from app.schemas.responses import (
     DERRecommendationResponse, PipelineRunResponse, OverviewResponse,
 )
 from app.api.v1.dominion_routes import router as dominion_router
+from app.api.v1.dominion_admin_routes import router as dominion_admin_router
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(dominion_router, prefix="/dominion", tags=["Dominion DER demo"])
+router.include_router(dominion_admin_router, prefix="/dominion/admin", tags=["Dominion admin"])
 
 
 @router.get("/isos", response_model=list[ISOResponse])
