@@ -1,5 +1,5 @@
 /*
- * WattCarbon brand theme — shared across /dominion-demo/ and /dominion-admin/.
+ * WattCarbon brand theme. Shared across /dominion-demo/ and /dominion-admin/.
  *
  * Tokens mirror brand-guidelines.md (Sherpa Blue palette, Inter + Source Serif
  * Pro typography). Dark UI is native to the brand since Dark Sherpa Blue is
@@ -32,7 +32,7 @@
   --wc-font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --wc-font-display: "Source Serif Pro", "SourceSerif Pro", Georgia, serif;
 
-  /* Semantic mappings for dark UI — consume these in component CSS */
+  /* Semantic mappings for dark UI. Consume these in component CSS. */
   --bg: var(--wc-dark-sherpa);
   --panel: var(--wc-sherpa);
   --panel-hi: var(--wc-light-sherpa);
@@ -43,7 +43,7 @@
   --accent-dim: var(--wc-lake);
   --border: rgba(11, 212, 255, 0.15);
 
-  /* Performance / status colors — kept semantic so Dominion PMs read them at a glance */
+  /* Performance / status colors. Kept semantic so Dominion PMs read them at a glance. */
   --ok: var(--wc-honeydew);
   --warn: var(--wc-honeydew);
 }
@@ -61,7 +61,7 @@ h1, h2, h3, h4 {
   letter-spacing: -0.01em;
 }
 
-/* Brand header — reusable across pages */
+/* Brand header. Reusable across pages. */
 .wc-brand-header {
   display: flex;
   align-items: center;
