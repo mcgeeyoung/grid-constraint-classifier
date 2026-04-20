@@ -1,0 +1,113 @@
+<h2>Device detail + Event history pages</h2>
+<p class="subtitle">Two secondary pages. Both standard tables plus one chart. Confirm or adjust.</p>
+
+<style>
+  .wire { background:#0f1419; border:1px solid #2d3844; border-radius:8px; padding: 0.9rem; font-family: -apple-system, sans-serif; font-size: 0.72rem; color:#c9d1d9; margin-bottom: 1rem; }
+  .wire .crumb { color:#79c0ff; font-size:0.68rem; margin-bottom:0.4rem; }
+  .wire .h { font-size:1rem; font-weight:600; margin-bottom:0.2rem; }
+  .wire .meta { color:#8b98a5; font-size:0.65rem; margin-bottom:0.7rem; }
+  .wire .kpis { display:grid; grid-template-columns: repeat(4,1fr); gap:0.5rem; margin-bottom:0.8rem; }
+  .wire .kpi { background:#1a222c; border:1px solid #2d3844; border-radius:6px; padding:0.45rem 0.6rem; }
+  .wire .kpi .label { color:#8b98a5; font-size:0.55rem; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:0.15rem; }
+  .wire .kpi .val { font-size:1.15rem; font-weight:700; }
+  .wire .kpi .sub { color:#8b98a5; font-size:0.6rem; }
+  .wire .chart { background:#1a222c; border:1px solid #2d3844; border-radius:6px; padding:0.5rem; min-height:8rem; display:flex; align-items:center; justify-content:center; color:#79c0ff; font-family:monospace; font-size:0.7rem; }
+  .wire table { width:100%; border-collapse:collapse; font-size:0.68rem; }
+  .wire th { text-align:left; color:#8b98a5; font-weight:500; padding:0.35rem 0.45rem; border-bottom:1px solid #2d3844; }
+  .wire td { padding:0.35rem 0.45rem; border-bottom:1px solid #2d3844; }
+  .wire .filters { display:flex; gap:0.4rem; margin-bottom:0.6rem; flex-wrap:wrap; }
+  .wire .filter { background:#1a222c; border:1px solid #2d3844; border-radius:4px; padding:0.25rem 0.5rem; font-size:0.65rem; color:#c9d1d9; }
+  .wire .filter.active { background:#3d8bfd; color:#fff; border-color:#3d8bfd; }
+  .v-green { color:#3fb950; } .v-amber { color:#d29922; } .v-red { color:#e5534b; }
+  .bar-bg { background:#2d3844; height: 0.35rem; border-radius:3px; overflow:hidden; width: 60px; display:inline-block; }
+  .bar-fill { background:#3fb950; height:100%; }
+</style>
+
+<h3 style="margin-top:0;font-size:0.9rem">1. Device detail page</h3>
+<div class="wire">
+  <div class="crumb">Dashboard › Devices › demo-tysons-001</div>
+  <div class="h">demo-tysons-001 · TYSONS (Vienna VA, Fairfax 230 kV)</div>
+  <div class="meta">Enrolled 2020-01-01 · listed 800 kW · zone: Fairfax 230 kV · primary pnode 34886435 (+ 0 neighbors)</div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Events · 30 days</div>
+      <div class="val">14</div>
+      <div class="sub">27 dispatch hrs</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Avg performance</div>
+      <div class="val v-green">89%</div>
+      <div class="sub">last 30d · rank 2 of 6</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Mandatory performance</div>
+      <div class="val v-green">94%</div>
+      <div class="sub">when it counts</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Realized energy</div>
+      <div class="val">19.2 MWh</div>
+      <div class="sub">delivered in period</div>
+    </div>
+  </div>
+
+  <div class="chart">30-day line chart: listed vs realized kW at each event · performance % per event as shaded markers</div>
+
+  <h4 style="margin:0.8rem 0 0.3rem;font-size:0.8rem">Recent events</h4>
+  <table>
+    <thead>
+      <tr><th>Event</th><th>Date</th><th>Hours</th><th>Listed avg</th><th>Realized avg</th><th>Perf</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr><td>E-2026-04-17-pm</td><td>Apr 17</td><td>14–18 EPT · 4h</td><td>800</td><td>720</td><td>90%</td><td><div class="bar-bg"><div class="bar-fill" style="width:90%"></div></div></td></tr>
+      <tr><td>E-2026-04-15-am</td><td>Apr 15</td><td>07–09 EPT · 2h</td><td>800</td><td>744</td><td>93%</td><td><div class="bar-bg"><div class="bar-fill" style="width:93%"></div></div></td></tr>
+      <tr><td>E-2026-04-14-pm</td><td>Apr 14</td><td>15–17 EPT · 2h</td><td>800</td><td>664</td><td class="v-amber">83%</td><td><div class="bar-bg"><div class="bar-fill" style="width:83%;background:#d29922"></div></div></td></tr>
+      <tr><td colspan="7" style="text-align:center;color:#8b98a5">· · · 11 more ·  <span style="color:#79c0ff">view all</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3 style="margin-top:0;font-size:0.9rem">2. Event history page</h3>
+<div class="wire">
+  <div class="crumb">Dashboard › History</div>
+  <div class="h">Event history</div>
+  <div class="meta">364 DA days loaded (2025-04-18 → 2026-04-17) · click a row to open event detail</div>
+
+  <div class="filters">
+    <span class="filter active">All zones</span>
+    <span class="filter">Loudoun</span>
+    <span class="filter">Fairfax 230 kV</span>
+    <span class="filter">Alexandria</span>
+    <span class="filter">· range: 30d / 90d / 365d / custom ·</span>
+    <span class="filter">has mandatory</span>
+    <span class="filter">perf &lt; 85%</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Event ID</th><th>Start</th><th>Dur</th><th>Zones</th><th>Devices</th>
+        <th>Mandatory hrs</th><th>Listed avg (MW)</th><th>Realized avg (MW)</th><th>Perf</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>E-2026-04-17-pm</td><td>Apr 17 14:00</td><td>4h</td><td>Loudoun, Fairfax</td><td>5</td><td>2</td><td>3.2</td><td>2.8</td><td>87%</td></tr>
+      <tr><td>E-2026-04-17-am</td><td>Apr 17 08:00</td><td>2h</td><td>Fairfax</td><td>3</td><td>0</td><td>2.0</td><td>1.8</td><td>92%</td></tr>
+      <tr><td>E-2026-04-15-pm</td><td>Apr 15 13:00</td><td>5h</td><td>All</td><td>6</td><td>1</td><td>4.2</td><td>3.6</td><td>86%</td></tr>
+      <tr><td>E-2026-04-14-pm</td><td>Apr 14 15:00</td><td>2h</td><td>Fairfax, Alex</td><td>4</td><td>1</td><td>2.9</td><td>2.4</td><td class="v-amber">83%</td></tr>
+      <tr><td colspan="9" style="text-align:center;color:#8b98a5">· · · rolling · page / load-more ·</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="ok" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Both look right</h3><p>Approve and move on.</p></div>
+  </div>
+  <div class="option" data-choice="adjust" onclick="toggleSelect(this)">
+    <div class="letter">…</div>
+    <div class="content"><h3>Adjust one or both</h3><p>Tell me what to change.</p></div>
+  </div>
+</div>

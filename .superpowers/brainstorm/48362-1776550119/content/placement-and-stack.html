@@ -1,0 +1,51 @@
+<h2>Placement and tech stack</h2>
+<p class="subtitle">Two quick decisions that are tightly coupled. Default strong recommendation highlighted.</p>
+
+<div class="section">
+  <h3>URL placement</h3>
+</div>
+<div class="options">
+  <div class="option" data-choice="placement-a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>New path: <code>/dominion-admin/</code>&nbsp;(recommended)</h3>
+      <p>Keeps <code>/dominion-demo/</code> as the engineering walkthrough (proves the data pipeline works). New page is the Dominion-facing admin dashboard. Same FastAPI service, new static files.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="placement-b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Replace <code>/dominion-demo/</code></h3>
+      <p>Admin dashboard becomes THE Dominion-facing demo. Engineering panels live in a hidden <code>/dominion-demo/engineering/</code> route for debugging.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.25rem">
+  <h3>Frontend tech</h3>
+</div>
+<div class="options">
+  <div class="option" data-choice="stack-a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Vanilla JS + Chart.js + Leaflet&nbsp;(recommended)</h3>
+      <p>Consistent with existing <code>/dominion-demo/</code>. No build step, no tooling. Add Alpine.js (lightweight, CDN) for the reactivity the dashboard needs. Same deploy path.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="stack-b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Vue 3 (CDN, no build)</h3>
+      <p>Better for the many repeating components (zone cards, device rows, event rows). Matches WattCarbon main stack. Still no build step. Small cognitive jump from the current JS style.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="stack-c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>React via CDN</h3>
+      <p>Preact/React with htm for a no-build workflow. Most familiar component model. Adds ~10 KB vs A.</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1rem">Answer format: click both, or just say "A and A" / "replace and vue" / etc.</p>

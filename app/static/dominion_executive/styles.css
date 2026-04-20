@@ -282,3 +282,28 @@ main#app {
 .exec-map { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
 .exec-map .maplibregl-ctrl-attrib { font-size: 0.6rem; background: rgba(0, 35, 44, 0.8); color: var(--muted); }
 .exec-map .maplibregl-canvas { outline: none; }
+
+.pilot-marker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  pointer-events: none;
+}
+
+.pilot-marker-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(11, 212, 255, 0.25), 0 0 6px rgba(11, 212, 255, 0.6);
+  flex-shrink: 0;
+}
+
+.pilot-marker-label {
+  font-family: var(--wc-font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #F1FDFF;
+  text-shadow: 0 0 4px rgba(0, 35, 44, 0.95), 0 0 4px rgba(0, 35, 44, 0.95);
+  white-space: nowrap;
+}

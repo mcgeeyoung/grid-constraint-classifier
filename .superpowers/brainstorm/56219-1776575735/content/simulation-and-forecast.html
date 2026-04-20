@@ -1,0 +1,62 @@
+<h2>Mocked telemetry "story" + next-day forecast source</h2>
+<p class="subtitle">Two small decisions that shape how the demo feels.</p>
+
+<div class="section">
+  <h3>Telemetry story</h3>
+  <p class="subtitle">Realized kW per device per hour is mocked. What character should the mock have so the dashboard tells a story, not just flat averages?</p>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="story-flat" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Uniform, slight noise</h3>
+      <p>All devices 85–92%, ±5% per hour. Clean. Every zone looks the same → dashboard doesn't tell a program-design story.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="story-device" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Per-device characteristic</h3>
+      <p>Each device has a baseline perf (seeded). TYSONS 90%, BRADDOCK 78%, BLMNTDOM 94%, etc. Ranked "top / bottom performers" makes sense.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="story-rich" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Zone × duration shape&nbsp;(recommended)</h3>
+      <p>Per-device baseline (as in 2) <em>plus</em> intra-event decay (performance drops hour 3+ on long events) <em>plus</em> zone-level color (Loudoun exurban: steady residential thermostats; Fairfax 230 kV: growing data centers, more noise; Alexandria: small sample). Makes the demo's charts speak.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:1.25rem">
+  <h3>Expected next-day dispatch source</h3>
+  <p class="subtitle">"Today's forecast" and "tomorrow's forecast" need a data source. PJM DA clears ~4 pm day-ahead — so tomorrow's DA may or may not exist when a user loads the page.</p>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="fcst-da" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>PJM DA for tomorrow when available, else today&nbsp;(recommended)</h3>
+      <p>If DA for tomorrow is ingested (after ~4 pm EPT), show it. Otherwise show today's DA as the "tomorrow likely looks like this" proxy. Label clearly. No ML.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="fcst-avg" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Rolling-window average</h3>
+      <p>"Tomorrow will look like the last 7 weekday DA days." Simple statistical forecast. Works even before DA clears. Less credible to a program operator ("why not use actual DA?").</p>
+    </div>
+  </div>
+  <div class="option" data-choice="fcst-lightml" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Light ML</h3>
+      <p>A small regression over hour-of-week + weather. Better forecast, but scope creep. Not worth it for the demo.</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1rem">Click or tell me in terminal (e.g., "3 and A").</p>

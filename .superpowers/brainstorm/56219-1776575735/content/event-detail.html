@@ -1,0 +1,105 @@
+<h2>Event detail page</h2>
+<p class="subtitle">Click any event in the dashboard or history list → this page. Shows the program ask vs the realized response, broken down by zone and device.</p>
+
+<style>
+  .wire { background:#0f1419; border:1px solid #2d3844; border-radius:8px; padding: 1rem; font-family: -apple-system, sans-serif; font-size: 0.75rem; color:#c9d1d9; }
+  .wire .crumb { color:#79c0ff; font-size:0.7rem; margin-bottom:0.5rem; }
+  .wire .h { font-size:1.1rem; font-weight:600; margin-bottom: 0.2rem; }
+  .wire .meta { color:#8b98a5; font-size:0.7rem; margin-bottom: 0.8rem; }
+  .wire .kpis { display:grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
+  .wire .kpi { background:#1a222c; border:1px solid #2d3844; border-radius:6px; padding: 0.5rem 0.7rem; }
+  .wire .kpi .label { color:#8b98a5; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.2rem; }
+  .wire .kpi .val { font-size:1.3rem; font-weight:700; }
+  .wire .kpi .sub { color:#8b98a5; font-size:0.65rem; }
+  .wire .v-green { color:#3fb950; } .wire .v-amber { color:#d29922; } .wire .v-red { color:#e5534b; }
+  .wire .chart { background:#1a222c; border:1px solid #2d3844; border-radius:6px; padding:0.6rem; min-height:11rem; display:flex; align-items:center; justify-content:center; color:#79c0ff; font-family:monospace; }
+  .wire .row { display:grid; gap:0.6rem; margin-bottom: 0.8rem; }
+  .wire .row-2 { grid-template-columns: 2fr 1fr; }
+  .wire table { width:100%; border-collapse:collapse; font-size:0.7rem; }
+  .wire th { text-align:left; color:#8b98a5; font-weight:500; padding:0.4rem 0.5rem; border-bottom:1px solid #2d3844; }
+  .wire td { padding:0.4rem 0.5rem; border-bottom:1px solid #2d3844; }
+  .wire .bar-bg { background:#2d3844; height: 0.45rem; border-radius:3px; overflow:hidden; }
+  .wire .bar-fill { background:#3fb950; height:100%; }
+</style>
+
+<div class="wire">
+  <div class="crumb">Dashboard › Events › E-2026-04-17-pm</div>
+  <div class="h">Event E-2026-04-17-pm · Apr 17 14:00–18:00 EPT (4h)</div>
+  <div class="meta">Operating day 2026-04-17 · contiguous dispatch (4 stressed + 2 mandatory hrs) · zones: Loudoun corridor, Fairfax 230 kV</div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Listed capacity (avg)</div>
+      <div class="val">3.2 MW</div>
+      <div class="sub">across 5 dispatched devices</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Realized capacity (avg)</div>
+      <div class="val v-green">2.8 MW</div>
+      <div class="sub">↓ 0.4 MW vs listed</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Performance</div>
+      <div class="val v-green">87.5%</div>
+      <div class="sub">realized / listed</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Mandatory hrs</div>
+      <div class="val">2 of 4</div>
+      <div class="sub">94% perf in mandatory window</div>
+    </div>
+  </div>
+
+  <div class="row row-2">
+    <div class="chart">
+      Hourly chart: program signal (line) vs<br>
+      listed capacity (band) vs realized kW (bars)<br>
+      shaded mandatory window
+    </div>
+    <div class="chart" style="min-height:11rem">Mini-map: zones involved<br>device pins colored by perf%</div>
+  </div>
+
+  <h3 style="margin:1rem 0 0.4rem;font-size:0.85rem">Per-zone breakdown</h3>
+  <table>
+    <thead>
+      <tr><th>Zone</th><th>Devices</th><th>Listed (avg kW)</th><th>Realized (avg kW)</th><th>Perf</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Loudoun corridor</td><td>2</td><td>1,200</td><td>1,140</td><td>95%</td><td><div class="bar-bg"><div class="bar-fill" style="width:95%"></div></div></td></tr>
+      <tr><td>Fairfax 230 kV</td><td>3</td><td>2,000</td><td>1,660</td><td>83%</td><td><div class="bar-bg"><div class="bar-fill" style="width:83%;background:#d29922"></div></div></td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin:1rem 0 0.4rem;font-size:0.85rem">Per-device breakdown</h3>
+  <table>
+    <thead>
+      <tr><th>Device</th><th>Pnode</th><th>Listed (kW)</th><th>Realized avg (kW)</th><th>Perf</th><th>Mand. perf</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>demo-bmtdom-001</td><td>BLMNTDOM</td><td>600</td><td>578</td><td>96%</td><td>98%</td></tr>
+      <tr><td>demo-hamiltn-001</td><td>HAMILTN</td><td>600</td><td>562</td><td>94%</td><td>95%</td></tr>
+      <tr><td>demo-tysons-001</td><td>TYSONS</td><td>800</td><td>720</td><td>90%</td><td>96%</td></tr>
+      <tr><td>demo-braddock-001</td><td>BRADDOCK</td><td>700</td><td>520</td><td><span class="v-amber">74%</span></td><td>88%</td></tr>
+      <tr><td>demo-idylwoo4-001</td><td>IDYLWOO4</td><td>500</td><td>420</td><td>84%</td><td>92%</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<p class="subtitle" style="margin-top:1rem">Looks right? Or change something — add columns, drop a section, different chart, etc.</p>
+
+<div class="options">
+  <div class="option" data-choice="ok" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>Looks right, move on</h3>
+      <p>Approve event detail layout as designed.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="adjust" onclick="toggleSelect(this)">
+    <div class="letter">…</div>
+    <div class="content">
+      <h3>Adjust</h3>
+      <p>Tell me what to change in the terminal.</p>
+    </div>
+  </div>
+</div>

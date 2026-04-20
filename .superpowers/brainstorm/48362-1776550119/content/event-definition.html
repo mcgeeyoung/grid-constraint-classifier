@@ -1,0 +1,108 @@
+<h2>What is a "dispatch event"?</h2>
+<p class="subtitle">Performance score = "% of realized capacity vs listed capacity per event" needs a well-defined event. Shown below: same 24-hour day, four different event definitions.</p>
+
+<style>
+  .timeline { display:grid; grid-template-columns: 6rem repeat(24, 1fr); gap:2px; font-family: monospace; font-size: 0.65rem; margin: 0.5rem 0; }
+  .hour-label { text-align:right; padding-right:0.5rem; color:#8b98a5; }
+  .hour-cell { height:1.8rem; background:#1a222c; border:1px solid #2d3844; display:flex; align-items:center; justify-content:center; }
+  .hour-cell.normal { background:#1a222c; color:#5a6673; }
+  .hour-cell.stressed { background:#3a5a8c; color:#fff; }
+  .hour-cell.extreme { background:#8c3a3a; color:#fff; font-weight:bold; }
+  .event-row { display:grid; grid-template-columns: 6rem repeat(24, 1fr); gap:2px; margin-bottom:0.3rem; }
+  .event-row .hour-label { color:#c9d1d9; font-size: 0.75rem; }
+  .event-bar { height:1.2rem; border-radius:3px; display:flex; align-items:center; justify-content:center; font-size:0.6rem; color:#fff; }
+  .eb-a { background:#6b8fb3; } .eb-b { background:#5a8d5a; } .eb-c { background:#b38f6b; } .eb-d { background:#b36b6b; }
+  .hour-spacer { grid-column: span 1; }
+</style>
+
+<div class="section">
+  <p class="label">Example day (hours 0-23 EPT). dark blue=stressed, dark red=extreme, grey=normal.</p>
+  <div class="timeline">
+    <div class="hour-label">tier</div>
+    <div class="hour-cell normal">0</div><div class="hour-cell normal">1</div><div class="hour-cell normal">2</div><div class="hour-cell normal">3</div>
+    <div class="hour-cell normal">4</div><div class="hour-cell normal">5</div><div class="hour-cell stressed">6</div><div class="hour-cell stressed">7</div>
+    <div class="hour-cell stressed">8</div><div class="hour-cell normal">9</div><div class="hour-cell normal">10</div><div class="hour-cell stressed">11</div>
+    <div class="hour-cell stressed">12</div><div class="hour-cell stressed">13</div><div class="hour-cell extreme">14</div><div class="hour-cell extreme">15</div>
+    <div class="hour-cell extreme">16</div><div class="hour-cell extreme">17</div><div class="hour-cell extreme">18</div><div class="hour-cell stressed">19</div>
+    <div class="hour-cell stressed">20</div><div class="hour-cell normal">21</div><div class="hour-cell normal">22</div><div class="hour-cell normal">23</div>
+  </div>
+</div>
+
+<div class="section">
+  <p class="label">"Events" under each definition</p>
+
+  <div class="event-row">
+    <div class="hour-label">A</div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div class="event-bar eb-a" style="grid-column: 8 / span 3">E1 (3h)</div>
+    <div></div><div></div>
+    <div class="event-bar eb-a" style="grid-column: 13 / span 9">E2 (9h)</div>
+    <div></div><div></div><div></div>
+  </div>
+  <p style="font-size:0.75rem;color:#8b98a5;margin:0 0 0.75rem">A: <strong>contiguous any-dispatch run</strong> = one event. Here, 2 events (3h morning + 9h afternoon/evening).</p>
+
+  <div class="event-row">
+    <div class="hour-label">B</div>
+    <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+    <div class="event-bar eb-b" style="grid-column: 16 / span 5">E1 (5h)</div>
+    <div></div><div></div><div></div>
+  </div>
+  <p style="font-size:0.75rem;color:#8b98a5;margin:0 0 0.75rem">B: <strong>contiguous extreme-only run</strong> = one event (mandatory block). Here, 1 event of 5 hours.</p>
+
+  <div class="event-row">
+    <div class="hour-label">C</div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div class="event-bar eb-c" style="grid-column: 8 / span 14">E1 (whole day)</div>
+  </div>
+  <p style="font-size:0.75rem;color:#8b98a5;margin:0 0 0.75rem">C: <strong>any DA day with any dispatch</strong> = one event. Daily granularity.</p>
+
+  <div class="event-row">
+    <div class="hour-label">D</div>
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+    <div class="event-bar eb-d" style="grid-column: 8 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 9 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 10 / span 1">.</div>
+    <div></div><div></div>
+    <div class="event-bar eb-d" style="grid-column: 13 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 14 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 15 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 16 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 17 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 18 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 19 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 20 / span 1">.</div>
+    <div class="event-bar eb-d" style="grid-column: 21 / span 1">.</div>
+  </div>
+  <p style="font-size:0.75rem;color:#8b98a5;margin:0 0 0.75rem">D: <strong>per hour</strong>. Here, 12 events. Atomic but noisy.</p>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Contiguous dispatch block</h3>
+      <p>Stressed+extreme hours adjacent = one event. Matches how program operators think ("morning event, afternoon event"). Mixes optional and mandatory hours — report with sub-breakdown.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Contiguous extreme-only block</h3>
+      <p>Mandatory hours only, gaps close an event. Aligns with emergency DR conventions. Stressed-only activity is called out separately.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>DA day</h3>
+      <p>One row per operating day with any dispatch. Simple. Loses intra-day structure; harder to reason about multi-event days.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="d" onclick="toggleSelect(this)">
+    <div class="letter">D</div>
+    <div class="content">
+      <h3>Per hour</h3>
+      <p>Every non-zero program-signal hour = event. Noisiest. The history table would be huge, the "average per event" reduces to hourly averaging.</p>
+    </div>
+  </div>
+</div>

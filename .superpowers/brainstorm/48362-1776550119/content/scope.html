@@ -1,0 +1,71 @@
+<h2>Dominion admin UI: scope map</h2>
+<p class="subtitle">Before designing views, let's agree on what's in vs later. Five features you named, plus the data gaps that gate them.</p>
+
+<div class="section">
+  <h3>Features you described</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+    <thead>
+      <tr style="border-bottom:1px solid #2d3844;text-align:left">
+        <th style="padding:0.5rem">Surface</th>
+        <th style="padding:0.5rem">Ready with current data?</th>
+        <th style="padding:0.5rem">New data needed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid #2d3844">
+        <td style="padding:0.5rem"><strong>Zonal DA forecast</strong></td>
+        <td style="padding:0.5rem;color:#3fb950">yes</td>
+        <td style="padding:0.5rem">— (need a "zone" taxonomy within DOM)</td>
+      </tr>
+      <tr style="border-bottom:1px solid #2d3844">
+        <td style="padding:0.5rem"><strong>Available capacity (agg + individual)</strong></td>
+        <td style="padding:0.5rem;color:#d29922">partial</td>
+        <td style="padding:0.5rem">kW rating per device</td>
+      </tr>
+      <tr style="border-bottom:1px solid #2d3844">
+        <td style="padding:0.5rem"><strong>Performance score (realized vs listed per event)</strong></td>
+        <td style="padding:0.5rem;color:#e5534b">no</td>
+        <td style="padding:0.5rem">event grouping + post-event telemetry feed</td>
+      </tr>
+      <tr style="border-bottom:1px solid #2d3844">
+        <td style="padding:0.5rem"><strong>Expected next-day dispatch</strong></td>
+        <td style="padding:0.5rem;color:#3fb950">yes</td>
+        <td style="padding:0.5rem">— (DA clears ~4pm day-ahead; use that)</td>
+      </tr>
+      <tr>
+        <td style="padding:0.5rem"><strong>Historical records</strong></td>
+        <td style="padding:0.5rem;color:#3fb950">yes</td>
+        <td style="padding:0.5rem">— (12 months already loaded)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>First decision: who is this for?</h3>
+  <p class="subtitle">Answer shapes everything downstream (auth, scale, polish, data fidelity).</p>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Demo / pitch prop</h3>
+      <p>Shown to Dominion in meetings. Real DA data, mocked capacity + telemetry. No auth. Goal: make the program design concrete.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Pilot operator UI</h3>
+      <p>Something Dominion's program staff actually use to run a small pilot. Real telemetry feed required. Single-tenant, light auth.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>WattCarbon-operated</h3>
+      <p>We run dispatch; Dominion gets a read-only reporting view. Closer to a portal than an operator tool.</p>
+    </div>
+  </div>
+</div>

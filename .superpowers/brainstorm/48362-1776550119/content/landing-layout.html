@@ -1,0 +1,101 @@
+<h2>Landing view: what does the admin see first?</h2>
+<p class="subtitle">All three options assume the admin can drill into event history and device detail on separate pages. The question is what leads.</p>
+
+<style>
+  .wire { background:#0f1419; border:1px solid #2d3844; border-radius:8px; padding: 0.75rem; font-family: monospace; font-size: 0.65rem; color:#c9d1d9; min-height: 22rem; }
+  .wire .bar { background:#1a222c; border:1px solid #2d3844; padding: 0.3rem 0.5rem; margin-bottom: 0.4rem; border-radius: 4px; }
+  .wire .hero { background: linear-gradient(135deg,#1a2a3e,#1a222c); border:1px solid #3d8bfd; padding: 0.5rem; margin-bottom: 0.4rem; border-radius: 4px; color:#c9d1d9; }
+  .wire .card { background:#1a222c; border:1px solid #2d3844; padding: 0.35rem 0.5rem; border-radius: 4px; font-size: 0.6rem; }
+  .wire .map { background: #1f2e24; border:1px solid #2d3844; border-radius:4px; padding:0.5rem; text-align:center; color:#6b8f6b; min-height: 8rem; display:flex; align-items:center; justify-content:center; }
+  .wire .chart { background:#1a2a3e; border:1px solid #3d8bfd; border-radius:4px; padding:0.5rem; text-align:center; color:#79c0ff; min-height: 5rem; display:flex; align-items:center; justify-content:center; }
+  .wire .row { display:grid; gap:0.4rem; margin-bottom:0.4rem; }
+  .wire .row-3 { grid-template-columns: repeat(3, 1fr); }
+  .wire .row-2-1 { grid-template-columns: 2fr 1fr; }
+  .wire .row-1-1 { grid-template-columns: 1fr 1fr; }
+  .wire .tab-active { background: #3d8bfd; color:#fff; padding: 0.2rem 0.5rem; border-radius: 3px; font-weight:bold; display:inline-block; margin-right: 0.3rem; }
+  .wire .tab { background:#2d3844; color:#8b98a5; padding: 0.2rem 0.5rem; border-radius: 3px; display:inline-block; margin-right: 0.3rem; }
+  .wire .label { color:#8b98a5; font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; }
+  .wire .val { font-size: 1rem; font-weight:bold; color:#c9d1d9; }
+  .wire .val-green { color:#3fb950; }
+  .wire .val-amber { color:#d29922; }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="wire">
+        <div class="bar">DOM DER Program · Admin · [bell] [user]</div>
+        <div class="hero">
+          <div class="label">Today · 2026-04-18</div>
+          <div>Forecast <span class="val-amber">2 events</span> · 3.2 MW peak · 14:00–18:00 EPT</div>
+        </div>
+        <div class="row row-3">
+          <div class="card"><div class="label">Loudoun corridor</div><div>listed 1.8 MW · fcst <span class="val-amber">2 ev</span> · last perf 87%</div></div>
+          <div class="card"><div class="label">Fairfax 230 kV</div><div>listed 2.6 MW · fcst <span class="val-amber">2 ev</span> · last perf 91%</div></div>
+          <div class="card"><div class="label">Alexandria</div><div>listed 0.6 MW · fcst <span class="val-green">0 ev</span> · last perf 94%</div></div>
+        </div>
+        <div class="row row-2-1">
+          <div class="chart">Next 24h dispatch signal by zone (stacked area)</div>
+          <div class="map">Map: zones<br>shaded by<br>forecast intensity</div>
+        </div>
+        <div class="card"><div class="label">Recent events</div>Apr 17 14–18 EPT · 4h · 2.9 MW called · 88% realized | Apr 16 13–17 EPT · 4h · 3.1 MW · 92% | ...</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Zonal dashboard</h3>
+      <p>Top banner with today's headline. Row of zone summary cards. 24h dispatch chart + geography map. Recent events strip. Single scrollable page.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="wire">
+        <div class="bar">DOM DER Program · Admin · <span class="tab-active">Map</span><span class="tab">Zones</span><span class="tab">Events</span><span class="tab">Devices</span></div>
+        <div class="row row-2-1">
+          <div class="map" style="min-height:14rem">
+            <div>
+              Big map: VA counties + zones<br>
+              Polygons shaded by 24h fcst intensity<br>
+              Device pins sized by listed kW<br>
+              Click zone or device → side panel
+            </div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:0.3rem"><div class="label">Fairfax 230 kV (selected)</div><div>5 devices · 2.6 MW listed</div></div>
+            <div class="card" style="margin-bottom:0.3rem"><div class="label">Next event</div><div>14:00–18:00 EPT · 1.9 MW</div></div>
+            <div class="card" style="margin-bottom:0.3rem"><div class="label">Recent perf</div><div>88%, 92%, 85% (3 last)</div></div>
+            <div class="card"><div class="label">Devices</div><div>TYSONS · IDYLWOO4 · BRADDOCK · ...</div></div>
+          </div>
+        </div>
+        <div class="chart">Selected zone: 24h signal (hourly bars)</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Map-first</h3>
+      <p>Geography leads. Click a zone or device to drill into a right-hand context panel. Chart below reflects selection. Tabs for other views.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="wire">
+        <div class="bar">DOM DER Program · Admin · <span class="tab-active">Today</span><span class="tab">Tomorrow</span><span class="tab">History</span><span class="tab">Devices</span></div>
+        <div class="hero">
+          <div class="label">Today (operating 2026-04-18)</div>
+          <div>2 events · 3.2 MW peak · 14–18 EPT</div>
+        </div>
+        <div class="chart" style="min-height:9rem">Fleet-wide 24h chart<br>Program signal + listed capacity<br>Event windows highlighted</div>
+        <div class="row row-3">
+          <div class="card"><div class="label">Loudoun</div><div class="val">1.8 MW</div><div>2 ev fcst</div></div>
+          <div class="card"><div class="label">Fairfax</div><div class="val">2.6 MW</div><div>2 ev fcst</div></div>
+          <div class="card"><div class="label">Alexandria</div><div class="val">0.6 MW</div><div>0 ev fcst</div></div>
+        </div>
+        <div class="bar" style="text-align:center;color:#8b98a5">[small inline map]</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Time-first tabs</h3>
+      <p>Chart leads. Tabs for Today / Tomorrow / History / Devices cleanly separate the temporal views. Zone breakdown sits below chart. Map is a secondary inline element.</p>
+    </div>
+  </div>
+</div>

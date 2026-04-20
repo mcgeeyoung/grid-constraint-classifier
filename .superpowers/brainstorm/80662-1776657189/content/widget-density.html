@@ -1,0 +1,145 @@
+<h2>Widget density for the exec pitch</h2>
+<p class="subtitle">Given a C-suite audience driven live by a WC person, how dense should the screen be? Same data in both; different information architecture.</p>
+
+<style>
+  .wire {
+    background: #00232C;
+    border: 1px solid rgba(11, 212, 255, 0.15);
+    border-radius: 10px;
+    padding: 0.65rem;
+    font-family: monospace;
+    font-size: 0.55rem;
+    color: #F1FDFF;
+    min-height: 22rem;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .wire .tile {
+    background: #003E4A;
+    border: 1px solid rgba(11, 212, 255, 0.15);
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+    color: #F1FDFF;
+  }
+  .wire .tile.map {
+    background: #002530;
+    color: #6C8C93;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 11rem;
+  }
+  .wire .tile .h {
+    color: #6C8C93;
+    font-size: 0.45rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+  }
+  .wire .tile .v { font-size: 0.95rem; font-weight: 700; color: #E4FD7F; }
+  .wire .tile .v.neon { color: #0BD4FF; }
+  .wire .tile .sub { color: #CBCECF; font-size: 0.5rem; }
+  .wire .tile.hero-number { display: flex; flex-direction: column; justify-content: center; }
+  .wire .slider {
+    background: #002530;
+    border: 1px dashed rgba(11, 212, 255, 0.3);
+    color: #0BD4FF;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 6px;
+  }
+  .wire .ribbon {
+    background: #002530;
+    border: 1px solid rgba(11, 212, 255, 0.15);
+    color: #6C8C93;
+    padding: 0.3rem 0.5rem;
+    border-radius: 4px;
+    display: flex;
+    gap: 2px;
+  }
+  .wire .ribbon .cell { flex: 1; height: 0.65rem; background: #003E4A; border-radius: 2px; }
+  .wire .ribbon .cell.opt { background: rgba(228, 253, 127, 0.4); }
+  .wire .ribbon .cell.mand { background: rgba(229, 83, 75, 0.5); }
+  .row-map-rail { grid-template-columns: 2fr 1fr; }
+  .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+</style>
+
+<div class="cards">
+  <div class="card" data-choice="lean" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="wire">
+        <div class="tile" style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div class="h">WattCarbon · Dominion DER</div>
+            <div style="font-size:0.7rem;font-weight:600">The independent record for distributed energy transactions</div>
+          </div>
+          <div style="text-align:right"><div class="h">right now</div><div class="v neon">1.3× p85</div></div>
+        </div>
+        <div class="tile map" style="min-height:13rem">Full-bleed Virginia map<br>devices + congestion heat<br>(hero centerpiece)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+          <div class="tile hero-number">
+            <div class="h">Community energy this year</div>
+            <div class="v">6,327 hrs · 2.9 MWh avg</div>
+            <div class="sub">Virginia rooftops and businesses</div>
+          </div>
+          <div class="tile hero-number">
+            <div class="h">Grid value delivered</div>
+            <div class="v">$412K · 1,839 events</div>
+            <div class="sub">transmission deferred · carbon avoided</div>
+          </div>
+        </div>
+        <div class="slider">◉ scale:  6 ← ▬▬▬▬▬▬▬▬ → 10,000 devices</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Lean · 4 widgets</h3>
+      <p>Map is the hero. Two big-number tiles land the headline. One slider delivers the "new asset class" moment. Nothing else competes. Best for a 5–10 minute pitch where each moment gets full attention.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="rich" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="wire">
+        <div class="tile" style="display:flex;align-items:center;justify-content:space-between">
+          <div><div class="h">WattCarbon · Dominion DER</div><div style="font-size:0.7rem;font-weight:600">Virginia's independent record for distributed energy</div></div>
+          <div style="text-align:right"><div class="h">now</div><div class="v neon">1.3× p85</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:0.4rem">
+          <div class="tile map" style="min-height:13rem">Virginia map<br>hero centerpiece</div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem">
+            <div class="tile" style="flex:1">
+              <div class="h">Grid stress</div>
+              <div class="v neon">$18 · p85</div>
+              <div class="sub">radial dial</div>
+            </div>
+            <div class="tile" style="flex:1">
+              <div class="h">Community energy</div>
+              <div class="v">2,847 kWh</div>
+              <div class="sub">this week</div>
+            </div>
+            <div class="tile" style="flex:1">
+              <div class="h">Leaderboard</div>
+              <div class="sub">Loudoun · 1.2 MW · 96%</div>
+              <div class="sub">Fairfax · 2.6 MW · 91%</div>
+              <div class="sub">Alexandria · 0.6 MW · 94%</div>
+            </div>
+          </div>
+        </div>
+        <div class="ribbon">
+          <div class="cell"></div><div class="cell opt"></div><div class="cell opt"></div><div class="cell mand"></div>
+          <div class="cell"></div><div class="cell"></div><div class="cell opt"></div><div class="cell mand"></div>
+          <div class="cell"></div><div class="cell"></div><div class="cell opt"></div><div class="cell"></div>
+          <div class="cell mand"></div><div class="cell"></div><div class="cell opt"></div>
+        </div>
+        <div class="slider">◉ scale:  6 ← ▬▬▬▬▬▬▬▬ → 10,000 devices</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Rich · 7 widgets</h3>
+      <p>Map + side rail of three tiles (grid state, community counter, communities leaderboard) + 30-day event ribbon at the bottom + scale slider. More density, more for an analyst in the room to chew on, but the eye has more places to land. Best for a 15–20 minute meeting with deep-dive questions.</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:1rem">A C-suite decision-maker doesn't read the screen closely; they listen to the narrator and watch three things change. Lean usually wins that format. Which do you want to target?</p>

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -80,7 +80,7 @@ except (OSError, json.JSONDecodeError) as exc:
         exc,
     )
 
-_HEATMAP_CACHE: dict[date, list[dict]] = {}
+_HEATMAP_CACHE: dict[tuple[date, Optional[int]], list[dict]] = {}
 
 
 # ───────────────────────── helpers ─────────────────────────
@@ -507,24 +507,40 @@ def device_summary(
 def dispatch_congestion_heatmap(
     operating_date: Optional[date] = Query(
         default=None,
-        description="DA operating day; defaults to latest successful ingest",
+        description="DA operating day (or window end if window_days is set); defaults to latest successful ingest",
+    ),
+    window_days: Optional[int] = Query(
+        default=None,
+        ge=1,
+        le=365,
+        description="If set, aggregate across this many DA days ending at operating_date",
     ),
     db: Session = Depends(get_db),
 ):
-    """Per-pnode abs-congestion summary for an operating day, for map heatmap."""
+    """Per-pnode abs-congestion summary. Single day by default, or rolled up across a window."""
     if operating_date is None:
         latest = _latest_successful_run(db)
         if latest is None:
             raise HTTPException(503, "No successful DA ingest available yet.")
         operating_date = latest.operating_date
 
-    if operating_date in _HEATMAP_CACHE:
-        cached = _HEATMAP_CACHE[operating_date]
+    cache_key = (operating_date, window_days)
+    if cache_key in _HEATMAP_CACHE:
+        cached = _HEATMAP_CACHE[cache_key]
         return AdminCongestionHeatmapResponse(
             operating_date=operating_date,
             point_count=len(cached),
             points=[AdminCongestionHeatmapPoint(**p) for p in cached],
         )
+
+    if window_days is not None:
+        window_start = operating_date - timedelta(days=window_days - 1)
+        date_filter = and_(
+            DominionDaIngestionRun.operating_date >= window_start,
+            DominionDaIngestionRun.operating_date <= operating_date,
+        )
+    else:
+        date_filter = DominionDaIngestionRun.operating_date == operating_date
 
     rows = db.execute(
         select(
@@ -538,7 +554,7 @@ def dispatch_congestion_heatmap(
             DominionDaIngestionRun.id == DominionDaNodeHourly.ingestion_run_id,
         )
         .where(
-            DominionDaIngestionRun.operating_date == operating_date,
+            date_filter,
             DominionDaIngestionRun.status == "success",
             DominionDaNodeHourly.congestion_price_da.isnot(None),
         )
@@ -561,7 +577,7 @@ def dispatch_congestion_heatmap(
             )
         )
 
-    _HEATMAP_CACHE[operating_date] = points
+    _HEATMAP_CACHE[cache_key] = points
     return AdminCongestionHeatmapResponse(
         operating_date=operating_date,
         point_count=len(points),

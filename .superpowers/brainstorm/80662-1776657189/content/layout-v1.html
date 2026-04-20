@@ -1,0 +1,190 @@
+<h2>Layout: 7 widgets in the Rich composition</h2>
+<p class="subtitle">Each widget has a single narrative function. No row of KPI tiles; each tile answers a different question an exec might ask.</p>
+
+<style>
+  .wire {
+    background: #00232C;
+    border: 1px solid rgba(11, 212, 255, 0.15);
+    border-radius: 12px;
+    padding: 0.75rem;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 0.65rem;
+    color: #F1FDFF;
+    display: grid;
+    grid-template-areas:
+      "hdr  hdr  hdr"
+      "map  map  rail"
+      "ribbon ribbon ribbon"
+      "slider slider slider";
+    grid-template-columns: 1fr 1fr 0.8fr;
+    grid-template-rows: auto 1fr auto auto;
+    gap: 0.5rem;
+    min-height: 30rem;
+  }
+  .wire .tile {
+    background: #003E4A;
+    border: 1px solid rgba(11, 212, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.55rem 0.7rem;
+  }
+  .wire .h {
+    color: #6C8C93;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.2rem;
+  }
+  .wire .v {
+    font-family: "Source Serif Pro", Georgia, serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #F1FDFF;
+    line-height: 1.1;
+  }
+  .wire .v.neon { color: #0BD4FF; }
+  .wire .v.honey { color: #E4FD7F; }
+  .wire .sub { color: #CBCECF; font-size: 0.6rem; }
+  .wire .hdr { grid-area: hdr; display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; }
+  .wire .hdr .brand { display: flex; gap: 0.5rem; align-items: center; }
+  .wire .hdr .brand .mark {
+    width: 1.3rem; height: 1.3rem; border-radius: 4px;
+    background: #0BD4FF; color: #00232C; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem;
+  }
+  .wire .hdr .brand .title {
+    font-family: "Source Serif Pro", Georgia, serif;
+    font-weight: 600; color: #F1FDFF;
+  }
+  .wire .hdr .grid-state .v { font-size: 1rem; }
+
+  .wire .map {
+    grid-area: map;
+    background: #001A20;
+    border: 1px solid rgba(11, 212, 255, 0.2);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #6C8C93; font-family: monospace; text-align: center;
+    min-height: 14rem;
+    position: relative;
+  }
+  .wire .map::before {
+    content: "Virginia · MapLibre dark vector · enrolled devices + DOM LOAD congestion heatmap · scenario stops update dot count + shading";
+    padding: 1rem;
+  }
+
+  .wire .rail { grid-area: rail; display: grid; gap: 0.5rem; grid-template-rows: repeat(3, 1fr); }
+
+  .wire .ribbon { grid-area: ribbon; display: flex; flex-direction: column; gap: 0.3rem; }
+  .wire .ribbon-strip { display: flex; gap: 2px; }
+  .wire .ribbon-strip .cell { flex: 1; height: 0.8rem; background: #003E4A; border-radius: 2px; }
+  .wire .ribbon-strip .cell.opt { background: rgba(228, 253, 127, 0.45); }
+  .wire .ribbon-strip .cell.mand { background: rgba(229, 83, 75, 0.6); }
+
+  .wire .slider {
+    grid-area: slider;
+    background: #001A20;
+    border: 1px solid rgba(11, 212, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+  }
+  .wire .slider .stops { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; margin-top: 0.5rem; }
+  .wire .slider .stop { border: 1px solid rgba(11, 212, 255, 0.15); border-radius: 6px; padding: 0.4rem 0.5rem; background: #00232C; }
+  .wire .slider .stop.active { border-color: #0BD4FF; background: rgba(11, 212, 255, 0.1); }
+  .wire .slider .stop .num { font-family: "Source Serif Pro", Georgia, serif; font-weight: 700; color: #E4FD7F; }
+  .wire .slider .stop .mw { color: #0BD4FF; font-weight: 600; }
+  .wire .slider .stop .infra { color: #CBCECF; font-size: 0.58rem; }
+
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 1rem;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+  }
+  .legend .item { display: flex; align-items: flex-start; gap: 0.5rem; }
+  .legend .badge {
+    min-width: 1.5rem; height: 1.5rem; border-radius: 4px;
+    background: rgba(11, 212, 255, 0.15); color: #0BD4FF;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.75rem;
+  }
+  .legend strong { color: var(--text-bright, #F1FDFF); }
+</style>
+
+<div class="wire">
+  <div class="hdr tile">
+    <div class="brand">
+      <span class="mark">W</span>
+      <span class="title">WattCarbon · Virginia DER program</span>
+    </div>
+    <div class="grid-state">
+      <div class="h">right now on the grid</div>
+      <div class="v neon">$18.20/MWh · 1.3× p85</div>
+    </div>
+  </div>
+
+  <div class="map"></div>
+
+  <div class="rail">
+    <div class="tile">
+      <div class="h">1 · Community energy delivered</div>
+      <div class="v">2,847 kWh</div>
+      <div class="sub">this week · Virginia rooftops + small businesses</div>
+    </div>
+    <div class="tile">
+      <div class="h">2 · Value returned to ratepayers</div>
+      <div class="v honey">$14,200</div>
+      <div class="sub">participation payments · stays in Loudoun/Fairfax/Alexandria</div>
+    </div>
+    <div class="tile">
+      <div class="h">3 · Communities leaderboard</div>
+      <div class="sub">Fairfax · 2.6 MW · 91%</div>
+      <div class="sub">Loudoun · 1.2 MW · 96%</div>
+      <div class="sub">Alexandria · 0.6 MW · 94%</div>
+    </div>
+  </div>
+
+  <div class="ribbon tile">
+    <div class="h">30 days of grid stress · honeydew optional · red mandatory</div>
+    <div class="ribbon-strip">
+      <div class="cell"></div><div class="cell opt"></div><div class="cell opt"></div><div class="cell mand"></div><div class="cell"></div>
+      <div class="cell"></div><div class="cell opt"></div><div class="cell mand"></div><div class="cell"></div><div class="cell"></div>
+      <div class="cell opt"></div><div class="cell"></div><div class="cell mand"></div><div class="cell"></div><div class="cell opt"></div>
+      <div class="cell mand"></div><div class="cell"></div><div class="cell opt"></div><div class="cell opt"></div><div class="cell"></div>
+      <div class="cell mand"></div><div class="cell opt"></div><div class="cell opt"></div><div class="cell"></div><div class="cell"></div>
+      <div class="cell mand"></div><div class="cell"></div><div class="cell opt"></div><div class="cell opt"></div><div class="cell mand"></div>
+    </div>
+    <div class="sub" style="color: #6C8C93">click a day → map zooms + timeline plays the event</div>
+  </div>
+
+  <div class="slider">
+    <div class="h">Scale scenarios · what this becomes at Dominion-planning-level capacity</div>
+    <div class="stops">
+      <div class="stop active">
+        <div class="num">6 devices</div>
+        <div class="mw">3.8 MW peak</div>
+        <div class="infra">Today · proof-of-concept</div>
+      </div>
+      <div class="stop">
+        <div class="num">~N devices</div>
+        <div class="mw">~X MW peak</div>
+        <div class="infra">Dominion DSM / GAPS target · IRP page Y</div>
+      </div>
+      <div class="stop">
+        <div class="num">~M devices</div>
+        <div class="mw">~Y GW peak</div>
+        <div class="infra">NoVA load-growth matched · IRP page Z</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="item"><span class="badge">hdr</span><div><strong>Header</strong>: brand + live grid-state readout. Sets the tone: "we're watching the real grid right now."</div></div>
+  <div class="item"><span class="badge">map</span><div><strong>Hero map</strong>: MapLibre dark-vector VA territory, enrolled devices, DOM LOAD congestion heat. Re-renders when a scenario stop is selected.</div></div>
+  <div class="item"><span class="badge">1</span><div><strong>Community kWh</strong>: this week's DER contribution. Frames "community energy value creation."</div></div>
+  <div class="item"><span class="badge">2</span><div><strong>Ratepayer value</strong>: settlement $ staying in Virginia. Capital-stays-local angle.</div></div>
+  <div class="item"><span class="badge">3</span><div><strong>Communities leaderboard</strong>: zone-level pride frame. Click a zone → map zooms.</div></div>
+  <div class="item"><span class="badge">rbn</span><div><strong>30-day ribbon</strong>: grid-optimization angle — "the grid stresses on a rhythm." Click a day plays it back on the map.</div></div>
+  <div class="item"><span class="badge">scl</span><div><strong>Scale slider</strong>: 3 named stops (today / DSM target / load-growth matched). Hybrid labels: count + MW + infrastructure-deferred.</div></div>
+</div>

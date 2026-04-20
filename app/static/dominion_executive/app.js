@@ -38,7 +38,7 @@ const App = {
           api.events({ window_days: 30, limit: 200 }),
           api.participation({ window_days: 30 }),
           api.participation({ window_days: 7 }),
-          api.congestionHeatmap(),
+          api.congestionHeatmap({ window_days: 30 }),
         ]);
         state.scenarios = scenarios;
         state.today = today;

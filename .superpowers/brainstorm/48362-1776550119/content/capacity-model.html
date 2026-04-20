@@ -1,0 +1,85 @@
+<h2>Capacity & realized performance: data shape</h2>
+<p class="subtitle">For "available capacity" and "performance score" we need both a listed side (what's enrolled) and a realized side (what actually showed up). Mocked for the demo, but the shape shapes every view.</p>
+
+<style>
+  .mockdb { font-family: monospace; font-size: 0.75rem; background:#0f1419; padding:0.6rem 0.8rem; border-radius:6px; margin: 0.3rem 0; border:1px solid #2d3844; }
+  .mockdb .tbl { color:#d29922; }
+  .mockdb .col { color:#79c0ff; }
+  .mockdb .cmt { color:#5a6673; font-style:italic; }
+  .approach { border: 1px solid #2d3844; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; background: #1a222c; }
+  .approach h3 { margin-top:0 }
+  .tag { display:inline-block; padding:0.15rem 0.45rem; border-radius:4px; font-size:0.7rem; background:#2d3844; color:#c9d1d9; margin-left:0.5rem; vertical-align:middle; }
+</style>
+
+<div class="approach">
+  <h3>A. Scalar listed capacity + per-event realized (simple)<span class="tag">recommended</span></h3>
+  <p style="margin:0.25rem 0;color:#c9d1d9">Each device has one kW rating (on <code>dominion_devices</code>). Realized performance is aggregated per event (average kW delivered).</p>
+  <div class="mockdb">
+    ALTER TABLE <span class="tbl">dominion_devices</span> ADD COLUMN <span class="col">listed_capacity_kw</span> NUMERIC(10,2);<br>
+    <br>
+    CREATE TABLE <span class="tbl">dominion_dispatch_events</span> (<br>
+    &nbsp;&nbsp;<span class="col">id</span> SERIAL PRIMARY KEY,<br>
+    &nbsp;&nbsp;<span class="col">ingestion_run_id</span> INT,<br>
+    &nbsp;&nbsp;<span class="col">device_id_external</span> TEXT,<br>
+    &nbsp;&nbsp;<span class="col">start_utc</span>, <span class="col">end_utc</span>, <span class="col">duration_hours</span> INT,<br>
+    &nbsp;&nbsp;<span class="col">has_mandatory</span> BOOL,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">-- contains any extreme hour</span><br>
+    &nbsp;&nbsp;<span class="col">avg_program_signal</span> NUMERIC(5,3),&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">-- from dispatch table</span><br>
+    &nbsp;&nbsp;<span class="col">listed_capacity_kw_avg</span> NUMERIC(10,2),<br>
+    &nbsp;&nbsp;<span class="col">realized_capacity_kw_avg</span> NUMERIC(10,2),<br>
+    &nbsp;&nbsp;<span class="col">performance_pct</span> NUMERIC(5,2)&nbsp;&nbsp;<span class="cmt">-- realized / listed</span><br>
+    );
+  </div>
+  <p class="label" style="margin-top:0.75rem">Pros</p>
+  <p style="margin:0.15rem 0;font-size:0.8rem">One row per device per event. Performance score is one column. Easy to aggregate by zone, roll up to fleet. Mock realized by injecting ~70-90% of listed with some jitter.</p>
+  <p class="label" style="margin-top:0.5rem">Cons</p>
+  <p style="margin:0.15rem 0;font-size:0.8rem">No intra-event shape (can't show "device ramped down at hour 3, back up at hour 4"). Fine for demo; extendable later.</p>
+</div>
+
+<div class="approach">
+  <h3>B. Time-varying capacity + per-hour telemetry (richer)</h3>
+  <p style="margin:0.25rem 0;color:#c9d1d9">Capacity can vary by hour (battery SOC, thermostat availability). Realized is per-hour kW from DER telemetry, aggregated to events for reporting.</p>
+  <div class="mockdb">
+    CREATE TABLE <span class="tbl">dominion_device_capacity</span> (<br>
+    &nbsp;&nbsp;<span class="col">device_id_external</span> TEXT, <span class="col">effective_from</span>, <span class="col">effective_to</span>,<br>
+    &nbsp;&nbsp;<span class="col">curve_type</span> TEXT,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">-- 'constant' | 'tod' | 'piecewise'</span><br>
+    &nbsp;&nbsp;<span class="col">curve_json</span> JSONB<br>
+    );<br>
+    <br>
+    CREATE TABLE <span class="tbl">dominion_device_telemetry</span> (<br>
+    &nbsp;&nbsp;<span class="col">device_id_external</span> TEXT,<br>
+    &nbsp;&nbsp;<span class="col">interval_start_utc</span> TIMESTAMPTZ,<br>
+    &nbsp;&nbsp;<span class="col">listed_kw</span> NUMERIC(10,2),<br>
+    &nbsp;&nbsp;<span class="col">realized_kw</span> NUMERIC(10,2)<br>
+    );<br>
+    <br>
+    <span class="cmt">-- Events table is now a view over telemetry × dispatch tiers</span>
+  </div>
+  <p class="label" style="margin-top:0.75rem">Pros</p>
+  <p style="margin:0.15rem 0;font-size:0.8rem">Matches real telemetry feeds. Unlocks charts of realized-vs-signal throughout an event. Future-proof.</p>
+  <p class="label" style="margin-top:0.5rem">Cons</p>
+  <p style="margin:0.15rem 0;font-size:0.8rem">More data to mock convincingly. Event-level views have to aggregate on read. Adds one full table + one lookup table.</p>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Scalar + per-event (simple)</h3>
+      <p>Good for the demo. Listed is one kW number per device; realized is one number per event.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Time-varying + per-hour telemetry</h3>
+      <p>Richer. Enables intra-event charts of listed vs realized by hour.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Hybrid: scalar listed, per-hour realized</h3>
+      <p>Listed capacity is a single kW on each device (constant). Realized is per-hour (mocked). Gives intra-event charts without the complexity of time-varying listed capacity.</p>
+    </div>
+  </div>
+</div>
