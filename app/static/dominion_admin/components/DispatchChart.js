@@ -24,10 +24,10 @@ export const DispatchChart = {
         options: {
           responsive: true, maintainAspectRatio: false,
           interaction: { mode: "index", intersect: false },
-          plugins: { legend: { labels: { color: "#c9d1d9" } } },
+          plugins: { legend: { labels: { color: "#F1FDFF" } } },
           scales: {
-            x: { ticks: { color: "#8b98a5", maxRotation: 45 } },
-            y: { ticks: { color: "#8b98a5" }, grid: { color: "#2d3844" } },
+            x: { ticks: { color: "#6C8C93", maxRotation: 45 } },
+            y: { ticks: { color: "#6C8C93" }, grid: { color: "rgba(11, 212, 255, 0.08)" } },
           },
         },
       });

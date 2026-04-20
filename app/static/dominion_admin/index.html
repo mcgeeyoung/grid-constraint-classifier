@@ -4,6 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dominion DER program · Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap" />
+    <link rel="stylesheet" href="/static/wc-brand.css" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -12,10 +16,15 @@
     <script src="config.js" onerror="/* config.js is optional; see app.js */"></script>
   </head>
   <body>
+    <div class="wc-brand-header">
+      <img class="wc-logomark" src="/static/assets/logos/Symbol_on-dark.png" alt="WattCarbon" />
+      <span class="wc-wordmark">WattCarbon</span>
+      <span class="wc-sep">·</span>
+      <span class="wc-context">Dominion DER program · Admin</span>
+    </div>
     <header class="hero">
       <div class="brand">
-        <span class="logo">D</span>
-        <span class="name">Dominion DER program <span class="badge">Admin · demo</span></span>
+        <span class="name">Operations dashboard <span class="badge">demo</span></span>
       </div>
       <nav>
         <a href="#/" data-route="/">Dashboard</a>

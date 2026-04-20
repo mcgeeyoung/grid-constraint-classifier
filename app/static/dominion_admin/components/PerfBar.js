@@ -14,7 +14,7 @@ export const PerfBar = {
       ]),
       h("span",
         { class: pct == null ? "muted" : `v-${cls || "green"}`, style: { minWidth: "3rem", textAlign: "right" } },
-        pct == null ? "—" : `${pct.toFixed(0)}%`),
+        pct == null ? "-" : `${pct.toFixed(0)}%`),
     ]);
   },
 };

@@ -13,10 +13,10 @@ export const ZoneMap = {
     let markers = [];
 
     function colorForPerf(pct) {
-      if (pct == null) return "#8b98a5";
-      if (pct >= 90) return "#3fb950";
-      if (pct >= 75) return "#d29922";
-      return "#e5534b";
+      if (pct == null) return "#6C8C93";       // wc-sandy
+      if (pct >= 90) return "#E4FD7F";         // wc-honeydew
+      if (pct >= 75) return "#0BD4FF";         // wc-neon
+      return "#6C8C93";                        // wc-sandy (demote, no red in brand)
     }
 
     function renderMarkers() {
@@ -28,8 +28,8 @@ export const ZoneMap = {
         const color = colorForPerf(d.perf_pct);
         if (d.asset_lat != null && d.asset_lon != null) {
           const m = L.circleMarker([d.asset_lat, d.asset_lon], {
-            radius: 8, color, fillColor: "#98df8a", fillOpacity: 0.7, weight: 2,
-          }).bindPopup(`<b>${d.device_id_external}</b><br>listed ${d.listed_capacity_kw || "—"} kW<br>perf ${d.perf_pct != null ? d.perf_pct.toFixed(0) + "%" : "—"}`)
+            radius: 8, color, fillColor: "#E4FD7F", fillOpacity: 0.6, weight: 2,
+          }).bindPopup(`<b>${d.device_id_external}</b><br>listed ${d.listed_capacity_kw || "-"} kW<br>perf ${d.perf_pct != null ? d.perf_pct.toFixed(0) + "%" : "-"}`)
             .addTo(map);
           markers.push(m);
           pts.push([d.asset_lat, d.asset_lon]);
@@ -37,7 +37,7 @@ export const ZoneMap = {
         const coords = props.pnodeCoords[d.primary_pnode_id];
         if (coords) {
           const m = L.circleMarker(coords, {
-            radius: 6, color: "#1f77b4", fillColor: "#aec7e8", fillOpacity: 0.7, weight: 2,
+            radius: 6, color: "#0697B6", fillColor: "#C0F5FF", fillOpacity: 0.6, weight: 2,
           }).bindPopup(`<b>pnode ${d.primary_pnode_id}</b>`).addTo(map);
           markers.push(m);
           pts.push(coords);

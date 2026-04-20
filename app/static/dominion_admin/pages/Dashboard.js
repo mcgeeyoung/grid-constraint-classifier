@@ -33,7 +33,7 @@ export const Dashboard = {
 
     return () => {
       if (state.value.loading) return h("div", { class: "loading" }, "Loading dashboard…");
-      if (state.value.err) return h("div", { class: "panel", style: { color: "#e5534b" } }, state.value.err);
+      if (state.value.err) return h("div", { class: "panel error-text" }, state.value.err);
 
       const t = today.value;
       const labels = t.fleet_24h_signal.map((x) => new Date(x.hour_utc).toLocaleTimeString(undefined, { timeZone: "America/New_York", hour: "2-digit" }));
@@ -41,7 +41,7 @@ export const Dashboard = {
 
       return h("div", null, [
         h("div", { class: "panel hero-banner" }, [
-          h("div", { class: "label", style: { color: "#8b98a5" } }, `Operating ${t.operating_date} · ${t.forecast_basis === "tomorrow_da" ? "PJM DA (tomorrow)" : "most recent DA"}`),
+          h("div", { class: "label muted" }, `Operating ${t.operating_date} · ${t.forecast_basis === "tomorrow_da" ? "PJM DA (tomorrow)" : "most recent DA"}`),
           h("div", { style: { fontSize: "1.3rem", fontWeight: 600 } },
             `${t.events_forecast} events forecast · peak ${(t.peak_program_kw / 1000).toFixed(1)} MW`),
         ]),
@@ -52,7 +52,7 @@ export const Dashboard = {
         h("div", { class: "grid-2-1" }, [
           h(DispatchChart, {
             labels,
-            datasets: [{ label: "Fleet program signal (avg)", data: sig, color: "#3fb950", kind: "line" }],
+            datasets: [{ label: "Fleet program signal (avg)", data: sig, color: "#E4FD7F", kind: "line" }],
           }),
           h(ZoneMap, {
             devices: zones.value.flatMap((z) => z.device_ids.map((d) => ({ device_id_external: d, zone_id: z.id }))),

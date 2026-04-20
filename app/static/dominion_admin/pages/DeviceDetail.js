@@ -24,7 +24,7 @@ export const DeviceDetail = {
 
     return () => {
       if (state.value.loading) return h("div", { class: "loading" }, "Loading device…");
-      if (state.value.err) return h("div", { class: "panel", style: { color: "#e5534b" } }, state.value.err);
+      if (state.value.err) return h("div", { class: "panel error-text" }, state.value.err);
 
       const d = data.value;
       const labels = d.recent_events.slice().reverse().map((e) => new Date(e.start_utc).toLocaleDateString());
@@ -39,7 +39,7 @@ export const DeviceDetail = {
           h("div", { style: { fontSize: "1.1rem", fontWeight: 600 } },
             `${d.device_id_external} · ${d.primary_pnode_name || d.primary_pnode_id}`),
           h("div", { class: "muted" },
-            `listed ${d.listed_capacity_kw || "—"} kW · zone ${d.zone_id || "—"} · window ${d.window_start} → ${d.window_end}`),
+            `listed ${d.listed_capacity_kw || "-"} kW · zone ${d.zone_id || "-"} · window ${d.window_start} to ${d.window_end}`),
         ]),
         h("div", { class: "grid-4" }, [
           h("div", { class: "panel kpi" }, [
@@ -49,12 +49,12 @@ export const DeviceDetail = {
           ]),
           h("div", { class: "panel kpi" }, [
             h("div", { class: "label" }, "Avg performance"),
-            h("div", { class: "val" }, d.avg_performance_pct != null ? `${d.avg_performance_pct.toFixed(0)}%` : "—"),
+            h("div", { class: "val" }, d.avg_performance_pct != null ? `${d.avg_performance_pct.toFixed(0)}%` : "-"),
             h("div", { class: "sub" }, d.rank_in_fleet != null ? `rank ${d.rank_in_fleet}` : ""),
           ]),
           h("div", { class: "panel kpi" }, [
             h("div", { class: "label" }, "Mandatory performance"),
-            h("div", { class: "val" }, d.mandatory_performance_pct != null ? `${d.mandatory_performance_pct.toFixed(0)}%` : "—"),
+            h("div", { class: "val" }, d.mandatory_performance_pct != null ? `${d.mandatory_performance_pct.toFixed(0)}%` : "-"),
           ]),
           h("div", { class: "panel kpi" }, [
             h("div", { class: "label" }, "Realized energy"),
@@ -63,7 +63,7 @@ export const DeviceDetail = {
         ]),
         h(DispatchChart, {
           labels,
-          datasets: [{ label: "Performance % per event", data: perf, color: "#3d8bfd", kind: "line" }],
+          datasets: [{ label: "Performance % per event", data: perf, color: "#0BD4FF", kind: "line" }],
         }),
         h("div", { class: "panel" }, [
           h("h3", { style: { marginTop: 0 } }, "Recent events"),

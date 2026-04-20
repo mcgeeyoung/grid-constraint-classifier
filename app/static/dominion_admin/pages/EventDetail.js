@@ -4,7 +4,7 @@ import { ZoneMap } from "../components/ZoneMap.js";
 
 const { h, ref, onMounted, watch } = Vue;
 
-function fmt(v, fn, fallback = "—") {
+function fmt(v, fn, fallback = "-") {
   return v == null ? fallback : fn(v);
 }
 
@@ -28,7 +28,7 @@ export const EventDetail = {
 
     return () => {
       if (state.value.loading) return h("div", { class: "loading" }, "Loading event…");
-      if (state.value.err) return h("div", { class: "panel", style: { color: "#e5534b" } }, state.value.err);
+      if (state.value.err) return h("div", { class: "panel error-text" }, state.value.err);
 
       const e = ev.value;
       const labels = e.hours.map((h) => {
@@ -36,9 +36,9 @@ export const EventDetail = {
         return d.toLocaleTimeString(undefined, { timeZone: "America/New_York", hour: "2-digit", minute: "2-digit" });
       });
       const ds = [
-        { label: "Program signal", data: e.hours.map((h) => h.dispatch_signal_program), color: "#3d8bfd", kind: "line" },
-        { label: "Listed ask (kW)", data: e.hours.map((h) => h.listed_kw_ask), color: "#d29922", kind: "line" },
-        { label: "Realized (kW)",   data: e.hours.map((h) => h.realized_kw), color: "#3fb950", kind: "bar" },
+        { label: "Program signal", data: e.hours.map((h) => h.dispatch_signal_program), color: "#0BD4FF", kind: "line" },
+        { label: "Listed ask (kW)", data: e.hours.map((h) => h.listed_kw_ask), color: "#C0F5FF", kind: "line" },
+        { label: "Realized (kW)",   data: e.hours.map((h) => h.realized_kw), color: "#E4FD7F", kind: "bar" },
       ];
 
       return h("div", null, [
@@ -51,7 +51,7 @@ export const EventDetail = {
           h("div", { style: { fontSize: "1.1rem", fontWeight: 600 } },
             `${e.event_id} · ${e.duration_hours}h · ${e.device_id_external}`),
           h("div", { class: "muted" },
-            `Operating ${e.operating_date} · ${e.stressed_hours} stressed + ${e.extreme_hours} mandatory · zone ${e.zone_id || "—"}`),
+            `Operating ${e.operating_date} · ${e.stressed_hours} stressed + ${e.extreme_hours} mandatory · zone ${e.zone_id || "-"}`),
         ]),
         h("div", { class: "grid-4" }, [
           h("div", { class: "panel kpi" }, [

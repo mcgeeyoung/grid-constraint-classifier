@@ -66,7 +66,7 @@ export const History = {
             }, "perf ≥ 85%"),
           ]),
           state.value.loading ? h("div", { class: "loading" }, "Loading…") :
-          state.value.err ? h("div", { style: { color: "#e5534b" } }, state.value.err) :
+          state.value.err ? h("div", { class: "error-text" }, state.value.err) :
           h("table", null, [
             h("thead", null, h("tr", null, ["Event", "Start", "Zone", "Pnode", "Tier", "Listed avg", "Realized avg", "Perf"].map((t) => h("th", null, t)))),
             h("tbody", null, rows.value.map((ev) => h(EventRow, { ev }))),
