@@ -19,6 +19,7 @@ from app.models.dominion_der import (
     DominionDevice,
     DominionDispatchDeviceHour,
 )
+from app.utilities import UtilityConfig, load_utility, utility_dir
 from app.schemas.dominion import (
     AdminCongestionHeatmapPoint,
     AdminCongestionHeatmapResponse,
@@ -48,39 +49,45 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# Full DOM LOAD pnode coord coverage for the /dispatch/congestion-heatmap
-# endpoint. Loaded once at process start. File is produced by the offline
-# HIFLD enrichment script (Task A1).
-_FULL_PNODE_COORDS_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "dominion_dispatch" / "refdata" / "pnode_coords_dom_full.json"
-)
-_FULL_PNODE_COORDS: dict[str, tuple[float, float]] = {}
-try:
-    _raw = json.loads(_FULL_PNODE_COORDS_PATH.read_text())
-    for k, v in _raw.items():
-        if k.startswith("_"):
-            continue
-        if isinstance(v, (list, tuple)) and len(v) >= 2:
-            _FULL_PNODE_COORDS[str(k).strip()] = (float(v[0]), float(v[1]))
-    logger.info(
-        "Loaded %d DOM LOAD pnode coords from %s",
-        len(_FULL_PNODE_COORDS),
-        _FULL_PNODE_COORDS_PATH,
-    )
-except FileNotFoundError:
-    logger.error(
-        "Pnode coord file missing: %s; /dispatch/congestion-heatmap will return 0 points",
-        _FULL_PNODE_COORDS_PATH,
-    )
-except (OSError, json.JSONDecodeError) as exc:
-    logger.error(
-        "Pnode coord file unreadable (%s): %s",
-        _FULL_PNODE_COORDS_PATH,
-        exc,
-    )
+# Per-utility pnode coord coverage for the /dispatch/congestion-heatmap
+# endpoint. Lazily loaded on first access (keyed by utility_id), cached for
+# the life of the process. Source file lives under utilities/<id>/.
+_COORDS_BY_UTILITY: dict[str, dict[str, tuple[float, float]]] = {}
 
-_HEATMAP_CACHE: dict[tuple[date, Optional[int]], list[dict]] = {}
+
+def _coords_for(utility: UtilityConfig) -> dict[str, tuple[float, float]]:
+    if utility.utility_id in _COORDS_BY_UTILITY:
+        return _COORDS_BY_UTILITY[utility.utility_id]
+    path = utility_dir(utility.utility_id) / utility.pnode_coords_path
+    coords: dict[str, tuple[float, float]] = {}
+    if path.is_file():
+        try:
+            raw = json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.error(
+                "Pnode coord file unreadable for %s (%s): %s",
+                utility.utility_id, path, exc,
+            )
+            raw = {}
+        for k, v in raw.items():
+            if k.startswith("_"):
+                continue
+            if isinstance(v, (list, tuple)) and len(v) >= 2:
+                coords[str(k).strip()] = (float(v[0]), float(v[1]))
+        logger.info(
+            "Loaded %d pnode coords for %s from %s",
+            len(coords), utility.utility_id, path,
+        )
+    else:
+        logger.error(
+            "Pnode coord file missing for %s: %s; heatmap will return 0 points",
+            utility.utility_id, path,
+        )
+    _COORDS_BY_UTILITY[utility.utility_id] = coords
+    return coords
+
+
+_HEATMAP_CACHE: dict[tuple[str, date, Optional[int]], list[dict]] = {}
 
 
 # ───────────────────────── helpers ─────────────────────────
