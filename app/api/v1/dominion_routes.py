@@ -72,7 +72,12 @@ def list_dominion_ingestion_runs(
 ):
     rows = (
         db.execute(
-            select(DominionDaIngestionRun).order_by(DominionDaIngestionRun.id.desc()).limit(limit)
+            select(DominionDaIngestionRun)
+            .order_by(
+                DominionDaIngestionRun.operating_date.desc(),
+                DominionDaIngestionRun.id.desc(),
+            )
+            .limit(limit)
         )
         .scalars()
         .all()

@@ -157,7 +157,7 @@ async function loadRuns() {
   tbody.innerHTML = "";
   for (const r of runs) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td class="click-run" data-id="${r.id}">${r.id}</td><td>${r.operating_date}</td><td>${r.status}</td><td>${r.row_count ?? "—"}</td>`;
+    tr.innerHTML = `<td class="click-run" data-id="${r.id}">${r.id}</td><td>${r.operating_date}</td><td>${r.status}</td><td>${r.row_count ?? "-"}</td>`;
     tbody.appendChild(tr);
   }
   tbody.querySelectorAll(".click-run").forEach((cell) => {
@@ -183,7 +183,7 @@ async function loadDevices() {
   sel.innerHTML = '<option value="">All devices (chart uses first)</option>';
   for (const d of devices) {
     const tr = document.createElement("tr");
-    const asset = d.asset_display_name || (d.asset_lat != null ? `${d.asset_lat}, ${d.asset_lon}` : "—");
+    const asset = d.asset_display_name || (d.asset_lat != null ? `${d.asset_lat}, ${d.asset_lon}` : "-");
     tr.innerHTML = `<td>${d.device_id_external}</td><td>${d.primary_pnode_id}</td><td>${asset}</td>`;
     tbody.appendChild(tr);
     const opt = document.createElement("option");
@@ -248,12 +248,12 @@ async function loadParticipation() {
       tbody.appendChild(tr);
       return;
     }
-    const pct = (v) => (v == null ? "—" : ` (${Number(v).toFixed(1)}%)`);
+    const pct = (v) => (v == null ? "-" : ` (${Number(v).toFixed(1)}%)`);
     for (const r of data.devices) {
       const tr = document.createElement("tr");
       const pnode = r.primary_pnode_name
         ? `${r.primary_pnode_name} (${r.primary_pnode_id})`
-        : r.primary_pnode_id || "—";
+        : r.primary_pnode_id || "-";
       addCell(tr, r.device_id_external);
       addCell(tr, pnode);
       addCell(tr, String(r.runs));
