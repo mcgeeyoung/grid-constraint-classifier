@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -53,14 +54,29 @@ _FULL_PNODE_COORDS_PATH = (
     / "dominion_dispatch" / "refdata" / "pnode_coords_dom_full.json"
 )
 _FULL_PNODE_COORDS: dict[str, tuple[float, float]] = {}
-if _FULL_PNODE_COORDS_PATH.is_file():
-    import json as _json
-    _raw = _json.loads(_FULL_PNODE_COORDS_PATH.read_text())
+try:
+    _raw = json.loads(_FULL_PNODE_COORDS_PATH.read_text())
     for k, v in _raw.items():
         if k.startswith("_"):
             continue
         if isinstance(v, (list, tuple)) and len(v) >= 2:
             _FULL_PNODE_COORDS[str(k).strip()] = (float(v[0]), float(v[1]))
+    logger.info(
+        "Loaded %d DOM LOAD pnode coords from %s",
+        len(_FULL_PNODE_COORDS),
+        _FULL_PNODE_COORDS_PATH,
+    )
+except FileNotFoundError:
+    logger.error(
+        "Pnode coord file missing: %s; /dispatch/congestion-heatmap will return 0 points",
+        _FULL_PNODE_COORDS_PATH,
+    )
+except (OSError, json.JSONDecodeError) as exc:
+    logger.error(
+        "Pnode coord file unreadable (%s): %s",
+        _FULL_PNODE_COORDS_PATH,
+        exc,
+    )
 
 _HEATMAP_CACHE: dict[date, list[dict]] = {}
 
@@ -508,12 +524,12 @@ def dispatch_congestion_heatmap(
             points=[AdminCongestionHeatmapPoint(**p) for p in cached],
         )
 
-    from sqlalchemy import func as _f
     rows = db.execute(
         select(
             DominionDaNodeHourly.pnode_id_external,
-            _f.max(_f.abs(DominionDaNodeHourly.congestion_price_da)).label("max_abs"),
-            _f.avg(_f.abs(DominionDaNodeHourly.congestion_price_da)).label("mean_abs"),
+            func.max(DominionDaNodeHourly.pnode_name).label("pnode_name"),
+            func.max(func.abs(DominionDaNodeHourly.congestion_price_da)).label("max_abs"),
+            func.avg(func.abs(DominionDaNodeHourly.congestion_price_da)).label("mean_abs"),
         )
         .join(
             DominionDaIngestionRun,
@@ -528,14 +544,14 @@ def dispatch_congestion_heatmap(
     ).all()
 
     points: list[dict] = []
-    for pid_ext, max_abs, mean_abs in rows:
+    for pid_ext, pname, max_abs, mean_abs in rows:
         coord = _FULL_PNODE_COORDS.get(str(pid_ext))
         if not coord:
             continue
         points.append(
             dict(
                 pnode_id=str(pid_ext),
-                pnode_name=None,
+                pnode_name=pname,
                 lat=coord[0],
                 lon=coord[1],
                 max_abs_congestion=float(max_abs),
