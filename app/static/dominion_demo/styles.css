@@ -1,6 +1,4 @@
-/* dominion-demo: consumes WattCarbon brand tokens from ../wc-brand.css */
-
-@import url("/static/wc-brand.css");
+/* dominion-demo. Requires /static/wc-brand.css to be loaded first via <link>. */
 
 * {
   box-sizing: border-box;

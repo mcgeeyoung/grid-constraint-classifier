@@ -6,7 +6,10 @@
  * already the deepest primary.
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap");
+/* Note: consumer pages must <link> the Inter + Source Serif Pro Google Fonts
+ * stylesheet themselves. This file does not @import fonts to avoid nested-
+ * @import resolution issues in some browsers.
+ */
 
 :root {
   /* Primary */
