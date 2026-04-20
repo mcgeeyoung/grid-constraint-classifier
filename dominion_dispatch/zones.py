@@ -1,5 +1,6 @@
-"""Zone taxonomy for Dominion DER program: loads ``refdata/zones_dom.yaml``
-and provides pnode -> zone lookups."""
+"""Zone taxonomy loader. Default to the legacy Dominion file for backward
+compat with the CLI, but accept a ``utility_id`` for per-tenant loads from
+``utilities/<utility_id>/zones.yaml``."""
 
 from __future__ import annotations
 
@@ -9,7 +10,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-REFDATA_PATH = Path(__file__).resolve().parent / "refdata" / "zones_dom.yaml"
+_REPO = Path(__file__).resolve().parents[1]
+REFDATA_PATH = _REPO / "dominion_dispatch" / "refdata" / "zones_dom.yaml"
 
 
 @dataclass(frozen=True)
@@ -32,8 +34,21 @@ class ZoneIndex:
         return None
 
 
-@lru_cache(maxsize=1)
-def load_zones(path: Path = REFDATA_PATH) -> ZoneIndex:
+def _zones_path(utility_id: Optional[str] = None) -> Path:
+    """Resolve the zones YAML file for a given utility.
+
+    When ``utility_id`` is ``None`` the legacy Dominion file is returned so
+    that ``dominion_dispatch/cli.py`` and other non-web callers continue to
+    work without modification.
+    """
+    if utility_id:
+        return _REPO / "utilities" / utility_id / "zones.yaml"
+    return REFDATA_PATH
+
+
+@lru_cache(maxsize=16)
+def load_zones(utility_id: Optional[str] = None) -> ZoneIndex:
+    path = _zones_path(utility_id)
     with open(path) as f:
         raw = yaml.safe_load(f)
     zones = tuple(
