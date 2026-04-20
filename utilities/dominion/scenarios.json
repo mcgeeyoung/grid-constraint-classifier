@@ -1,0 +1,26 @@
+[
+  {
+    "id": "today",
+    "label": "Today · simulated pilot scale",
+    "deviceCount": 5000,
+    "peakMw": 10,
+    "infra": "Live simulation at pilot scale, grounded in 2026 PJM DOM DA data.",
+    "citation": "WattCarbon simulation, not a Dominion filing."
+  },
+  {
+    "id": "dsm-target",
+    "label": "Dominion DSM / GAPS target",
+    "deviceCount": 50000,
+    "peakMw": 100,
+    "infra": "Defers one 230 kV substation upgrade.",
+    "citation": "Directional toward Dominion Energy Virginia's stated DSM/GAPS program scale. Replace with IRP docket + page reference before the first external meeting."
+  },
+  {
+    "id": "load-growth",
+    "label": "NoVA load-growth matched",
+    "deviceCount": 500000,
+    "peakMw": 1000,
+    "infra": "Offsets one natural-gas peaker plant.",
+    "citation": "Directional toward publicly reported Northern Virginia data-center load growth. Replace with IRP docket + page reference before the first external meeting."
+  }
+]

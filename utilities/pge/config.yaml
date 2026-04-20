@@ -1,0 +1,12 @@
+utility_id: pge
+iso: CAISO
+pricing_zone: DLAP_PGAE-APND
+program_name: "California DER program"
+service_territory_center: [37.5, -121.8]
+service_territory_zoom: 7.4
+settlement_rate_usd_per_mwh: 22.00
+settlement_rate_description: "PG&E DLAP p85 congestion, trailing 365 DA days (placeholder; refine once backfill completes)"
+pnode_coords_path: pnode_coords_full.json
+zones_path: zones.yaml
+headline_lead: "California communities deliver back to PG&E's grid."
+community_sub_location: "Northern California"

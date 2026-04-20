@@ -25,6 +25,8 @@ class UtilityConfig:
     settlement_rate_description: str
     pnode_coords_path: str                    # relative to utilities/<id>/
     zones_path: str                           # relative to utilities/<id>/
+    headline_lead: str                        # SPA hero lead line
+    community_sub_location: str               # short geo phrase e.g. "Northern Virginia"
 
 
 @lru_cache(maxsize=32)
@@ -34,17 +36,20 @@ def load_utility(utility_id: str) -> UtilityConfig:
         raise HTTPException(status_code=404, detail=f"Unknown utility: {utility_id}")
     raw = yaml.safe_load(path.read_text())
     center = raw["service_territory_center"]
+    program_name = raw["program_name"]
     return UtilityConfig(
         utility_id=raw["utility_id"],
         iso=raw["iso"],
         pricing_zone=raw["pricing_zone"],
-        program_name=raw["program_name"],
+        program_name=program_name,
         service_territory_center=(float(center[0]), float(center[1])),
         service_territory_zoom=float(raw["service_territory_zoom"]),
         settlement_rate_usd_per_mwh=float(raw["settlement_rate_usd_per_mwh"]),
         settlement_rate_description=raw["settlement_rate_description"],
         pnode_coords_path=raw.get("pnode_coords_path", "pnode_coords_full.json"),
         zones_path=raw.get("zones_path", "zones.yaml"),
+        headline_lead=raw.get("headline_lead", program_name),
+        community_sub_location=raw.get("community_sub_location", ""),
     )
 
 

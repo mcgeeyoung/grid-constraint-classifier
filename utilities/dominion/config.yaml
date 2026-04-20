@@ -8,3 +8,5 @@ settlement_rate_usd_per_mwh: 16.60
 settlement_rate_description: "DOM zone p85 congestion, trailing 365 DA days"
 pnode_coords_path: pnode_coords_full.json
 zones_path: zones.yaml
+headline_lead: "Virginia communities deliver back to Dominion's grid."
+community_sub_location: "Northern Virginia"
