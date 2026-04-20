@@ -214,7 +214,7 @@ def list_zones(
     utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
-    idx = load_zones()
+    idx = load_zones(utility.utility_id)
     as_of = _utcnow_date()
     devices = _active_devices(db, as_of)
     caps = {
@@ -247,7 +247,7 @@ def get_zone(
     utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
-    idx = load_zones()
+    idx = load_zones(utility.utility_id)
     z = idx.by_id(zone_id)
     if z is None:
         raise HTTPException(404, f"Zone {zone_id} not found")
@@ -278,7 +278,7 @@ def dashboard_today(
     utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
-    idx = load_zones()
+    idx = load_zones(utility.utility_id)
     as_of = _utcnow_date()
 
     tomorrow_run = _run_for_date(db, utility.utility_id, as_of + timedelta(days=1))
@@ -293,6 +293,7 @@ def dashboard_today(
 
     events = build_events_for_window(
         db,
+        utility.utility_id,
         window_start=run.operating_date,
         window_end=run.operating_date,
     )
@@ -314,7 +315,10 @@ def dashboard_today(
 
     # Fleet 24-hour signal series
     hour_rows = fetch_hours_for_window(
-        db, window_start=run.operating_date, window_end=run.operating_date
+        db,
+        utility.utility_id,
+        window_start=run.operating_date,
+        window_end=run.operating_date,
     )
     hour_map: dict[datetime, list[float]] = {}
     for r in hour_rows:
@@ -351,8 +355,8 @@ def dashboard_today(
 # ───────────────────────── events list + detail ─────────────────────────
 
 
-def _zone_id_for(primary_pnode_id: str) -> Optional[str]:
-    z = zone_for_pnode(load_zones(), str(primary_pnode_id))
+def _zone_id_for(utility_id: str, primary_pnode_id: str) -> Optional[str]:
+    z = zone_for_pnode(load_zones(utility_id), str(primary_pnode_id))
     return z.id if z else None
 
 
@@ -365,13 +369,13 @@ def _pnode_name_for(session: Session, primary_pnode_id: str) -> Optional[str]:
     return row
 
 
-def _event_to_summary(ev, session: Session) -> AdminEventSummary:
+def _event_to_summary(ev, session: Session, utility_id: str) -> AdminEventSummary:
     return AdminEventSummary(
         event_id=ev.event_id,
         device_id_external=ev.device_id_external,
         primary_pnode_id=ev.primary_pnode_id,
         primary_pnode_name=_pnode_name_for(session, ev.primary_pnode_id),
-        zone_id=_zone_id_for(ev.primary_pnode_id),
+        zone_id=_zone_id_for(utility_id, ev.primary_pnode_id),
         operating_date=ev.operating_date,
         start_utc=ev.start_utc,
         end_utc=ev.end_utc,
@@ -409,7 +413,7 @@ def list_events(
 
     device_ids: Optional[list[str]] = None
     if zone_id:
-        z = load_zones().by_id(zone_id)
+        z = load_zones(utility.utility_id).by_id(zone_id)
         if z is None:
             raise HTTPException(404, f"Zone {zone_id} not found")
         rows = db.execute(
@@ -433,6 +437,7 @@ def list_events(
 
     events = build_events_for_window(
         db,
+        utility.utility_id,
         window_start=window_start,
         window_end=window_end,
         device_ids=device_ids,
@@ -449,7 +454,7 @@ def list_events(
         window_start=window_start,
         window_end=window_end,
         total=total,
-        events=[_event_to_summary(e, db) for e in page],
+        events=[_event_to_summary(e, db, utility.utility_id) for e in page],
     )
 
 
@@ -473,6 +478,7 @@ def get_event(
 
     events = build_events_for_window(
         db,
+        utility.utility_id,
         window_start=op_date,
         window_end=op_date,
         device_ids=[device_id],
@@ -482,7 +488,7 @@ def get_event(
     if match is None:
         raise HTTPException(404, f"Event {event_id} not found")
 
-    summary = _event_to_summary(match, db)
+    summary = _event_to_summary(match, db, utility.utility_id)
     return AdminEventDetail(
         **summary.model_dump(),
         hours=[AdminEventHour(**h) for h in match.hours],
@@ -516,7 +522,7 @@ def device_summary(
             device_id_external=dev.device_id_external,
             primary_pnode_id=dev.primary_pnode_id,
             primary_pnode_name=dev.primary_pnode_name,
-            zone_id=_zone_id_for(dev.primary_pnode_id),
+            zone_id=_zone_id_for(utility.utility_id, dev.primary_pnode_id),
             listed_capacity_kw=float(dev.listed_capacity_kw) if dev.listed_capacity_kw else None,
             asset_lat=float(dev.asset_lat) if dev.asset_lat is not None else None,
             asset_lon=float(dev.asset_lon) if dev.asset_lon is not None else None,
@@ -530,6 +536,7 @@ def device_summary(
 
     my_events = build_events_for_window(
         db,
+        utility.utility_id,
         window_start=window_start,
         window_end=window_end,
         device_ids=[device_id_external],
@@ -551,7 +558,10 @@ def device_summary(
 
     # Fleet ranking: avg perf across all devices
     all_events = build_events_for_window(
-        db, window_start=window_start, window_end=window_end
+        db,
+        utility.utility_id,
+        window_start=window_start,
+        window_end=window_end,
     )
     per_device: dict[str, list[float]] = {}
     for e in all_events:
@@ -565,7 +575,7 @@ def device_summary(
 
     my_events.sort(key=lambda e: e.start_utc, reverse=True)
     recent = [
-        AdminDeviceRecentEvent(**_event_to_summary(e, db).model_dump())
+        AdminDeviceRecentEvent(**_event_to_summary(e, db, utility.utility_id).model_dump())
         for e in my_events[:recent_limit]
     ]
 
@@ -573,7 +583,7 @@ def device_summary(
         device_id_external=dev.device_id_external,
         primary_pnode_id=dev.primary_pnode_id,
         primary_pnode_name=dev.primary_pnode_name,
-        zone_id=_zone_id_for(dev.primary_pnode_id),
+        zone_id=_zone_id_for(utility.utility_id, dev.primary_pnode_id),
         listed_capacity_kw=float(dev.listed_capacity_kw) if dev.listed_capacity_kw else None,
         asset_lat=float(dev.asset_lat) if dev.asset_lat is not None else None,
         asset_lon=float(dev.asset_lon) if dev.asset_lon is not None else None,

@@ -328,7 +328,9 @@ def dominion_asset_map_html(
         )
 
     device_ids = [dev["device_id_external"] for dev in devices]
-    stats = compute_participation_for_devices(db, device_ids, window_days=window_days)
+    stats = compute_participation_for_devices(
+        db, utility.utility_id, device_ids, window_days=window_days
+    )
     participation = {did: s.as_dict() for did, s in stats.items()}
 
     with TemporaryDirectory() as td:
@@ -374,7 +376,7 @@ def dominion_participation(
         )
     by_id = {dev["device_id_external"]: dev for dev in devices}
     stats = compute_participation_for_devices(
-        db, list(by_id.keys()), window_days=window_days
+        db, utility.utility_id, list(by_id.keys()), window_days=window_days
     )
 
     rows: list[DominionParticipationRow] = []
