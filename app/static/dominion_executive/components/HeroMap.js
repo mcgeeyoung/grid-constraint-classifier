@@ -51,7 +51,7 @@ export const HeroMap = {
             features: (props.heatmap?.points || []).map((p) => ({
               type: "Feature",
               geometry: { type: "Point", coordinates: [p.lon, p.lat] },
-              properties: { w: p.max_abs_congestion },
+              properties: { w: p.mean_abs_congestion },
             })),
           };
           map.addSource("congestion", { type: "geojson", data: congestionFC });
@@ -61,7 +61,8 @@ export const HeroMap = {
             source: "congestion",
             maxzoom: 12,
             paint: {
-              "heatmap-weight": ["interpolate", ["linear"], ["get", "w"], 0, 0, 40, 0.6, 100, 1],
+              // Mean abs congestion across the 30-day window, typically 5-25 $/MWh.
+              "heatmap-weight": ["interpolate", ["linear"], ["get", "w"], 0, 0, 10, 0.35, 20, 0.7, 30, 1],
               "heatmap-intensity": 1.1,
               "heatmap-color": congestionColorStops(),
               "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 5, 18, 9, 45],
