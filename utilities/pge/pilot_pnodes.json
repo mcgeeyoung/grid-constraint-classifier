@@ -2,7 +2,7 @@
   "_source": "Six PG&E pilot pnodes with HIFLD-refined coords. Zone assignment mirrors CAISO sub-LAP grouping.",
   "pnodes": [
     {
-      "pnode_id": "METCALF_2_N101",
+      "pnode_id": "METCALF_1_N018",
       "pnode_name": "Metcalf 230 kV (San Jose)",
       "zone_id": "south-bay",
       "sublap": "SLAP_PGSB-APND",

@@ -2,14 +2,14 @@
   "_source": "HIFLD Electric Substations (chadbraden 1/9/2025 vintage) matched to CAISO PG&E pilot pnodes by substation name with geographic proximity filter. Today covers the 6 pilot nodes; future iterations will extend to all CAISO PG&E APNODEs.",
   "_coverage": "6 of 6 pilot pnodes matched",
   "_match_notes": {
-    "METCALF_2_N101": "Metcalf 230 kV (San Jose) -> HIFLD 'METCALF 1' (SANTA CLARA CA, 500 kV, 0.2 km from seed)",
+    "METCALF_1_N018": "Metcalf 230 kV (San Jose) -> HIFLD 'METCALF 1' (SANTA CLARA CA, 500 kV, 0.2 km from seed). ID corrected from METCALF_2_N101 after ATL_PNODE verification in Wave 2A.",
     "MISSION_6_N001": "Mission 230 kV (San Francisco) -> HIFLD 'MISSION' (SAN FRANCISCO CA, 115 kV, 1.0 km from seed)",
     "OAKLND3_7_N001": "Oakland 230 kV -> HIFLD 'OAKLAND L' (ALAMEDA CA, 115 kV, 0.7 km from seed)",
     "BELMONT_1_N001": "Belmont 115 kV (Peninsula) -> HIFLD 'BELMONT' (SAN MATEO CA, 115 kV, 1.0 km from seed)",
     "PANOCHE_7_N001": "Panoche 230 kV (Fresno / Path 15) -> HIFLD 'PANOCHE' (FRESNO CA, 230 kV, 24.4 km from seed)",
     "FULTON_2_B1": "Fulton 230 kV (Santa Rosa / North Bay) -> HIFLD 'FULTON' (SONOMA CA, 230 kV, 3.8 km from seed)"
   },
-  "METCALF_2_N101": [
+  "METCALF_1_N018": [
     37.22477,
     -121.74188
   ],
