@@ -1,0 +1,65 @@
+{
+  "_source": "Six PG&E pilot pnodes with HIFLD-refined coords. Zone assignment mirrors CAISO sub-LAP grouping.",
+  "pnodes": [
+    {
+      "pnode_id": "METCALF_2_N101",
+      "pnode_name": "Metcalf 230 kV (San Jose)",
+      "zone_id": "south-bay",
+      "sublap": "SLAP_PGSB-APND",
+      "lat": 37.22477,
+      "lon": -121.74188,
+      "voltage_kv": 230,
+      "region": "South Bay"
+    },
+    {
+      "pnode_id": "MISSION_6_N001",
+      "pnode_name": "Mission 230 kV (San Francisco)",
+      "zone_id": "san-francisco",
+      "sublap": "SLAP_PGSF-APND",
+      "lat": 37.77737,
+      "lon": -122.41383,
+      "voltage_kv": 230,
+      "region": "San Francisco"
+    },
+    {
+      "pnode_id": "OAKLND3_7_N001",
+      "pnode_name": "Oakland 230 kV",
+      "zone_id": "east-bay",
+      "sublap": "SLAP_PGEB-APND",
+      "lat": 37.8103,
+      "lon": -122.2715,
+      "voltage_kv": 230,
+      "region": "East Bay"
+    },
+    {
+      "pnode_id": "BELMONT_1_N001",
+      "pnode_name": "Belmont 115 kV (Peninsula)",
+      "zone_id": "peninsula",
+      "sublap": "SLAP_PGP2-APND",
+      "lat": 37.52343,
+      "lon": -122.2653,
+      "voltage_kv": 115,
+      "region": "Peninsula"
+    },
+    {
+      "pnode_id": "PANOCHE_7_N001",
+      "pnode_name": "Panoche 230 kV (Fresno / Path 15)",
+      "zone_id": "central-valley",
+      "sublap": "SLAP_PGF1-APND",
+      "lat": 36.65333,
+      "lon": -120.58239,
+      "voltage_kv": 230,
+      "region": "Central Valley"
+    },
+    {
+      "pnode_id": "FULTON_2_B1",
+      "pnode_name": "Fulton 230 kV (Santa Rosa / North Bay)",
+      "zone_id": "north-coast",
+      "sublap": "SLAP_PGNB-APND",
+      "lat": 38.49767,
+      "lon": -122.76069,
+      "voltage_kv": 230,
+      "region": "North Coast"
+    }
+  ]
+}
