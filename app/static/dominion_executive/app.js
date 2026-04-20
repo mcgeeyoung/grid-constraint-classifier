@@ -16,6 +16,7 @@ const BASE_DB_DEVICES = 6;
 
 async function loadScenarios() {
   const res = await fetch("./refdata/scenarios.json");
+  if (!res.ok) throw new Error(`scenarios.json: HTTP ${res.status}`);
   return res.json();
 }
 
