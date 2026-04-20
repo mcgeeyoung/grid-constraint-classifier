@@ -34,7 +34,9 @@ from app.schemas.dominion import (
     AdminZoneDetail,
     AdminZoneSummary,
     DominionDeviceResponse,
+    DominionParticipationResponse,
 )
+from app.api.v1.dominion_routes import dominion_participation as _dominion_participation
 from dominion_dispatch.events import (
     build_events_for_window,
     fetch_hours_for_window,
@@ -565,3 +567,18 @@ def dispatch_congestion_heatmap(
         point_count=len(points),
         points=[AdminCongestionHeatmapPoint(**p) for p in points],
     )
+
+
+# ─────────────────── alias: participation on the admin router ───────────────────
+# The underlying implementation lives in dominion_routes.py (used by /dominion-demo/).
+# The executive UI (/dominion/) consumes admin-scoped endpoints, so expose the same
+# function here. Identical behavior, same response schema.
+
+
+@router.get("/dispatch/participation", response_model=DominionParticipationResponse)
+def admin_dispatch_participation(
+    as_of: Optional[date] = Query(default=None, description="Enrollment as-of date (defaults to today UTC)"),
+    window_days: int = Query(default=30, ge=1, le=365, description="DA operating-day window ending at the most recent ingest"),
+    db: Session = Depends(get_db),
+):
+    return _dominion_participation(as_of=as_of, window_days=window_days, db=db)
