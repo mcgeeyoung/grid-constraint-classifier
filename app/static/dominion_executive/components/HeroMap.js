@@ -22,6 +22,8 @@ async function loadJson(url) {
 
 export const HeroMap = {
   props: {
+    // Consumed once on map load; not re-watched. app.js fetches heatmap once
+    // via Promise.all at mount and does not refetch for the session.
     heatmap: { type: Object, required: true },
     zones: { type: Array, required: true },
     events30: { type: Array, required: true },
@@ -43,6 +45,7 @@ export const HeroMap = {
       });
       map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
       map.on("load", async () => {
+        try {
         // Real congestion heatmap from the heatmap API.
         const congestionFC = {
           type: "FeatureCollection",
@@ -92,6 +95,9 @@ export const HeroMap = {
             "heatmap-opacity": 0.75,
           },
         });
+        } catch (e) {
+          console.error("HeroMap: layer init failed", e);
+        }
       });
     }
 
