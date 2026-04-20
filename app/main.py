@@ -16,8 +16,9 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.api.v1.routes import router as v1_router
 
-_DOMINION_DEMO_DIR = Path(__file__).resolve().parent / "static" / "dominion_demo"
-_DOMINION_ADMIN_DIR = Path(__file__).resolve().parent / "static" / "dominion_admin"
+_STATIC_DIR = Path(__file__).resolve().parent / "static"
+_DOMINION_DEMO_DIR = _STATIC_DIR / "dominion_demo"
+_DOMINION_ADMIN_DIR = _STATIC_DIR / "dominion_admin"
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -40,6 +41,13 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(v1_router)
+
+if _STATIC_DIR.is_dir():
+    app.mount(
+        "/static",
+        StaticFiles(directory=str(_STATIC_DIR)),
+        name="static",
+    )
 
 if _DOMINION_DEMO_DIR.is_dir():
     app.mount(
