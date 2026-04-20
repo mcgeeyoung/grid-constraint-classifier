@@ -39,6 +39,9 @@ class DominionDaIngestionRun(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     idempotency_key: Mapped[str] = mapped_column(String(220), nullable=False)
+    utility_id: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default="dominion", default="dominion"
+    )
     operating_date: Mapped[date] = mapped_column(Date, nullable=False)
     zone_code: Mapped[str] = mapped_column(String(20), nullable=False, default="DOM")
     lmp_type: Mapped[str] = mapped_column(String(20), nullable=False, default="LOAD")
@@ -81,6 +84,9 @@ class DominionDaNodeHourly(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     ingestion_run_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("dominion_da_ingestion_runs.id", ondelete="CASCADE"), nullable=False
+    )
+    utility_id: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default="dominion", default="dominion"
     )
     operating_date: Mapped[date] = mapped_column(Date, nullable=False)
     zone_code: Mapped[str] = mapped_column(String(20), nullable=False)
