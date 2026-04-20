@@ -20,8 +20,12 @@ from app.api.v1.dominion_routes import router as dominion_router
 from app.api.v1.dominion_admin_routes import router as dominion_admin_router
 
 router = APIRouter(prefix="/api/v1")
-router.include_router(dominion_router, prefix="/dominion", tags=["Dominion DER demo"])
-router.include_router(dominion_admin_router, prefix="/dominion/admin", tags=["Dominion admin"])
+# Multi-tenant: {utility_id} is validated inside each endpoint via load_utility().
+# Today only 'dominion' resolves; adding utilities/<id>/config.yaml enables a new tenant.
+router.include_router(dominion_router, prefix="/{utility_id}", tags=["Utility DER demo"])
+router.include_router(
+    dominion_admin_router, prefix="/{utility_id}/admin", tags=["Utility admin"]
+)
 
 
 @router.get("/isos", response_model=list[ISOResponse])

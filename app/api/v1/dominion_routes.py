@@ -20,6 +20,7 @@ from app.models.dominion_der import (
     DominionDevice,
     DominionDispatchDeviceHour,
 )
+from app.utilities import UtilityConfig, load_utility
 from app.schemas.dominion import (
     DominionDeviceResponse,
     DominionDispatchHourResponse,
@@ -34,6 +35,11 @@ from app.schemas.dominion import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def get_utility(utility_id: str) -> UtilityConfig:
+    """FastAPI dependency: validates {utility_id} path param and loads its config."""
+    return load_utility(utility_id)
 
 # Curated DOM pnode coords (HIFLD substations + OSM fallback). Loaded once
 # at import; safe if missing (empty dict, map falls back to no pnode markers).
@@ -68,11 +74,13 @@ def _run_to_response(run: DominionDaIngestionRun) -> DominionIngestionRunRespons
 @router.get("/ingestion-runs", response_model=list[DominionIngestionRunResponse])
 def list_dominion_ingestion_runs(
     limit: int = Query(default=40, le=200),
+    utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
     rows = (
         db.execute(
             select(DominionDaIngestionRun)
+            .where(DominionDaIngestionRun.utility_id == utility.utility_id)
             .order_by(
                 DominionDaIngestionRun.operating_date.desc(),
                 DominionDaIngestionRun.id.desc(),
@@ -86,15 +94,23 @@ def list_dominion_ingestion_runs(
 
 
 @router.get("/ingestion-runs/{run_id}", response_model=DominionIngestionRunResponse)
-def get_dominion_ingestion_run(run_id: int, db: Session = Depends(get_db)):
+def get_dominion_ingestion_run(
+    run_id: int,
+    utility: UtilityConfig = Depends(get_utility),
+    db: Session = Depends(get_db),
+):
     run = db.get(DominionDaIngestionRun, run_id)
-    if run is None:
+    if run is None or run.utility_id != utility.utility_id:
         raise HTTPException(404, f"Ingestion run {run_id} not found")
     return _run_to_response(run)
 
 
 @router.post("/ingest", response_model=DominionIngestionRunResponse)
-def ingest_dominion_da(body: DominionIngestRequest, db: Session = Depends(get_db)):
+def ingest_dominion_da(
+    body: DominionIngestRequest,
+    utility: UtilityConfig = Depends(get_utility),
+    db: Session = Depends(get_db),
+):
     """
     Pull PJM ``da_hrl_lmps`` for zone DOM and persist node hourly rows + run metadata.
 
@@ -146,6 +162,7 @@ def list_dominion_devices(
         default=None,
         description="Enrollment window filter (defaults to today UTC date)",
     ),
+    utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
     d = as_of or datetime.now(timezone.utc).date()
@@ -176,10 +193,11 @@ def list_dominion_dispatch_hours(
     ingestion_run_id: int = Query(..., description="FK to dominion_da_ingestion_runs.id"),
     device_id_external: Optional[str] = Query(default=None),
     limit: int = Query(default=8000, le=50_000),
+    utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
     run = db.get(DominionDaIngestionRun, ingestion_run_id)
-    if run is None:
+    if run is None or run.utility_id != utility.utility_id:
         raise HTTPException(404, f"Ingestion run {ingestion_run_id} not found")
 
     q = select(DominionDispatchDeviceHour).where(
@@ -219,7 +237,11 @@ def list_dominion_dispatch_hours(
 
 
 @router.post("/dispatch/rebuild", response_model=DominionDispatchRebuildResponse)
-def rebuild_dominion_dispatch(body: DominionDispatchRebuildRequest, db: Session = Depends(get_db)):
+def rebuild_dominion_dispatch(
+    body: DominionDispatchRebuildRequest,
+    utility: UtilityConfig = Depends(get_utility),
+    db: Session = Depends(get_db),
+):
     """
     Recompute ``build_dispatch_schedule`` from DB hourly + active devices, then persist.
     """
@@ -231,7 +253,7 @@ def rebuild_dominion_dispatch(body: DominionDispatchRebuildRequest, db: Session 
     )
 
     run = db.get(DominionDaIngestionRun, body.ingestion_run_id)
-    if run is None:
+    if run is None or run.utility_id != utility.utility_id:
         raise HTTPException(404, f"Ingestion run {body.ingestion_run_id} not found")
 
     devices = fetch_active_devices_for_schedule(db, run.operating_date)
@@ -289,6 +311,7 @@ def dominion_asset_map_html(
         le=365,
         description="Participation window (DA operating days) for popup stats",
     ),
+    utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
     """Interactive Folium map (DER sites vs pnodes) for devices active on ``as_of``."""
@@ -336,6 +359,7 @@ def dominion_participation(
         le=365,
         description="DA operating-day window ending at the most recent ingest",
     ),
+    utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
     """Per-device dispatch participation rollup over the last ``window_days`` DA days."""

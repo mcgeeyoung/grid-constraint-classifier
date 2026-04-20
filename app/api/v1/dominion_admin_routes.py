@@ -49,6 +49,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def get_utility(utility_id: str) -> UtilityConfig:
+    """FastAPI dependency: validates {utility_id} path param and loads its config."""
+    return load_utility(utility_id)
+
+
 # Per-utility pnode coord coverage for the /dispatch/congestion-heatmap
 # endpoint. Lazily loaded on first access (keyed by utility_id), cached for
 # the life of the process. Source file lives under utilities/<id>/.
@@ -108,10 +113,13 @@ def _device_response(d: DominionDevice) -> DominionDeviceResponse:
     return DominionDeviceResponse.model_validate(d, from_attributes=True)
 
 
-def _latest_successful_run(session: Session) -> Optional[DominionDaIngestionRun]:
+def _latest_successful_run(
+    session: Session, utility_id: str
+) -> Optional[DominionDaIngestionRun]:
     return session.execute(
         select(DominionDaIngestionRun)
         .where(
+            DominionDaIngestionRun.utility_id == utility_id,
             DominionDaIngestionRun.status == "success",
             DominionDaIngestionRun.row_count > 0,
         )
@@ -120,10 +128,13 @@ def _latest_successful_run(session: Session) -> Optional[DominionDaIngestionRun]
     ).scalar_one_or_none()
 
 
-def _run_for_date(session: Session, d: date) -> Optional[DominionDaIngestionRun]:
+def _run_for_date(
+    session: Session, utility_id: str, d: date
+) -> Optional[DominionDaIngestionRun]:
     return session.execute(
         select(DominionDaIngestionRun)
         .where(
+            DominionDaIngestionRun.utility_id == utility_id,
             DominionDaIngestionRun.operating_date == d,
             DominionDaIngestionRun.status == "success",
             DominionDaIngestionRun.row_count > 0,
@@ -141,7 +152,10 @@ def _utcnow_date() -> date:
 
 
 @router.get("/zones", response_model=list[AdminZoneSummary])
-def list_zones(db: Session = Depends(get_db)):
+def list_zones(
+    utility: UtilityConfig = Depends(get_utility),
+    db: Session = Depends(get_db),
+):
     idx = load_zones()
     as_of = _utcnow_date()
     devices = _active_devices(db, as_of)
@@ -170,7 +184,11 @@ def list_zones(db: Session = Depends(get_db)):
 
 
 @router.get("/zones/{zone_id}", response_model=AdminZoneDetail)
-def get_zone(zone_id: str, db: Session = Depends(get_db)):
+def get_zone(
+    zone_id: str,
+    utility: UtilityConfig = Depends(get_utility),
+    db: Session = Depends(get_db),
+):
     idx = load_zones()
     z = idx.by_id(zone_id)
     if z is None:
@@ -198,16 +216,19 @@ def get_zone(zone_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/dashboard/today", response_model=AdminDashboardToday)
-def dashboard_today(db: Session = Depends(get_db)):
+def dashboard_today(
+    utility: UtilityConfig = Depends(get_utility),
+    db: Session = Depends(get_db),
+):
     idx = load_zones()
     as_of = _utcnow_date()
 
-    tomorrow_run = _run_for_date(db, as_of + timedelta(days=1))
+    tomorrow_run = _run_for_date(db, utility.utility_id, as_of + timedelta(days=1))
     if tomorrow_run:
         run = tomorrow_run
         basis = "tomorrow_da"
     else:
-        run = _latest_successful_run(db)
+        run = _latest_successful_run(db, utility.utility_id)
         basis = "most_recent_da"
     if run is None:
         raise HTTPException(503, "No successful DA ingest available yet.")
@@ -319,9 +340,10 @@ def list_events(
     device_id_external: Optional[str] = None,
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
+    utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
-    latest = _latest_successful_run(db)
+    latest = _latest_successful_run(db, utility.utility_id)
     if latest is None:
         return AdminEventListResponse(total=0, events=[])
     window_end = latest.operating_date
@@ -374,7 +396,11 @@ def list_events(
 
 
 @router.get("/events/{event_id}", response_model=AdminEventDetail)
-def get_event(event_id: str, db: Session = Depends(get_db)):
+def get_event(
+    event_id: str,
+    utility: UtilityConfig = Depends(get_utility),
+    db: Session = Depends(get_db),
+):
     # Event IDs are shaped: E-YYYY-MM-DD-<device_id>-<hh>
     # Parse the operating_date and device_id to scope the lookup cheaply.
     parts = event_id.split("-")
@@ -415,6 +441,7 @@ def device_summary(
     device_id_external: str,
     window_days: int = Query(default=30, ge=1, le=365),
     recent_limit: int = Query(default=10, ge=1, le=100),
+    utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
     dev = db.execute(
@@ -425,7 +452,7 @@ def device_summary(
     if dev is None:
         raise HTTPException(404, f"Device {device_id_external} not found")
 
-    latest = _latest_successful_run(db)
+    latest = _latest_successful_run(db, utility.utility_id)
     if latest is None:
         return AdminDeviceSummary(
             device_id_external=dev.device_id_external,
@@ -522,16 +549,17 @@ def dispatch_congestion_heatmap(
         le=365,
         description="If set, aggregate across this many DA days ending at operating_date",
     ),
+    utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
     """Per-pnode abs-congestion summary. Single day by default, or rolled up across a window."""
     if operating_date is None:
-        latest = _latest_successful_run(db)
+        latest = _latest_successful_run(db, utility.utility_id)
         if latest is None:
             raise HTTPException(503, "No successful DA ingest available yet.")
         operating_date = latest.operating_date
 
-    cache_key = (operating_date, window_days)
+    cache_key = (utility.utility_id, operating_date, window_days)
     if cache_key in _HEATMAP_CACHE:
         cached = _HEATMAP_CACHE[cache_key]
         return AdminCongestionHeatmapResponse(
@@ -562,15 +590,18 @@ def dispatch_congestion_heatmap(
         )
         .where(
             date_filter,
+            DominionDaIngestionRun.utility_id == utility.utility_id,
+            DominionDaNodeHourly.utility_id == utility.utility_id,
             DominionDaIngestionRun.status == "success",
             DominionDaNodeHourly.congestion_price_da.isnot(None),
         )
         .group_by(DominionDaNodeHourly.pnode_id_external)
     ).all()
 
+    coords = _coords_for(utility)
     points: list[dict] = []
     for pid_ext, pname, max_abs, mean_abs in rows:
-        coord = _FULL_PNODE_COORDS.get(str(pid_ext))
+        coord = coords.get(str(pid_ext))
         if not coord:
             continue
         points.append(
@@ -602,6 +633,9 @@ def dispatch_congestion_heatmap(
 def admin_dispatch_participation(
     as_of: Optional[date] = Query(default=None, description="Enrollment as-of date (defaults to today UTC)"),
     window_days: int = Query(default=30, ge=1, le=365, description="DA operating-day window ending at the most recent ingest"),
+    utility: UtilityConfig = Depends(get_utility),
     db: Session = Depends(get_db),
 ):
-    return _dominion_participation(as_of=as_of, window_days=window_days, db=db)
+    return _dominion_participation(
+        as_of=as_of, window_days=window_days, utility=utility, db=db
+    )
