@@ -66,31 +66,53 @@ function renderChart(rows, deviceId) {
     return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   });
   const resolved = sorted.map((r) => (r.resolved_congestion == null ? null : Number(r.resolved_congestion)));
-  const program = sorted.map((r) => (r.dispatch_signal_program == null ? null : Number(r.dispatch_signal_program)));
+  const tiers = sorted.map((r) => (r.period_tier || "normal").toLowerCase());
+  // Period-tier shading: full-width vertical bar behind the price line, 1.0 on a
+  // hidden 0-1 axis so the band fills the plot height. Stressed = honeydew yellow
+  // (optional), extreme = red (mandatory).
+  const extremeBars = tiers.map((t) => (t === "extreme" ? 1 : null));
+  const stressedBars = tiers.map((t) => (t === "stressed" ? 1 : null));
 
   const ctx = el("chart-dispatch").getContext("2d");
   if (chartInstance) chartInstance.destroy();
 
   chartInstance = new Chart(ctx, {
-    type: "line",
     data: {
       labels,
       datasets: [
         {
-          label: "Resolved DA congestion ($/MWh)",
-          data: resolved,
-          borderColor: "#79c0ff",
-          backgroundColor: "rgba(121, 192, 255, 0.1)",
-          tension: 0.15,
-          spanGaps: true,
+          type: "bar",
+          label: "Mandatory (extreme)",
+          data: extremeBars,
+          backgroundColor: "rgba(229, 83, 75, 0.35)",
+          borderWidth: 0,
+          yAxisID: "yBar",
+          order: 2,
+          categoryPercentage: 1.0,
+          barPercentage: 1.0,
         },
         {
-          label: "Program dispatch signal",
-          data: program,
-          borderColor: "#3fb950",
-          backgroundColor: "rgba(63, 185, 80, 0.1)",
+          type: "bar",
+          label: "Optional (stressed)",
+          data: stressedBars,
+          backgroundColor: "rgba(228, 253, 127, 0.28)",
+          borderWidth: 0,
+          yAxisID: "yBar",
+          order: 2,
+          categoryPercentage: 1.0,
+          barPercentage: 1.0,
+        },
+        {
+          type: "line",
+          label: "Resolved DA congestion ($/MWh)",
+          data: resolved,
+          borderColor: "#0BD4FF",
+          backgroundColor: "rgba(11, 212, 255, 0.1)",
           tension: 0.15,
           spanGaps: true,
+          pointRadius: 2,
+          yAxisID: "y",
+          order: 1,
         },
       ],
     },
@@ -99,12 +121,31 @@ function renderChart(rows, deviceId) {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       plugins: {
-        title: { display: true, text: oneDevice ? `Device ${oneDevice}` : "Dispatch series" },
-        legend: { labels: { color: "#c9d1d9" } },
+        title: { display: true, text: oneDevice ? `Device ${oneDevice}` : "Dispatch series", color: "#F1FDFF" },
+        legend: { labels: { color: "#F1FDFF" } },
+        tooltip: {
+          filter: (item) => item.dataset.type !== "bar",
+        },
       },
       scales: {
-        x: { ticks: { color: "#8b98a5", maxRotation: 45, minRotation: 0 } },
-        y: { ticks: { color: "#8b98a5" }, grid: { color: "#2d3844" } },
+        x: {
+          stacked: true,
+          ticks: { color: "#6C8C93", maxRotation: 45, minRotation: 0 },
+          grid: { display: false },
+        },
+        y: {
+          position: "left",
+          ticks: { color: "#6C8C93" },
+          grid: { color: "rgba(11, 212, 255, 0.08)" },
+          title: { display: true, text: "$/MWh", color: "#6C8C93" },
+        },
+        yBar: {
+          position: "right",
+          display: false,
+          min: 0,
+          max: 1,
+          stacked: true,
+        },
       },
     },
   });
