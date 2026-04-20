@@ -219,6 +219,7 @@ from app.models.dominion_der import (
 
 def fetch_hours_for_window(
     session: Session,
+    utility_id: str,
     *,
     window_start: date,
     window_end: date,
@@ -226,6 +227,7 @@ def fetch_hours_for_window(
 ) -> list[DispatchHourRow]:
     """Pull dispatch hours joined to ingestion-run operating_date.
 
+    Scoped to ``utility_id`` via ``dominion_da_ingestion_runs.utility_id``.
     Returns non-normal hours only (stressed or extreme), sorted by
     (device_id_external, interval_start_utc).
     """
@@ -248,6 +250,7 @@ def fetch_hours_for_window(
         )
         .where(
             and_(
+                DominionDaIngestionRun.utility_id == utility_id,
                 DominionDaIngestionRun.operating_date >= window_start,
                 DominionDaIngestionRun.operating_date <= window_end,
                 DominionDispatchDeviceHour.period_tier.in_(("stressed", "extreme")),
@@ -276,15 +279,20 @@ def device_capacity_map(session: Session, device_ids: list[str]) -> dict[str, fl
 
 def build_events_for_window(
     session: Session,
+    utility_id: str,
     *,
     window_start: date,
     window_end: date,
     device_ids: Optional[list[str]] = None,
     include_hourly_detail: bool = False,
 ) -> list[DeviceEvent]:
-    """Fetch hours, group by device, materialize events per device."""
+    """Fetch hours, group by device, materialize events per device.
+
+    Scoped to ``utility_id`` via ``dominion_da_ingestion_runs.utility_id``.
+    """
     rows = fetch_hours_for_window(
         session,
+        utility_id,
         window_start=window_start,
         window_end=window_end,
         device_ids=device_ids,

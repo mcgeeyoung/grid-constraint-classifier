@@ -39,6 +39,7 @@ class DeviceParticipation:
 
 def compute_participation_for_devices(
     session: Session,
+    utility_id: str,
     device_ids: list[str],
     *,
     window_days: int = 30,
@@ -49,20 +50,24 @@ def compute_participation_for_devices(
     operating days (by ``dominion_da_ingestion_runs.operating_date``) ending at
     ``as_of`` (inclusive; defaults to max operating_date present).
 
+    Scoped to ``utility_id`` via ``dominion_da_ingestion_runs.utility_id`` so
+    that tenant data never mixes.
+
     Counts are in hours (one dispatch row == one operating hour).
     """
     if not device_ids:
         return {}
 
     # Anchor window on the most recent operating_date that actually contributed
-    # dispatch rows. Ingests with zero PJM rows (e.g. future dates) would pull
-    # the window forward and shrink the effective history.
+    # dispatch rows for this utility. Ingests with zero PJM rows (e.g. future
+    # dates) would pull the window forward and shrink the effective history.
     max_op = session.execute(
         select(func.max(DominionDaIngestionRun.operating_date))
         .join(
             DominionDispatchDeviceHour,
             DominionDispatchDeviceHour.ingestion_run_id == DominionDaIngestionRun.id,
         )
+        .where(DominionDaIngestionRun.utility_id == utility_id)
     ).scalar_one_or_none()
     if max_op is None:
         # No ingests yet; return empty rollups so callers can still render
@@ -87,10 +92,11 @@ def compute_participation_for_devices(
     end = as_of if as_of is not None else max_op
     start = end - timedelta(days=window_days - 1)
 
-    # Subquery: ingestion_run_ids inside the window
+    # Subquery: ingestion_run_ids inside the window for this utility
     run_ids_q = (
         select(DominionDaIngestionRun.id)
         .where(
+            DominionDaIngestionRun.utility_id == utility_id,
             DominionDaIngestionRun.operating_date >= start,
             DominionDaIngestionRun.operating_date <= end,
             DominionDaIngestionRun.status == "success",
@@ -107,6 +113,7 @@ def compute_participation_for_devices(
             DominionDaIngestionRun.id == DominionDispatchDeviceHour.ingestion_run_id,
         )
         .where(
+            DominionDaIngestionRun.utility_id == utility_id,
             DominionDaIngestionRun.operating_date >= start,
             DominionDaIngestionRun.operating_date <= end,
             DominionDaIngestionRun.status == "success",
