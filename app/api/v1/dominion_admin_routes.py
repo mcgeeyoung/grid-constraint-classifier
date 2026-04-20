@@ -54,6 +54,64 @@ def get_utility(utility_id: str) -> UtilityConfig:
     return load_utility(utility_id)
 
 
+# ───────────────────────── ui-config (static bundle for the SPA) ─────────────────────────
+
+
+@router.get("/ui-config")
+def ui_config(utility: UtilityConfig = Depends(get_utility)):
+    """Assembled SPA bundle: tenant copy + zones + scenarios + pilot pnodes.
+
+    The shared executive SPA mounted at /{utility_id}/ reads this once on
+    load to avoid per-tenant static builds. Scenarios and pilot_pnodes are
+    resolved from utilities/<id>/ on disk; zones from the utility's
+    zones.yaml. All values are static per tenant; safe to cache client-side.
+    """
+    import yaml  # local import keeps module-level imports unchanged
+    util_path = utility_dir(utility.utility_id)
+    scenarios_path = util_path / "scenarios.json"
+    zones_path = util_path / utility.zones_path
+    pilot_path = util_path / "pilot_pnodes.json"
+
+    scenarios: list = []
+    if scenarios_path.is_file():
+        try:
+            scenarios = json.loads(scenarios_path.read_text())
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.error("scenarios.json unreadable for %s: %s", utility.utility_id, exc)
+
+    zones: list = []
+    if zones_path.is_file():
+        try:
+            zones_raw = yaml.safe_load(zones_path.read_text()) or {}
+            zones = zones_raw.get("zones", []) or []
+        except (OSError, yaml.YAMLError) as exc:
+            logger.error("zones.yaml unreadable for %s: %s", utility.utility_id, exc)
+
+    pilot_pnodes: list = []
+    if pilot_path.is_file():
+        try:
+            pilot_raw = json.loads(pilot_path.read_text()) or {}
+            pilot_pnodes = pilot_raw.get("pnodes", []) or []
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.error("pilot_pnodes.json unreadable for %s: %s", utility.utility_id, exc)
+
+    return {
+        "utility_id": utility.utility_id,
+        "program_name": utility.program_name,
+        "iso": utility.iso,
+        "pricing_zone": utility.pricing_zone,
+        "service_territory_center": list(utility.service_territory_center),
+        "service_territory_zoom": utility.service_territory_zoom,
+        "settlement_rate_usd_per_mwh": utility.settlement_rate_usd_per_mwh,
+        "settlement_rate_description": utility.settlement_rate_description,
+        "headline_lead": utility.headline_lead,
+        "community_sub_location": utility.community_sub_location,
+        "scenarios": scenarios,
+        "zones": zones,
+        "pilot_pnodes": pilot_pnodes,
+    }
+
+
 # Per-utility pnode coord coverage for the /dispatch/congestion-heatmap
 # endpoint. Lazily loaded on first access (keyed by utility_id), cached for
 # the life of the process. Source file lives under utilities/<id>/.

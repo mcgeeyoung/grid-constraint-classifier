@@ -1,15 +1,13 @@
 const { h } = Vue;
 
-// Zone → human label (UX-friendly names, not zone IDs).
-const ZONE_DISPLAY = {
-  "loudoun-corridor": "Loudoun",
-  "fairfax-230":      "Fairfax",
-  "alexandria":       "Alexandria",
-};
-
 export const CommunitiesLeaderboard = {
   props: {
+    // Zones from /api/v1/{utility_id}/admin/zones; each carries `label` and
+    // `device_ids`. For tenants whose /zones endpoint still returns Dominion's
+    // taxonomy (pre-existing scaffold limitation), the app also passes
+    // zoneLabels from ui-config to override display names per-id.
     zones: { type: Array, required: true },
+    zoneLabels: { type: Array, default: () => [] },
     participation30: { type: Object, required: true },
   },
   render() {
@@ -18,6 +16,10 @@ export const CommunitiesLeaderboard = {
     const deviceToZone = {};
     for (const z of this.zones) {
       for (const d of (z.device_ids || [])) deviceToZone[d] = z.id;
+    }
+    const labelOverride = {};
+    for (const z of (this.zoneLabels || [])) {
+      if (z && z.id) labelOverride[z.id] = z.label || z.id;
     }
     for (const d of devices) {
       const zid = deviceToZone[d.device_id_external];
@@ -32,7 +34,10 @@ export const CommunitiesLeaderboard = {
       const avgPerf = agg.perfs.length ? agg.perfs.reduce((a, b) => a + b, 0) / agg.perfs.length : null;
       return {
         id: z.id,
-        name: ZONE_DISPLAY[z.id] || z.label,
+        // Prefer ui-config override label when present (handles tenants
+        // whose /zones endpoint is still Dominion-scoped); else use the
+        // label the backend returned; else the raw id.
+        name: labelOverride[z.id] || z.label || z.id,
         mw: agg.mwBase,
         perf: avgPerf,
       };

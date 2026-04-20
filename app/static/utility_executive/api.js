@@ -1,5 +1,21 @@
-// Admin API client, mirrored from /dominion-admin/. Same base, same endpoints.
-const DEFAULT_BASE = "/api/v1/dominion/admin";
+// Admin API client. Tenant id is inferred from the first URL path segment,
+// e.g. /dominion/ -> "dominion", /pge/ -> "pge". All requests go to
+// /api/v1/{utility_id}/admin/*. A window override is still supported for
+// local testing.
+function inferUtilityId() {
+  if (typeof window !== "undefined" && window.__UTILITY_ID__) {
+    return String(window.__UTILITY_ID__);
+  }
+  if (typeof window !== "undefined") {
+    const seg = (window.location.pathname || "/").split("/").filter(Boolean)[0];
+    if (seg) return seg;
+  }
+  return "dominion";
+}
+
+export const UTILITY_ID = inferUtilityId();
+
+const DEFAULT_BASE = `/api/v1/${UTILITY_ID}/admin`;
 
 export function apiBase() {
   if (typeof window !== "undefined" && window.__DOMINION_ADMIN_API_BASE__) {
@@ -33,6 +49,7 @@ function toQuery(params) {
 }
 
 export const api = {
+  uiConfig:           ()                  => apiJson("/ui-config"),
   zones:              ()                  => apiJson("/zones"),
   dashboardToday:     ()                  => apiJson("/dashboard/today"),
   events:             (params = {})       => apiJson("/events" + toQuery(params)),

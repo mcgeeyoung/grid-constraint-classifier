@@ -3,7 +3,11 @@ const { h } = Vue;
 function fmt(n) { return Number(n).toLocaleString(); }
 
 export const EnrollmentProgress = {
-  props: { milestones: { type: Array, required: true } },
+  props: {
+    milestones: { type: Array, required: true },
+    // Short geo phrase, e.g. "Northern Virginia" or "Northern California".
+    subLocation: { type: String, default: "" },
+  },
   render() {
     const ms = (this.milestones || []).slice();
     if (ms.length === 0) return h("div", null, "No milestones configured.");
@@ -19,8 +23,16 @@ export const EnrollmentProgress = {
     const nextMs = midMilestones.length > 0 ? midMilestones[0] : goal;
     const toNext = Math.max(0, nextMs.deviceCount - today.deviceCount);
 
+    // Derive a region word for the headline ("Virginia", "California", ...)
+    // from subLocation. Falls back to the tenant-neutral "enrolled" if not
+    // recognized.
+    const stateMatch = String(this.subLocation || "").match(
+      /(Virginia|California|Maryland|New York|Pennsylvania|Illinois|Texas|Ohio|Michigan|New Jersey)\b/
+    );
+    const regionWord = stateMatch ? stateMatch[1] : "enrolled";
+
     return h("div", null, [
-      h("div", { class: "h" }, `Enrollment progress · toward ${fmt(goal.deviceCount)} Virginia devices`),
+      h("div", { class: "h" }, `Enrollment progress · toward ${fmt(goal.deviceCount)} ${regionWord} devices`),
 
       h("div", { class: "enrollment-headline" }, [
         h("span", { class: "enrollment-count" }, `${fmt(today.deviceCount)} enrolled`),

@@ -4,7 +4,9 @@ Grid Constraint Classifier API
 FastAPI application serving classification results, LMP data,
 data center locations, and DER recommendations across all 7 US ISOs.
 
-Dominion DER demo UI: ``/dominion-demo/`` (static) calling ``/api/v1/dominion/*``.
+Executive SPAs: ``/dominion/`` and ``/pge/`` (shared static, tenant-aware via
+URL) calling ``/api/v1/{utility_id}/admin/*``. Dominion demo at
+``/dominion-demo/``; Dominion ops at ``/dominion-admin/``.
 """
 
 from pathlib import Path
@@ -19,7 +21,14 @@ from app.api.v1.routes import router as v1_router
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 _DOMINION_DEMO_DIR = _STATIC_DIR / "dominion_demo"
 _DOMINION_ADMIN_DIR = _STATIC_DIR / "dominion_admin"
-_DOMINION_EXEC_DIR = _STATIC_DIR / "dominion_executive"
+_UTILITY_EXEC_DIR = _STATIC_DIR / "utility_executive"
+
+# Executive SPA tenants. Each mounts the same static dir; the SPA parses the
+# utility_id from its own URL and fetches /api/v1/{utility_id}/admin/ui-config
+# for tenant-specific copy, zones, scenarios, and pilot pnodes. To add a new
+# tenant, create utilities/<id>/{config.yaml,zones.yaml,scenarios.json,
+# pilot_pnodes.json} and add the id to _EXEC_TENANTS below.
+_EXEC_TENANTS = ("dominion", "pge")
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -64,12 +73,13 @@ if _DOMINION_ADMIN_DIR.is_dir():
         name="dominion_admin",
     )
 
-if _DOMINION_EXEC_DIR.is_dir():
-    app.mount(
-        "/dominion",
-        StaticFiles(directory=str(_DOMINION_EXEC_DIR), html=True),
-        name="dominion_executive",
-    )
+if _UTILITY_EXEC_DIR.is_dir():
+    for _utility_id in _EXEC_TENANTS:
+        app.mount(
+            f"/{_utility_id}",
+            StaticFiles(directory=str(_UTILITY_EXEC_DIR), html=True),
+            name=f"{_utility_id}_executive",
+        )
 
 
 @app.get("/health")

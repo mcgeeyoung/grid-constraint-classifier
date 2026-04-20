@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Virginia DER program · WattCarbon</title>
+    <!-- Title + context chip are rewritten at runtime from /ui-config. -->
+    <title>DER program · WattCarbon</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap" />
@@ -19,20 +20,18 @@
       <img class="wc-logomark" src="/static/assets/logos/Symbol_on-dark.png" alt="WattCarbon" />
       <span class="wc-wordmark">WattCarbon</span>
       <span class="wc-sep">·</span>
-      <span class="wc-context">Virginia DER program</span>
+      <span class="wc-context">DER program</span>
     </div>
     <main id="app">
       <div class="loading">Loading…</div>
     </main>
     <footer class="exec-footer">
-      <span>
-        Live simulation at 5,000 Virginia households against real 2026 PJM DOM DA data.
-        Slider scales to Dominion IRP targets.
+      <span class="exec-footer-blurb">
+        Live simulation grounded in recent DA market data. Slider scales to public utility targets.
       </span>
-      <span class="exec-footer-links">
-        <a href="/dominion-admin/">Operations console</a>
-        ·
-        <a href="/dominion-demo/">Engineering walkthrough</a>
+      <span class="exec-footer-links" data-footer-links>
+        <!-- Populated at runtime for Dominion (/dominion-admin, /dominion-demo);
+             other tenants currently have no sibling consoles. -->
       </span>
     </footer>
     <script type="module" src="app.js"></script>

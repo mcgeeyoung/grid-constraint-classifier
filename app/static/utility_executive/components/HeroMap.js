@@ -1,7 +1,8 @@
 const { h, onMounted, onBeforeUnmount, ref } = Vue;
 
+// Shared WattCarbon basemap style. Per-tenant pilot pnodes + map center now
+// arrive via props from /ui-config; no per-utility static files.
 const STYLE_URL = "./refdata/maplibre-style.json";
-const PILOT_URL = "./refdata/pilot_pnodes.json";
 
 function congestionColorStops() {
   // Transparent at 0, honeydew at moderate, red at heavy.
@@ -26,6 +27,11 @@ export const HeroMap = {
     heatmap: { type: Object, required: true },
     zones: { type: Array, required: true },
     events30: { type: Array, required: true },
+    // Tenant pilot pnodes from /ui-config (replaces ./refdata/pilot_pnodes.json).
+    pilotPnodes: { type: Array, default: () => [] },
+    // [lat, lon] from ui-config. Defaults keep the Dominion view if absent.
+    center: { type: Array, default: () => [38.9, -77.6] },
+    zoom: { type: Number, default: 7.6 },
   },
   setup(props) {
     const el = ref(null);
@@ -34,18 +40,22 @@ export const HeroMap = {
 
     async function init() {
       const style = await loadJson(STYLE_URL);
+      // ui-config stores [lat, lon]; MapLibre wants [lon, lat].
+      const cLatLon = (props.center && props.center.length >= 2)
+        ? [Number(props.center[0]), Number(props.center[1])]
+        : [38.9, -77.6];
       map = new maplibregl.Map({
         container: el.value,
         style,
-        center: [-77.6, 38.9],  // NoVA focus
-        zoom: 7.6,
+        center: [cLatLon[1], cLatLon[0]],
+        zoom: Number(props.zoom) || 7.6,
         attributionControl: true,
       });
       map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
-      map.on("load", async () => {
+      map.on("load", () => {
         try {
           // Rolled-up congestion heat across the last 30 DA days.
-          // Each point is a DOM LOAD pnode; weight = max abs congestion $/MWh seen in the window.
+          // Each point is a LOAD pnode; weight = mean abs congestion $/MWh in the window.
           const congestionFC = {
             type: "FeatureCollection",
             features: (props.heatmap?.points || []).map((p) => ({
@@ -70,9 +80,8 @@ export const HeroMap = {
             },
           });
 
-          // Pilot pnode markers (the 6 enrolled devices). Labeled.
-          const pilot = await loadJson(PILOT_URL);
-          for (const p of (pilot.pnodes || [])) {
+          // Pilot pnode markers. Labeled.
+          for (const p of (props.pilotPnodes || [])) {
             const wrap = document.createElement("div");
             wrap.className = "pilot-marker-wrap";
             const dot = document.createElement("div");
