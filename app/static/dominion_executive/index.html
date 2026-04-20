@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Virginia DER program · WattCarbon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Serif+Pro:wght@400;600;700&display=swap" />
+    <link rel="stylesheet" href="/static/wc-brand.css" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/vue@3.4.27/dist/vue.global.prod.js"></script>
+  </head>
+  <body>
+    <div class="wc-brand-header">
+      <img class="wc-logomark" src="/static/assets/logos/Symbol_on-dark.png" alt="WattCarbon" />
+      <span class="wc-wordmark">WattCarbon</span>
+      <span class="wc-sep">·</span>
+      <span class="wc-context">Virginia DER program</span>
+    </div>
+    <main id="app">
+      <div class="loading">Loading…</div>
+    </main>
+    <footer class="exec-footer">
+      <span>
+        Live simulation at 5,000 Virginia households against real 2026 PJM DOM DA data.
+        Slider scales to Dominion IRP targets.
+      </span>
+      <span class="exec-footer-links">
+        <a href="/dominion-admin/">Operations console</a>
+        ·
+        <a href="/dominion-demo/">Engineering walkthrough</a>
+      </span>
+    </footer>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

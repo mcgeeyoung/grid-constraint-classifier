@@ -1,0 +1,185 @@
+/* dominion-executive. Requires /static/wc-brand.css to be loaded first via <link>. */
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+
+main#app {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  display: grid;
+  grid-template-areas:
+    "hdr    hdr    hdr"
+    "map    map    rail"
+    "ribbon ribbon ribbon"
+    "slider slider slider";
+  grid-template-columns: 1fr 1fr 22rem;
+  grid-template-rows: auto minmax(28rem, 1fr) auto auto;
+  gap: 1rem;
+}
+
+.loading { color: var(--muted); padding: 2rem; text-align: center; grid-column: 1 / -1; }
+
+.exec-hdr     { grid-area: hdr; }
+.exec-map     { grid-area: map; min-height: 28rem; position: relative; }
+.exec-rail    { grid-area: rail; display: grid; grid-template-rows: repeat(3, 1fr); gap: 1rem; }
+.exec-ribbon  { grid-area: ribbon; }
+.exec-slider  { grid-area: slider; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+}
+
+.exec-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.exec-hdr .lead {
+  font-family: var(--wc-font-display);
+  font-weight: 600;
+  color: var(--text-bright);
+  font-size: 1.25rem;
+}
+
+.exec-hdr .grid-state {
+  text-align: right;
+}
+
+.exec-hdr .grid-state .h {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.exec-hdr .grid-state .v {
+  font-family: var(--wc-font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.kpi .h {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.25rem;
+}
+
+.kpi .v {
+  font-family: var(--wc-font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  line-height: 1.1;
+}
+
+.kpi .v.honey { color: var(--wc-honeydew); }
+
+.kpi .sub {
+  color: var(--wc-dolphin);
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+}
+
+.kpi .disc {
+  color: var(--muted);
+  font-size: 0.7rem;
+  margin-top: 0.4rem;
+}
+
+.leaderboard-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.25rem 0;
+  cursor: pointer;
+}
+
+.leaderboard-row:hover { color: var(--accent); }
+.leaderboard-row .name { color: var(--text-bright); font-weight: 600; }
+.leaderboard-row .meta { color: var(--wc-dolphin); font-size: 0.8rem; }
+
+.ribbon-strip {
+  display: flex;
+  gap: 2px;
+  margin-top: 0.5rem;
+}
+
+.ribbon-strip .cell {
+  flex: 1;
+  height: 1.1rem;
+  background: var(--panel-hi);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.ribbon-strip .cell:hover { outline: 1px solid var(--accent); }
+.ribbon-strip .cell.opt   { background: rgba(228, 253, 127, 0.45); }
+.ribbon-strip .cell.mand  { background: rgba(229, 83, 75, 0.55); }
+
+.slider-stops {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.8rem;
+  margin-top: 0.75rem;
+}
+
+.slider-stop {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  transition: border-color 120ms, transform 120ms;
+}
+
+.slider-stop:hover { border-color: var(--accent); }
+
+.slider-stop.active {
+  border-color: var(--accent);
+  background: rgba(11, 212, 255, 0.08);
+}
+
+.slider-stop .num {
+  font-family: var(--wc-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--wc-honeydew);
+}
+
+.slider-stop .mw {
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 0.1rem;
+}
+
+.slider-stop .infra {
+  color: var(--wc-dolphin);
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+  line-height: 1.3;
+}
+
+.exec-footer {
+  padding: 0.9rem 1.5rem 1.2rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+}
+
+.exec-footer-links a { color: var(--accent); text-decoration: none; margin-left: 0.25rem; }
+.exec-footer-links a:hover { text-decoration: underline; }
+
+.exec-map { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+.exec-map .maplibregl-ctrl-attrib { font-size: 0.6rem; background: rgba(0, 35, 44, 0.8); color: var(--muted); }
+.exec-map .maplibregl-canvas { outline: none; }

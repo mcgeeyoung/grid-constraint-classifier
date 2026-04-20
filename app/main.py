@@ -19,6 +19,7 @@ from app.api.v1.routes import router as v1_router
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 _DOMINION_DEMO_DIR = _STATIC_DIR / "dominion_demo"
 _DOMINION_ADMIN_DIR = _STATIC_DIR / "dominion_admin"
+_DOMINION_EXEC_DIR = _STATIC_DIR / "dominion_executive"
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -61,6 +62,13 @@ if _DOMINION_ADMIN_DIR.is_dir():
         "/dominion-admin",
         StaticFiles(directory=str(_DOMINION_ADMIN_DIR), html=True),
         name="dominion_admin",
+    )
+
+if _DOMINION_EXEC_DIR.is_dir():
+    app.mount(
+        "/dominion",
+        StaticFiles(directory=str(_DOMINION_EXEC_DIR), html=True),
+        name="dominion_executive",
     )
 
 
