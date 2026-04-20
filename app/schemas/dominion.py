@@ -221,3 +221,21 @@ class AdminDeviceSummary(BaseModel):
 
 
 AdminZoneDetail.model_rebuild()
+
+
+# ───────────────────────── admin / exec heatmap ─────────────────────────
+
+
+class AdminCongestionHeatmapPoint(BaseModel):
+    pnode_id: str
+    pnode_name: Optional[str] = None
+    lat: float
+    lon: float
+    max_abs_congestion: float
+    mean_abs_congestion: float
+
+
+class AdminCongestionHeatmapResponse(BaseModel):
+    operating_date: date
+    point_count: int
+    points: list[AdminCongestionHeatmapPoint]

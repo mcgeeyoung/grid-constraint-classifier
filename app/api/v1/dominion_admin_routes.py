@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -18,6 +19,8 @@ from app.models.dominion_der import (
     DominionDispatchDeviceHour,
 )
 from app.schemas.dominion import (
+    AdminCongestionHeatmapPoint,
+    AdminCongestionHeatmapResponse,
     AdminDashboardHour,
     AdminDashboardToday,
     AdminDashboardZoneSlice,
@@ -40,6 +43,26 @@ from dominion_dispatch.zones import Zone, load_zones, zone_for_pnode
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+# Full DOM LOAD pnode coord coverage for the /dispatch/congestion-heatmap
+# endpoint. Loaded once at process start. File is produced by the offline
+# HIFLD enrichment script (Task A1).
+_FULL_PNODE_COORDS_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "dominion_dispatch" / "refdata" / "pnode_coords_dom_full.json"
+)
+_FULL_PNODE_COORDS: dict[str, tuple[float, float]] = {}
+if _FULL_PNODE_COORDS_PATH.is_file():
+    import json as _json
+    _raw = _json.loads(_FULL_PNODE_COORDS_PATH.read_text())
+    for k, v in _raw.items():
+        if k.startswith("_"):
+            continue
+        if isinstance(v, (list, tuple)) and len(v) >= 2:
+            _FULL_PNODE_COORDS[str(k).strip()] = (float(v[0]), float(v[1]))
+
+_HEATMAP_CACHE: dict[date, list[dict]] = {}
 
 
 # ───────────────────────── helpers ─────────────────────────
@@ -453,4 +476,76 @@ def device_summary(
         total_realized_energy_mwh=total_energy_mwh,
         rank_in_fleet=rank,
         recent_events=recent,
+    )
+
+
+# ───────────────────────── congestion heatmap ─────────────────────────
+
+
+@router.get(
+    "/dispatch/congestion-heatmap",
+    response_model=AdminCongestionHeatmapResponse,
+)
+def dispatch_congestion_heatmap(
+    operating_date: Optional[date] = Query(
+        default=None,
+        description="DA operating day; defaults to latest successful ingest",
+    ),
+    db: Session = Depends(get_db),
+):
+    """Per-pnode abs-congestion summary for an operating day, for map heatmap."""
+    if operating_date is None:
+        latest = _latest_successful_run(db)
+        if latest is None:
+            raise HTTPException(503, "No successful DA ingest available yet.")
+        operating_date = latest.operating_date
+
+    if operating_date in _HEATMAP_CACHE:
+        cached = _HEATMAP_CACHE[operating_date]
+        return AdminCongestionHeatmapResponse(
+            operating_date=operating_date,
+            point_count=len(cached),
+            points=[AdminCongestionHeatmapPoint(**p) for p in cached],
+        )
+
+    from sqlalchemy import func as _f
+    rows = db.execute(
+        select(
+            DominionDaNodeHourly.pnode_id_external,
+            _f.max(_f.abs(DominionDaNodeHourly.congestion_price_da)).label("max_abs"),
+            _f.avg(_f.abs(DominionDaNodeHourly.congestion_price_da)).label("mean_abs"),
+        )
+        .join(
+            DominionDaIngestionRun,
+            DominionDaIngestionRun.id == DominionDaNodeHourly.ingestion_run_id,
+        )
+        .where(
+            DominionDaIngestionRun.operating_date == operating_date,
+            DominionDaIngestionRun.status == "success",
+            DominionDaNodeHourly.congestion_price_da.isnot(None),
+        )
+        .group_by(DominionDaNodeHourly.pnode_id_external)
+    ).all()
+
+    points: list[dict] = []
+    for pid_ext, max_abs, mean_abs in rows:
+        coord = _FULL_PNODE_COORDS.get(str(pid_ext))
+        if not coord:
+            continue
+        points.append(
+            dict(
+                pnode_id=str(pid_ext),
+                pnode_name=None,
+                lat=coord[0],
+                lon=coord[1],
+                max_abs_congestion=float(max_abs),
+                mean_abs_congestion=float(mean_abs),
+            )
+        )
+
+    _HEATMAP_CACHE[operating_date] = points
+    return AdminCongestionHeatmapResponse(
+        operating_date=operating_date,
+        point_count=len(points),
+        points=[AdminCongestionHeatmapPoint(**p) for p in points],
     )
