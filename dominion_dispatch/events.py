@@ -62,6 +62,7 @@ def build_events_from_rows(
     *,
     listed_capacity_kw: Optional[float] = None,
     include_hourly_detail: bool = False,
+    utility_id: Optional[str] = None,
 ) -> list[DeviceEvent]:
     """Walk hourly rows (sorted) and emit contiguous non-normal events.
 
@@ -104,7 +105,7 @@ def build_events_from_rows(
             mandatory_performance_pct=None,
         )
         if listed_capacity_kw is not None and listed_capacity_kw > 0:
-            _attach_perf(ev, cur, float(listed_capacity_kw), include_hourly_detail)
+            _attach_perf(ev, cur, float(listed_capacity_kw), include_hourly_detail, utility_id)
         elif include_hourly_detail:
             ev.hours = [_hour_dict(i, r, None, None) for i, r in enumerate(cur)]
         events.append(ev)
@@ -148,6 +149,7 @@ def _attach_perf(
     rows: list[DispatchHourRow],
     listed_kw: float,
     include_hourly_detail: bool,
+    utility_id: Optional[str] = None,
 ) -> None:
     hour_rows: list[dict] = []
     realized_per_hour: list[float] = []
@@ -163,6 +165,7 @@ def _attach_perf(
             listed_kw=listed_kw,
             dispatch_signal_program=signal,
             pnode_id_external=r.primary_pnode_id,
+            utility_id=utility_id,
         )
         realized_per_hour.append(realized_kw)
         if r.period_tier == "extreme":
@@ -314,6 +317,7 @@ def build_events_for_window(
                         cur_rows,
                         listed_capacity_kw=caps.get(cur_id or ""),
                         include_hourly_detail=include_hourly_detail,
+                        utility_id=utility_id,
                     )
                 )
             cur_id = r.device_id_external
@@ -325,6 +329,7 @@ def build_events_for_window(
                 cur_rows,
                 listed_capacity_kw=caps.get(cur_id or ""),
                 include_hourly_detail=include_hourly_detail,
+                utility_id=utility_id,
             )
         )
     return events

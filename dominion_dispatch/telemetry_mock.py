@@ -56,11 +56,13 @@ def _normal_from_seed(seed: int, sigma: float) -> float:
 
 
 def _zone_id_for_device(
-    device_id_external: str, pnode_id_external: str | None
+    device_id_external: str,
+    pnode_id_external: str | None,
+    utility_id: str | None = None,
 ) -> str | None:
     if pnode_id_external is None:
         return None
-    idx = load_zones()
+    idx = load_zones(utility_id)
     z = zone_for_pnode(idx, str(pnode_id_external))
     return z.id if z else None
 
@@ -74,13 +76,14 @@ def mock_realized_kw(
     dispatch_signal_program: float,
     *,
     pnode_id_external: str | None = None,
+    utility_id: str | None = None,
 ) -> float:
     """Return deterministic realized kW for one hour of a mocked event."""
     if dispatch_signal_program <= 0 or listed_kw <= 0:
         return 0.0
 
     baseline = DEVICE_BASELINE.get(device_id_external, DEFAULT_BASELINE)
-    zone_id = _zone_id_for_device(device_id_external, pnode_id_external)
+    zone_id = _zone_id_for_device(device_id_external, pnode_id_external, utility_id)
     zone_factor = ZONE_PERFORMANCE.get(zone_id or "", DEFAULT_ZONE)
 
     decay = max(
