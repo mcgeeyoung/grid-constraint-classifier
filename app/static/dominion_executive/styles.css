@@ -146,47 +146,124 @@ main#app {
 
 .pulse-bar-wrap:hover .pulse-bar { outline: 1px solid var(--accent); }
 
-.slider-stops {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.8rem;
-  margin-top: 0.75rem;
+.enrollment-headline {
+  display: flex;
+  gap: 1.5rem;
+  align-items: baseline;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.slider-stop {
+.enrollment-headline .enrollment-count {
+  font-family: var(--wc-font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.enrollment-headline .enrollment-pct {
+  font-family: var(--wc-font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.enrollment-headline .enrollment-gap {
+  color: var(--wc-dolphin);
+  font-size: 0.95rem;
+}
+
+.enrollment-track {
+  position: relative;
+  height: 0.6rem;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.8rem 1rem;
-  cursor: pointer;
-  transition: border-color 120ms, transform 120ms;
+  border-radius: 999px;
+  margin: 2.2rem 2rem 4rem 2rem;
 }
 
-.slider-stop:hover { border-color: var(--accent); }
-
-.slider-stop.active {
-  border-color: var(--accent);
-  background: rgba(11, 212, 255, 0.08);
+.enrollment-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, var(--accent), var(--wc-honeydew));
+  border-radius: 999px;
+  transition: width 400ms ease-out;
 }
 
-.slider-stop .num {
-  font-family: var(--wc-font-display);
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: var(--wc-honeydew);
+.enrollment-today-marker {
+  position: absolute;
+  top: -0.3rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-left: -0.6rem;
+  background: var(--wc-honeydew);
+  border: 2px solid var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(11, 212, 255, 0.15);
 }
 
-.slider-stop .mw {
-  font-weight: 600;
+.enrollment-today-label {
+  position: absolute;
+  top: -1.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
   color: var(--accent);
-  margin-top: 0.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
 }
 
-.slider-stop .infra {
+.enrollment-milestone,
+.enrollment-goal {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin-left: -1px;
+}
+
+.enrollment-milestone-tick {
+  position: absolute;
+  top: -0.3rem;
+  bottom: -0.3rem;
+  width: 2px;
+  background: var(--wc-dolphin);
+  opacity: 0.7;
+}
+
+.enrollment-goal .enrollment-milestone-tick {
+  background: var(--wc-honeydew);
+  opacity: 1;
+}
+
+.enrollment-milestone-label,
+.enrollment-goal-label {
+  position: absolute;
+  top: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  min-width: 10rem;
+  line-height: 1.2;
+}
+
+.enrollment-goal-label { transform: translateX(-75%); }
+
+.enrollment-milestone-count {
+  font-family: var(--wc-font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.enrollment-goal .enrollment-milestone-count { color: var(--wc-honeydew); }
+
+.enrollment-milestone-infra {
   color: var(--wc-dolphin);
-  font-size: 0.8rem;
-  margin-top: 0.3rem;
-  line-height: 1.3;
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
 }
 
 .exec-footer {
