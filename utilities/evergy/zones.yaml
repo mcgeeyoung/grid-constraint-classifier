@@ -1,0 +1,21 @@
+zones:
+  - id: kc-metro
+    label: "Kansas City Metro"
+    description: "Evergy Metro service area (KCMO, JoCo, Wyandotte) — Hawthorn, Prairie Queen"
+    pnode_ids: ["KCPL.HAW10", "KCPL.PRQUEEN"]
+  - id: central-ks
+    label: "Central Kansas"
+    description: "Westar central / Hutchinson Energy Center"
+    pnode_ids: ["WR.HEC.GT1"]
+  - id: south-ks
+    label: "South Kansas"
+    description: "Westar south / Flat Ridge wind complex"
+    pnode_ids: ["WR.FLATRIDGE3"]
+  - id: nw-missouri
+    label: "Northwest Missouri"
+    description: "Greater Missouri Operations (St. Joseph area)"
+    pnode_ids: ["KCPL_GMOC_HUB"]
+  - id: system
+    label: "KCPL System"
+    description: "Evergy/KCPL system hub reference"
+    pnode_ids: ["KCPLHUB"]

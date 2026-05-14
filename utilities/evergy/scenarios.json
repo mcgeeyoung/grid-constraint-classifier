@@ -1,0 +1,26 @@
+[
+  {
+    "id": "today",
+    "label": "Today · simulated pilot scale",
+    "deviceCount": 5000,
+    "peakMw": 10,
+    "infra": "Live simulation at pilot scale, grounded in 2026 SPP KCPL DA data.",
+    "citation": "WattCarbon simulation, not an Evergy filing."
+  },
+  {
+    "id": "dr-target",
+    "label": "Evergy DR target",
+    "deviceCount": 75000,
+    "peakMw": 150,
+    "infra": "Defers one 230 kV substation upgrade in the KC metro.",
+    "citation": "Directional toward Evergy's stated demand-response / behind-the-meter program scale (KCC + MPSC dockets). Replace with regulatory citation before the first external meeting."
+  },
+  {
+    "id": "peaker-offset",
+    "label": "Peaker-offset scale",
+    "deviceCount": 500000,
+    "peakMw": 1000,
+    "infra": "Offsets one natural-gas peaker plant.",
+    "citation": "Directional toward Evergy's IRP forecast for new peaking capacity. Replace with KCC IRP docket reference before the first external meeting."
+  }
+]
