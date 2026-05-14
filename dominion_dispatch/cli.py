@@ -78,20 +78,19 @@ def _parse_peak_hours_ept(s: str) -> Set[int]:
 
 
 def cmd_ingest_dom(args: argparse.Namespace) -> int:
-    key = os.environ.get("PJM_SUBSCRIPTION_KEY", "")
-    if not key:
+    if not os.environ.get("PJM_SUBSCRIPTION_KEY", ""):
         logger.error("Set PJM_SUBSCRIPTION_KEY")
         return 1
-    from src.pjm_client import PJMClient
+    import isos
     from app.database import SessionLocal
 
     day = _parse_date(args.date)
     z = args.zone or PJM_ZONE_DOM
     if z != PJM_ZONE_DOM:
         logger.warning("Dominion program targets %s; ingest zone is %s", PJM_ZONE_DOM, z)
-    client = PJMClient(key)
+    driver = isos.get_driver("PJM")
     df = fetch_da_node_congestion_dom(
-        client,
+        driver,
         day,
         lmp_type=args.lmp_type,
         zone=z,
@@ -126,20 +125,19 @@ def cmd_ingest_dom(args: argparse.Namespace) -> int:
 
 
 def cmd_fetch_dom(args: argparse.Namespace) -> int:
-    key = os.environ.get("PJM_SUBSCRIPTION_KEY", "")
-    if not key:
+    if not os.environ.get("PJM_SUBSCRIPTION_KEY", ""):
         logger.error("Set PJM_SUBSCRIPTION_KEY")
         return 1
-    from src.pjm_client import PJMClient
+    import isos
 
     z = args.zone or PJM_ZONE_DOM
     if z != PJM_ZONE_DOM:
         logger.warning("Dominion program targets %s; fetch zone is %s", PJM_ZONE_DOM, z)
-    client = PJMClient(key)
+    driver = isos.get_driver("PJM")
     day = _parse_date(args.date)
     end = _parse_date(args.end_date) if args.end_date else None
     df = fetch_da_node_congestion_dom(
-        client,
+        driver,
         day,
         operating_day_end=end,
         lmp_type=args.lmp_type,

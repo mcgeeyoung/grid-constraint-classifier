@@ -2,11 +2,15 @@
 Dominion-focused tooling for a DER program keyed to PJM day-ahead (DA)
 congestion prices at pricing nodes (pnodes).
 
-Reuses ``src.pjm_client.PJMClient`` (PJM Data Miner 2, ``da_hrl_lmps``) and the
-same congestion column semantics as ``core.pnode_analyzer`` (``congestion_price_da``).
+Routes through the ISO driver protocol via ``isos.get_driver("PJM")``;
+no longer depends on ``src.pjm_client`` directly. The fetch path returns
+the canonical ISODriver schema (`pnode_id_external`, `hour_ending_ept`,
+`lmp_da`, `energy_price_da`, `congestion_price_da`, `loss_price_da`);
+``persist.py`` renames to the legacy DB column names at the write
+boundary so the on-disk schema is unchanged.
 
 This package is intentionally separate from the multi-ISO classifier pipeline:
-it targets operational daily signals + device→pnode mapping rather than
+it targets operational daily signals + device->pnode mapping rather than
 annual zone classification dashboards.
 
 Maps: ``asset_map`` builds Folium HTML of asset sites vs nodal associations under **DOM**.

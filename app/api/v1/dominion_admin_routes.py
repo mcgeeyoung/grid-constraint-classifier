@@ -113,41 +113,15 @@ def ui_config(utility: UtilityConfig = Depends(get_utility)):
 
 
 # Per-utility pnode coord coverage for the /dispatch/congestion-heatmap
-# endpoint. Lazily loaded on first access (keyed by utility_id), cached for
-# the life of the process. Source file lives under utilities/<id>/.
-_COORDS_BY_UTILITY: dict[str, dict[str, tuple[float, float]]] = {}
+# endpoint. Delegates to app.coords which merges:
+#   1. isos/<iso>/refdata/pnode_coords_<iso>.json   (HIFLD pipeline baseline)
+#   2. utilities/<id>/<pnode_coords_path>           (utility overrides; win)
+# Both layers are optional; cache is per utility_id for the process lifetime.
+from app.coords import load_pnode_coords_for as _load_coords
 
 
 def _coords_for(utility: UtilityConfig) -> dict[str, tuple[float, float]]:
-    if utility.utility_id in _COORDS_BY_UTILITY:
-        return _COORDS_BY_UTILITY[utility.utility_id]
-    path = utility_dir(utility.utility_id) / utility.pnode_coords_path
-    coords: dict[str, tuple[float, float]] = {}
-    if path.is_file():
-        try:
-            raw = json.loads(path.read_text())
-        except (OSError, json.JSONDecodeError) as exc:
-            logger.error(
-                "Pnode coord file unreadable for %s (%s): %s",
-                utility.utility_id, path, exc,
-            )
-            raw = {}
-        for k, v in raw.items():
-            if k.startswith("_"):
-                continue
-            if isinstance(v, (list, tuple)) and len(v) >= 2:
-                coords[str(k).strip()] = (float(v[0]), float(v[1]))
-        logger.info(
-            "Loaded %d pnode coords for %s from %s",
-            len(coords), utility.utility_id, path,
-        )
-    else:
-        logger.error(
-            "Pnode coord file missing for %s: %s; heatmap will return 0 points",
-            utility.utility_id, path,
-        )
-    _COORDS_BY_UTILITY[utility.utility_id] = coords
-    return coords
+    return _load_coords(utility.utility_id)
 
 
 _HEATMAP_CACHE: dict[tuple[str, date, Optional[int]], list[dict]] = {}

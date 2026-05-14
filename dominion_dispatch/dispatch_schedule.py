@@ -60,12 +60,20 @@ def infer_hourly_frame_columns(
     else:
         raise ValueError("hourly_df needs pnode_id or pnode_id_external")
 
-    if "interval_start_utc" in df.columns:
+    # Accept canonical (`hour_ending_ept`, from PJMDriver) plus the two
+    # legacy column names (`interval_start_utc` from DB exports,
+    # `datetime_beginning_ept` from the pre-protocol PJM pull path).
+    if "hour_ending_ept" in df.columns:
+        time_col = "hour_ending_ept"
+    elif "interval_start_utc" in df.columns:
         time_col = "interval_start_utc"
     elif "datetime_beginning_ept" in df.columns:
         time_col = "datetime_beginning_ept"
     else:
-        raise ValueError("hourly_df needs interval_start_utc or datetime_beginning_ept")
+        raise ValueError(
+            "hourly_df needs hour_ending_ept (canonical), "
+            "interval_start_utc (DB export), or datetime_beginning_ept (legacy PJM)"
+        )
 
     return pnode_col, time_col, congestion_col
 

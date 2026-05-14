@@ -20,12 +20,18 @@ DEFAULT_PEAK_HOURS_EPT = set(range(7, 23))
 
 
 def interval_hour_ept(interval_start: object) -> int:
-    """Hour-of-day 0–23 in **America/New_York** for the interval timestamp."""
+    """Hour-of-day 0-23 in **America/New_York** for the interval timestamp.
+
+    `ambiguous=False` picks the standard-time (post-fall-back) reading on
+    the one duplicated 01:00 EST hour each year. Wrong on at most one hour
+    annually; deterministic and avoids the `"infer"` mode which only works
+    on DatetimeIndex (not on a single Timestamp).
+    """
     ts = pd.Timestamp(interval_start)
     if ts.tzinfo is None:
         ts = ts.tz_localize(
             "America/New_York",
-            ambiguous="infer",
+            ambiguous=False,
             nonexistent="shift_forward",
         )
     else:

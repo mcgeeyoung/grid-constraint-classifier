@@ -41,20 +41,12 @@ def get_utility(utility_id: str) -> UtilityConfig:
     """FastAPI dependency: validates {utility_id} path param and loads its config."""
     return load_utility(utility_id)
 
-# Curated DOM pnode coords (HIFLD substations + OSM fallback). Loaded once
-# at import; safe if missing (empty dict, map falls back to no pnode markers).
-_PNODE_COORDS_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "dominion_dispatch" / "refdata" / "pnode_coords_dom.json"
-)
-_DOM_PNODE_COORDS: dict[str, tuple[float, float]] = {}
-if _PNODE_COORDS_PATH.is_file():
-    from dominion_dispatch.pnode_coords import load_pnode_coords_json
-    try:
-        _DOM_PNODE_COORDS = load_pnode_coords_json(_PNODE_COORDS_PATH)
-    except Exception:
-        logger.exception("Failed to load %s; continuing without pnode coords",
-                         _PNODE_COORDS_PATH)
+# Pnode coords for the asset-map endpoint. Resolved per-utility via
+# `app.coords.load_pnode_coords_for` which merges:
+#   1. isos/<iso>/refdata/pnode_coords_<iso>.json   (HIFLD pipeline baseline)
+#   2. utilities/<id>/<pnode_coords_path>           (utility-specific overrides)
+# Lazy + cached per utility_id; safe if either layer is missing.
+from app.coords import load_pnode_coords_for as _load_pnode_coords
 
 
 def _run_to_response(run: DominionDaIngestionRun) -> DominionIngestionRunResponse:
@@ -122,15 +114,15 @@ def ingest_dominion_da(
             503,
             "PJM_SUBSCRIPTION_KEY is not set; configure the environment for live ingest.",
         )
-    from src.pjm_client import PJMClient
+    import isos
 
     from dominion_dispatch.da_congestion import fetch_da_node_congestion_dom
     from dominion_dispatch.persist import ingest_da_dom_dataframe
 
-    client = PJMClient(settings.PJM_SUBSCRIPTION_KEY)
+    driver = isos.get_driver("PJM", subscription_key=settings.PJM_SUBSCRIPTION_KEY)
     try:
         df = fetch_da_node_congestion_dom(
-            client,
+            driver,
             body.operating_date,
             lmp_type=body.lmp_type,
             zone=body.zone_code,
@@ -339,7 +331,7 @@ def dominion_asset_map_html(
             devices,
             project_root=settings.PROJECT_ROOT,
             output_html=out,
-            pnode_coords=_DOM_PNODE_COORDS,
+            pnode_coords=_load_pnode_coords(utility.utility_id),
             session=db,
             include_dom_boundary=True,
             geocode_missing_pnodes=False,

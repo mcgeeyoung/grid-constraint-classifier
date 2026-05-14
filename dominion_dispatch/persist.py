@@ -54,15 +54,31 @@ def _prepare_hourly_frame(
     zone_code: str,
     lmp_type: str,
 ) -> pd.DataFrame:
+    """Translate the canonical ISODriver schema to DB-row shape.
+
+    Reads canonical columns produced by `PJMDriver.fetch_da_hourly`:
+        pnode_id_external, pnode_name, hour_ending_ept,
+        lmp_da, energy_price_da, congestion_price_da, loss_price_da
+
+    Computes `interval_start_utc` as `hour_ending_ept - 1h` localized
+    America/New_York then converted to UTC. The DB stores hour-beginning
+    UTC; the canonical schema uses hour-ending naive EPT (per the
+    ISODriver protocol).
+    """
     if df.empty:
         return df
     out = df.copy()
-    if "datetime_beginning_ept" not in out.columns:
-        raise ValueError("DataFrame must include datetime_beginning_ept")
-    out["interval_start_utc"] = _ept_naive_to_utc(out["datetime_beginning_ept"])
-    if "pnode_id" not in out.columns:
-        raise ValueError("DataFrame must include pnode_id")
-    out["pnode_id_external"] = out["pnode_id"].astype(str)
+    if "hour_ending_ept" not in out.columns:
+        raise ValueError("DataFrame must include hour_ending_ept (canonical schema)")
+    if "pnode_id_external" not in out.columns:
+        raise ValueError("DataFrame must include pnode_id_external (canonical schema)")
+
+    # HE (canonical) -> HB (DB) -> UTC.
+    he_ept = pd.to_datetime(out["hour_ending_ept"])
+    hb_ept = he_ept - pd.Timedelta(hours=1)
+    out["interval_start_utc"] = _ept_naive_to_utc(hb_ept)
+
+    out["pnode_id_external"] = out["pnode_id_external"].astype(str)
     out["operating_date"] = operating_date
     out["zone_code"] = zone_code
     out["lmp_type"] = lmp_type
@@ -141,6 +157,10 @@ def ingest_da_dom_dataframe(
         ts = rec["interval_start_utc"]
         if hasattr(ts, "to_pydatetime"):
             ts = ts.to_pydatetime()
+        # DB column names (`total_lmp_da`, `system_energy_price_da`,
+        # `marginal_loss_price_da`) are PJM-native; map from the canonical
+        # column names emitted by PJMDriver. `congestion_price_da` and
+        # `pnode_name` are the same in both schemas.
         mappings.append(
             {
                 "ingestion_run_id": run.id,
@@ -151,9 +171,9 @@ def ingest_da_dom_dataframe(
                 "pnode_id_external": rec["pnode_id_external"],
                 "pnode_name": rec.get("pnode_name"),
                 "congestion_price_da": _num(rec.get("congestion_price_da")),
-                "total_lmp_da": _num(rec.get("total_lmp_da")),
-                "marginal_loss_price_da": _num(rec.get("marginal_loss_price_da")),
-                "system_energy_price_da": _num(rec.get("system_energy_price_da")),
+                "total_lmp_da": _num(rec.get("lmp_da")),
+                "marginal_loss_price_da": _num(rec.get("loss_price_da")),
+                "system_energy_price_da": _num(rec.get("energy_price_da")),
             }
         )
 
