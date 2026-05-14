@@ -13,12 +13,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # any image layer; the global git url.insteadOf rewrite is scoped to
 # this RUN step (we delete /root/.gitconfig after install).
 COPY requirements.txt .
+# Two-step install: pip-resolve the regular requirements first, then drop
+# wcgrid in. Combining them sent pip into a multi-hour resolver backtrack
+# because wcgrid's transitive dep tree is large enough to force pip to
+# re-evaluate every other package's version space. Splitting the install
+# lets each resolution proceed independently; the second step may pin or
+# upgrade a transitive shared dep but never re-explores the full graph.
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
 RUN --mount=type=secret,id=github_token \
     if [ -f /run/secrets/github_token ]; then \
         TOKEN=$(cat /run/secrets/github_token) && \
         git config --global url."https://${TOKEN}@github.com/".insteadOf "https://github.com/" ; \
     fi && \
-    pip install --no-cache-dir -r requirements.txt gunicorn && \
+    pip install --no-cache-dir "wcgrid @ git+https://github.com/wattcarbon/wcgrid.git@main" && \
     rm -f /root/.gitconfig
 
 COPY . .

@@ -14,10 +14,5 @@ psycopg2-binary>=2.9
 fastapi>=0.110
 uvicorn>=0.27
 jinja2>=3.1
-# Shared WattCarbon grid-data toolkit (private repo).
-# Local dev resolves via the developer's git auth; Cloud Run build uses a
-# GitHub deploy token (see Dockerfile + section 7 of deploy/cloud-run-dominion.txt).
-# No extras here: dominion-api only uses wcgrid.utilities (config loader) and
-# the packaged ISO refdata JSON files. The ingestion/docparse/viz extras
-# pull in anthropic/pdfplumber/openpyxl/etc that the request path never touches.
-wcgrid @ git+https://github.com/wattcarbon/wcgrid.git@main
+# wcgrid is installed in a separate pip step in the Dockerfile so its
+# resolution doesn't tangle with the rest of the dependency tree.
