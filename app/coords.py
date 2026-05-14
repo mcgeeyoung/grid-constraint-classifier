@@ -21,7 +21,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from app.utilities import UtilityConfig, utility_dir
+from wcgrid.utilities import UtilityConfig, utility_dir
 
 logger = logging.getLogger(__name__)
 
@@ -29,15 +29,18 @@ _REPO = Path(__file__).resolve().parents[1]
 
 
 def _iso_coords_path(iso: str) -> Path:
-    """isos/<iso_lower>/refdata/pnode_coords_<iso_lower>.json.
+    """Resolve wcgrid's packaged ISO refdata file for the given iso.
 
-    PJM uses a zone-scoped filename (`pnode_coords_pjm_dom.json`) because
-    the LOAD-pnode catalog varies per zone.
+    PJM uses a zone-scoped filename (``pnode_coords_pjm_dom.json``) because
+    the LOAD-pnode catalogue varies per zone; every other ISO follows the
+    ``pnode_coords_<iso_lower>.json`` convention.
     """
+    from importlib import resources
+
     iso_l = iso.lower()
-    if iso_l == "pjm":
-        return _REPO / "isos" / "pjm" / "refdata" / "pnode_coords_pjm_dom.json"
-    return _REPO / "isos" / iso_l / "refdata" / f"pnode_coords_{iso_l}.json"
+    filename = "pnode_coords_pjm_dom.json" if iso_l == "pjm" else f"pnode_coords_{iso_l}.json"
+    root = resources.files(f"wcgrid.isos.{iso_l}")
+    return Path(str(root)) / "refdata" / filename
 
 
 def _load_coord_file(path: Path) -> dict[str, tuple[float, float]]:
@@ -72,7 +75,7 @@ def _load_coord_file(path: Path) -> dict[str, tuple[float, float]]:
 @lru_cache(maxsize=32)
 def load_pnode_coords_for(utility_id: str) -> dict[str, tuple[float, float]]:
     """Resolve coords for `utility_id`. Cached per utility_id."""
-    from app.utilities import load_utility  # local to avoid cycle at import time
+    from wcgrid.utilities import load_utility  # local to avoid cycle at import time
 
     cfg: UtilityConfig = load_utility(utility_id)
     iso_path = _iso_coords_path(cfg.iso)

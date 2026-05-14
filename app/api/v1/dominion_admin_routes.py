@@ -19,7 +19,7 @@ from app.models.dominion_der import (
     DominionDevice,
     DominionDispatchDeviceHour,
 )
-from app.utilities import UtilityConfig, load_utility, utility_dir
+from wcgrid.utilities import UtilityConfig, UtilityNotFound, load_utility, utility_dir
 from app.schemas.dominion import (
     AdminCongestionHeatmapPoint,
     AdminCongestionHeatmapResponse,
@@ -51,7 +51,10 @@ router = APIRouter()
 
 def get_utility(utility_id: str) -> UtilityConfig:
     """FastAPI dependency: validates {utility_id} path param and loads its config."""
-    return load_utility(utility_id)
+    try:
+        return load_utility(utility_id)
+    except UtilityNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
 
 # ───────────────────────── ui-config (static bundle for the SPA) ─────────────────────────
