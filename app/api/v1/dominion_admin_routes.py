@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
+from app.auth import require_api_key
 from app.database import get_db
 from app.models.dominion_der import (
     DominionDaIngestionRun,
@@ -46,7 +47,11 @@ from dominion_dispatch.zones import Zone, load_zones, zone_for_pnode
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+# Router-level auth: every route under /api/v1/dominion-admin requires
+# a valid X-API-Key. Fail-closed via app.auth.require_api_key: if
+# GCC_API_KEYS isn't configured, requests are rejected unless
+# GCC_AUTH_DISABLED=true is explicitly set for dev/test.
+router = APIRouter(dependencies=[Depends(require_api_key)])
 
 
 def get_utility(utility_id: str) -> UtilityConfig:

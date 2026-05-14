@@ -20,6 +20,9 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql://gridclass:gridclass@db:5432/gridclass
+      # Local dev skips the API key requirement on dominion-admin routes.
+      # Production sets GCC_API_KEYS via Secret Manager (see cloudbuild.yaml).
+      GCC_AUTH_DISABLED: "true"
     depends_on:
       - db
     volumes:

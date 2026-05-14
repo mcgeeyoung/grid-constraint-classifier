@@ -15,6 +15,18 @@ Prereqs
   private wcgrid package during the image build.
 - DATABASE_URL and PJM_SUBSCRIPTION_KEY stored in Secret Manager as
   `dominion-db-url` and `pjm-key` respectively.
+- API keys for dominion-admin routes stored in Secret Manager as
+  `gcc-api-keys` (comma-separated list of valid X-API-Key values).
+  Create with:
+    KEY=$(openssl rand -hex 32)
+    echo -n "$KEY" | gcloud secrets create gcc-api-keys --data-file=-
+    PROJECT_NUMBER=$(gcloud projects describe wattcarbon-internal --format='value(projectNumber)')
+    gcloud secrets add-iam-policy-binding gcc-api-keys \
+        --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+        --role="roles/secretmanager.secretAccessor"
+  The dominion-admin router fails closed: if GCC_API_KEYS is unset,
+  every admin request returns 403 unless GCC_AUTH_DISABLED=true is
+  explicitly set (local dev only).
 
 Why Cloud Run fits
 ------------------
