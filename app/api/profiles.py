@@ -37,12 +37,12 @@ router = APIRouter(prefix="/api/profiles", tags=["profiles"])
 
 
 @router.get("/constraint/{profile_id}")
-async def get_constraint_profile(
+def get_constraint_profile(
     profile_id: int,
     db: Session = Depends(get_db),
 ):
     """Full constraint profile detail."""
-    cp = db.query(ConstraintProfile).get(profile_id)
+    cp = db.get(ConstraintProfile, profile_id)
     if not cp:
         raise HTTPException(status_code=404, detail="Constraint profile not found")
 
@@ -71,7 +71,7 @@ async def get_constraint_profile(
 
 
 @router.get("/der/{der_type}")
-async def get_der_profile(
+def get_der_profile(
     der_type: str,
     db: Session = Depends(get_db),
 ):
@@ -97,7 +97,7 @@ async def get_der_profile(
 
 
 @router.get("/der")
-async def list_der_profiles(
+def list_der_profiles(
     db: Session = Depends(get_db),
 ):
     """List all canonical DER profiles."""
@@ -123,13 +123,13 @@ async def list_der_profiles(
 
 
 @router.get("/intersection")
-async def get_intersection(
+def get_intersection(
     constraint_profile_id: int = Query(...),
     der_type: str = Query(...),
     db: Session = Depends(get_db),
 ):
     """Intersection analysis between a constraint profile and DER type."""
-    cp = db.query(ConstraintProfile).get(constraint_profile_id)
+    cp = db.get(ConstraintProfile, constraint_profile_id)
     if not cp:
         raise HTTPException(status_code=404, detail="Constraint profile not found")
 
@@ -229,7 +229,7 @@ async def get_intersection(
 
 @router.get("/zone/{iso_code}/{zone_code}/loadshape")
 @cache_response("loadshape", ttl=300)
-async def zone_loadshape(
+def zone_loadshape(
     iso_code: str,
     zone_code: str,
     month: Optional[int] = None,
@@ -281,7 +281,7 @@ async def zone_loadshape(
 
 
 @router.get("/der-grid-scores", response_model=DERGridScoresResponse)
-async def get_der_grid_scores(
+def get_der_grid_scores(
     lat: float = Query(...),
     lon: float = Query(...),
     der_type: str = Query("solar"),
@@ -319,9 +319,9 @@ async def get_der_grid_scores(
     iso_obj = None
     if nearest_sub:
         if nearest_sub.zone_id:
-            zone_obj = db.query(Zone).get(nearest_sub.zone_id)
+            zone_obj = db.get(Zone, nearest_sub.zone_id)
         if nearest_sub.iso_id:
-            iso_obj = db.query(ISO).get(nearest_sub.iso_id)
+            iso_obj = db.get(ISO, nearest_sub.iso_id)
 
     # If no substation found, use the iso_code hint from the frontend
     if not iso_obj and iso_code:
@@ -443,7 +443,7 @@ async def get_der_grid_scores(
         )
         if ps:
             from app.models.pnode import Pnode
-            pnode = db.query(Pnode).get(nearest_sub.nearest_pnode_id)
+            pnode = db.get(Pnode, nearest_sub.nearest_pnode_id)
             levels.append(_build_level(
                 "pnode",
                 pnode.node_name if pnode else None,

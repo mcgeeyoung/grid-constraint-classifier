@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
 @router.post("/recompute")
-async def recompute_profiles(
+def recompute_profiles(
     iso_code: Optional[str] = None,
     year: Optional[int] = 2024,
     api_key: str = Depends(require_api_key),
@@ -31,7 +31,7 @@ async def recompute_profiles(
 
 
 @router.post("/refresh-matviews")
-async def refresh_matviews(
+def refresh_matviews(
     api_key: str = Depends(require_api_key),
     db: Session = Depends(get_db),
 ):
@@ -42,8 +42,9 @@ async def refresh_matviews(
 
 
 @router.get("/computation-runs")
-async def list_runs(
+def list_runs(
     limit: int = Query(20, le=100),
+    api_key: str = Depends(require_api_key),
     db: Session = Depends(get_db),
 ):
     """List recent computation runs with metrics."""

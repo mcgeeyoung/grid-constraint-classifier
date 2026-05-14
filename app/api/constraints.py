@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api", tags=["constraints"])
 
 @router.get("/resolve")
 @cache_response("geo-resolve", ttl=300)
-async def resolve_location(
+def resolve_location(
     lat: float = Query(...),
     lon: float = Query(...),
     request: Request = None,
@@ -54,9 +54,19 @@ async def resolve_location(
             .filter_by(location_level="zone", location_id=resolution.zone_id)
             .all()
         )
+        # Batch-load annotations for all profiles
+        profile_ids = [cp.id for cp in zone_profiles]
+        all_annots = (
+            db.query(ConstraintAnnotation)
+            .filter(ConstraintAnnotation.constraint_profile_id.in_(profile_ids))
+            .all()
+        ) if profile_ids else []
+        annots_by_profile: dict[int, list] = {}
+        for a in all_annots:
+            annots_by_profile.setdefault(a.constraint_profile_id, []).append(a)
+
         for cp in zone_profiles:
-            annotations = db.query(ConstraintAnnotation).filter_by(
-                constraint_profile_id=cp.id).all()
+            annotations = annots_by_profile.get(cp.id, [])
             constraints.append({
                 "id": cp.id,
                 "location_level": cp.location_level,
@@ -113,7 +123,7 @@ async def resolve_location(
 
 @router.get("/zones/{iso_code}")
 @cache_response("zones", ttl=3600)
-async def list_zones(
+def list_zones(
     iso_code: str,
     request: Request = None,
     db: Session = Depends(get_db),
@@ -124,41 +134,91 @@ async def list_zones(
         raise HTTPException(status_code=404, detail=f"ISO '{iso_code}' not found")
 
     zones = db.query(Zone).filter_by(iso_id=iso.id).all()
+    zone_ids = [z.id for z in zones]
+
+    if not zone_ids:
+        return []
+
+    # Batch: get latest congestion profiles for all zones in one query
+    from sqlalchemy import distinct
+    from sqlalchemy.orm import aliased
+
+    latest_profiles_sub = (
+        db.query(
+            ConstraintProfile.location_id,
+            func.max(ConstraintProfile.period_year).label("max_year"),
+        )
+        .filter(
+            ConstraintProfile.location_level == "zone",
+            ConstraintProfile.location_id.in_(zone_ids),
+            ConstraintProfile.constraint_type == "congestion",
+        )
+        .group_by(ConstraintProfile.location_id)
+        .subquery()
+    )
+
+    profiles_by_zone = {}
+    profile_rows = (
+        db.query(ConstraintProfile)
+        .join(
+            latest_profiles_sub,
+            (ConstraintProfile.location_id == latest_profiles_sub.c.location_id)
+            & (ConstraintProfile.period_year == latest_profiles_sub.c.max_year),
+        )
+        .filter(
+            ConstraintProfile.location_level == "zone",
+            ConstraintProfile.constraint_type == "congestion",
+        )
+        .all()
+    )
+    for cp in profile_rows:
+        profiles_by_zone[cp.location_id] = cp
+
+    # Batch: count annotations per profile in one query
+    profile_ids = [cp.id for cp in profile_rows]
+    annotation_counts = {}
+    if profile_ids:
+        ann_rows = (
+            db.query(
+                ConstraintAnnotation.constraint_profile_id,
+                func.count(ConstraintAnnotation.id),
+            )
+            .filter(ConstraintAnnotation.constraint_profile_id.in_(profile_ids))
+            .group_by(ConstraintAnnotation.constraint_profile_id)
+            .all()
+        )
+        annotation_counts = dict(ann_rows)
+
+    # Batch: best DER per profile in one query (ranked by value)
+    best_ders = {}
+    if profile_ids:
+        # Use a subquery to find max value per constraint profile
+        best_val_sub = (
+            db.query(
+                ConstraintDERIntersection.constraint_profile_id,
+                func.max(ConstraintDERIntersection.value_per_kw_year).label("max_val"),
+            )
+            .filter(ConstraintDERIntersection.constraint_profile_id.in_(profile_ids))
+            .group_by(ConstraintDERIntersection.constraint_profile_id)
+            .subquery()
+        )
+        best_rows = (
+            db.query(ConstraintDERIntersection, DERProfile)
+            .join(DERProfile, ConstraintDERIntersection.der_profile_id == DERProfile.id)
+            .join(
+                best_val_sub,
+                (ConstraintDERIntersection.constraint_profile_id == best_val_sub.c.constraint_profile_id)
+                & (ConstraintDERIntersection.value_per_kw_year == best_val_sub.c.max_val),
+            )
+            .all()
+        )
+        for cdi, dp in best_rows:
+            best_ders[cdi.constraint_profile_id] = (dp.der_type, cdi.value_per_kw_year)
 
     results = []
     for zone in zones:
-        # Get primary constraint profile
-        cp = (
-            db.query(ConstraintProfile)
-            .filter_by(location_level="zone", location_id=zone.id,
-                       constraint_type="congestion")
-            .order_by(ConstraintProfile.period_year.desc())
-            .first()
-        )
-
-        # Count annotations
-        annotation_count = 0
-        best_der_type = None
-        best_der_value = None
-
-        if cp:
-            annotation_count = (
-                db.query(func.count(ConstraintAnnotation.id))
-                .filter_by(constraint_profile_id=cp.id)
-                .scalar()
-            )
-
-            # Best DER
-            best = (
-                db.query(ConstraintDERIntersection, DERProfile)
-                .join(DERProfile, ConstraintDERIntersection.der_profile_id == DERProfile.id)
-                .filter(ConstraintDERIntersection.constraint_profile_id == cp.id)
-                .order_by(ConstraintDERIntersection.value_per_kw_year.desc())
-                .first()
-            )
-            if best:
-                best_der_type = best[1].der_type
-                best_der_value = best[0].value_per_kw_year
+        cp = profiles_by_zone.get(zone.id)
+        best = best_ders.get(cp.id) if cp else None
 
         results.append(ZoneConstraintSummaryResponse(
             iso_code=iso.iso_code,
@@ -172,9 +232,9 @@ async def list_zones(
             peak_month=cp.peak_month if cp else None,
             peak_hour=cp.peak_hour if cp else None,
             constrained_hours_pct=cp.constrained_hours_pct if cp else None,
-            best_der_type=best_der_type,
-            best_der_value_per_kw_year=best_der_value,
-            annotation_count=annotation_count,
+            best_der_type=best[0] if best else None,
+            best_der_value_per_kw_year=best[1] if best else None,
+            annotation_count=annotation_counts.get(cp.id, 0) if cp else 0,
         ))
 
     return results
@@ -182,7 +242,7 @@ async def list_zones(
 
 @router.get("/zones/{iso_code}/geometry")
 @cache_response("zone-geometries", ttl=86400)
-async def zone_geometries(
+def zone_geometries(
     iso_code: str,
     request: Request = None,
     db: Session = Depends(get_db),
@@ -209,7 +269,7 @@ async def zone_geometries(
 
 @router.get("/zones/{iso_code}/{zone_code}/constraints")
 @cache_response("zone-constraints", ttl=300)
-async def zone_constraints(
+def zone_constraints(
     iso_code: str,
     zone_code: str,
     request: Request = None,
@@ -230,10 +290,20 @@ async def zone_constraints(
         .all()
     )
 
+    # Batch-load annotations for all profiles
+    zc_profile_ids = [cp.id for cp in profiles]
+    zc_all_annots = (
+        db.query(ConstraintAnnotation)
+        .filter(ConstraintAnnotation.constraint_profile_id.in_(zc_profile_ids))
+        .all()
+    ) if zc_profile_ids else []
+    zc_annots_by_profile: dict[int, list] = {}
+    for a in zc_all_annots:
+        zc_annots_by_profile.setdefault(a.constraint_profile_id, []).append(a)
+
     profile_responses = []
     for cp in profiles:
-        annotations = db.query(ConstraintAnnotation).filter_by(
-            constraint_profile_id=cp.id).all()
+        annotations = zc_annots_by_profile.get(cp.id, [])
         profile_responses.append(ConstraintProfileResponse(
             id=cp.id,
             location_level=cp.location_level,
@@ -286,7 +356,7 @@ async def zone_constraints(
 
 @router.get("/zones/{iso_code}/{zone_code}/lmps")
 @cache_response("zone-lmps", ttl=300)
-async def zone_lmps(
+def zone_lmps(
     iso_code: str,
     zone_code: str,
     limit: int = Query(500, le=10000),
@@ -333,7 +403,7 @@ async def zone_lmps(
 
 @router.get("/locations/{level}/{location_id}/profile")
 @cache_response("location-profile", ttl=300)
-async def location_profile(
+def location_profile(
     level: str,
     location_id: int,
     request: Request = None,
@@ -356,10 +426,20 @@ async def location_profile(
     all_12x24s = [cp.profile_12x24 for cp in profiles]
     composite = max_merge_12x24(all_12x24s)
 
+    # Batch-load annotations for all profiles
+    lp_profile_ids = [cp.id for cp in profiles]
+    lp_all_annots = (
+        db.query(ConstraintAnnotation)
+        .filter(ConstraintAnnotation.constraint_profile_id.in_(lp_profile_ids))
+        .all()
+    ) if lp_profile_ids else []
+    lp_annots_by_profile: dict[int, list] = {}
+    for a in lp_all_annots:
+        lp_annots_by_profile.setdefault(a.constraint_profile_id, []).append(a)
+
     profile_responses = []
     for cp in profiles:
-        annotations = db.query(ConstraintAnnotation).filter_by(
-            constraint_profile_id=cp.id).all()
+        annotations = lp_annots_by_profile.get(cp.id, [])
         profile_responses.append(ConstraintProfileResponse(
             id=cp.id,
             location_level=cp.location_level,
@@ -389,7 +469,7 @@ async def location_profile(
 
 @router.get("/isos")
 @cache_response("isos", ttl=3600)
-async def list_isos(
+def list_isos(
     is_rto: Optional[bool] = None,
     request: Request = None,
     db: Session = Depends(get_db),

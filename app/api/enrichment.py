@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/enrichment", tags=["enrichment"])
 
 
 @router.get("/hosting-capacity")
-async def nearby_hosting_capacity(
+def nearby_hosting_capacity(
     lat: float = Query(...),
     lon: float = Query(...),
     radius_km: float = Query(10.0, le=100),
@@ -58,7 +58,7 @@ async def nearby_hosting_capacity(
 
 
 @router.get("/interconnection-queue")
-async def nearby_interconnection(
+def nearby_interconnection(
     lat: float = Query(...),
     lon: float = Query(...),
     radius_km: float = Query(50.0, le=200),
@@ -93,7 +93,7 @@ async def nearby_interconnection(
 
 @router.get("/interconnection-queue/all")
 @cache_response("iq-all", ttl=3600)
-async def all_interconnection_queue(
+def all_interconnection_queue(
     request: Request = None,
     db: Session = Depends(get_db),
 ):
@@ -119,7 +119,7 @@ async def all_interconnection_queue(
 
 
 @router.get("/filings/{utility_code}")
-async def utility_filings(
+def utility_filings(
     utility_code: str,
     filing_type: Optional[str] = None,
     db: Session = Depends(get_db),
@@ -127,9 +127,11 @@ async def utility_filings(
     """Full filing history for a utility."""
     from sqlalchemy import or_
     # Match by EIA ID (if numeric), utility_code, or name
+    # Escape SQL LIKE wildcards to prevent unintended pattern matching
+    safe_name = utility_code.replace("%", r"\%").replace("_", r"\_")
     conditions = [
         Utility.utility_code == utility_code,
-        Utility.utility_name.ilike(f"%{utility_code}%"),
+        Utility.utility_name.ilike(f"%{safe_name}%", escape="\\"),
     ]
     try:
         conditions.append(Utility.eia_id == int(utility_code))
@@ -161,7 +163,7 @@ async def utility_filings(
 
 @router.get("/utilities")
 @cache_response("utilities", ttl=3600)
-async def list_utilities(
+def list_utilities(
     state: Optional[str] = None,
     iso_code: Optional[str] = None,
     request: Request = None,
