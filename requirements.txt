@@ -6,7 +6,6 @@ folium>=0.14
 pyarrow>=12.0
 shapely>=2.0
 beautifulsoup4>=4.12
-gridstatus>=0.27
 pyyaml>=6.0
 # Database & API
 sqlalchemy>=2.0
@@ -15,9 +14,10 @@ psycopg2-binary>=2.9
 fastapi>=0.110
 uvicorn>=0.27
 jinja2>=3.1
-pytest>=8.2
-pytest-asyncio>=0.24
 # Shared WattCarbon grid-data toolkit (private repo).
 # Local dev resolves via the developer's git auth; Cloud Run build uses a
-# GitHub deploy token (see Dockerfile + Section 7 of DEPLOY.md).
-wcgrid[ingestion,docparse,viz] @ git+https://github.com/wattcarbon/wcgrid.git@main
+# GitHub deploy token (see Dockerfile + section 7 of deploy/cloud-run-dominion.txt).
+# No extras here: dominion-api only uses wcgrid.utilities (config loader) and
+# the packaged ISO refdata JSON files. The ingestion/docparse/viz extras
+# pull in anthropic/pdfplumber/openpyxl/etc that the request path never touches.
+wcgrid @ git+https://github.com/wattcarbon/wcgrid.git@main
