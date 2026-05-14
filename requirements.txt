@@ -15,7 +15,7 @@ psycopg2-binary>=2.9
 fastapi>=0.110
 uvicorn>=0.27
 jinja2>=3.1
-pytest>=8.0
+pytest>=8.2
 pytest-asyncio>=0.24
 # Shared WattCarbon grid-data toolkit (private repo).
 # Local dev resolves via the developer's git auth; Cloud Run build uses a
