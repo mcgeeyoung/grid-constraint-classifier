@@ -1,0 +1,119 @@
+{
+  "_source": "HIFLD chadbraden 1/9/25 + curated centroids; catalog from NYISO day file 2026-04-18; states=('NY',); prefix=True.",
+  "_iso_id": "NYISO",
+  "_catalog_size": 15,
+  "_matched": 22,
+  "_match_rate": 146.7,
+  "_match_notes": {
+    "WEST": "[seeded extras]",
+    "GENESE": "[seeded extras]",
+    "CENTRL": "[seeded extras]",
+    "NORTH": "[seeded extras]",
+    "MHK VL": "[seeded extras]",
+    "CAPITL": "[seeded extras]",
+    "HUD VL": "[seeded extras]",
+    "MILLWD": "[seeded extras]",
+    "DUNWOD": "[seeded extras]",
+    "N.Y.C.": "[seeded extras]",
+    "LONGIL": "[seeded extras]",
+    "61752": "[seeded extras]",
+    "61753": "[seeded extras]",
+    "61754": "[seeded extras]",
+    "61755": "[seeded extras]",
+    "61756": "[seeded extras]",
+    "61757": "[seeded extras]",
+    "61758": "[seeded extras]",
+    "61759": "[seeded extras]",
+    "61760": "[seeded extras]",
+    "61761": "[seeded extras]",
+    "61762": "[seeded extras]"
+  },
+  "61752": [
+    42.8864,
+    -78.8784
+  ],
+  "61753": [
+    43.1566,
+    -77.6088
+  ],
+  "61754": [
+    43.0481,
+    -76.1474
+  ],
+  "61755": [
+    44.6995,
+    -74.523
+  ],
+  "61756": [
+    43.1009,
+    -75.2327
+  ],
+  "61757": [
+    42.6526,
+    -73.7562
+  ],
+  "61758": [
+    41.7004,
+    -73.9209
+  ],
+  "61759": [
+    41.209,
+    -73.7287
+  ],
+  "61760": [
+    40.9854,
+    -73.8693
+  ],
+  "61761": [
+    40.7128,
+    -74.006
+  ],
+  "61762": [
+    40.7891,
+    -73.135
+  ],
+  "CAPITL": [
+    42.6526,
+    -73.7562
+  ],
+  "CENTRL": [
+    43.0481,
+    -76.1474
+  ],
+  "DUNWOD": [
+    40.9854,
+    -73.8693
+  ],
+  "GENESE": [
+    43.1566,
+    -77.6088
+  ],
+  "HUD VL": [
+    41.7004,
+    -73.9209
+  ],
+  "LONGIL": [
+    40.7891,
+    -73.135
+  ],
+  "MHK VL": [
+    43.1009,
+    -75.2327
+  ],
+  "MILLWD": [
+    41.209,
+    -73.7287
+  ],
+  "N.Y.C.": [
+    40.7128,
+    -74.006
+  ],
+  "NORTH": [
+    44.6995,
+    -74.523
+  ],
+  "WEST": [
+    42.8864,
+    -78.8784
+  ]
+}
