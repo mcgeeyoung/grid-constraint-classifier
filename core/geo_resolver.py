@@ -22,6 +22,9 @@ SUBSTATION_MAX_DISTANCE_KM = 30.0
 PNODE_MAX_DISTANCE_KM = 50.0
 FEEDER_MAX_DISTANCE_KM = 10.0
 
+# Approximate km-to-degrees conversion (1 degree latitude ≈ 111 km)
+KM_PER_DEG = 111.0
+
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Great-circle distance between two points in km."""
@@ -156,11 +159,25 @@ def _resolve_zone(db: Session, lat: float, lon: float) -> Optional[Zone]:
 
 
 def _nearest_zone_by_centroid(db: Session, lat: float, lon: float) -> Optional[Zone]:
-    """Fallback: find nearest zone by centroid distance."""
+    """Fallback: find nearest zone by centroid distance.
+
+    Uses a bounding-box pre-filter (500 km) to avoid loading all zones.
+    Falls back to unfiltered if no candidates found nearby.
+    """
+    deg_offset = 500.0 / KM_PER_DEG
     zones = db.query(Zone).filter(
         Zone.centroid_lat.isnot(None),
         Zone.centroid_lon.isnot(None),
+        Zone.centroid_lat.between(lat - deg_offset, lat + deg_offset),
+        Zone.centroid_lon.between(lon - deg_offset, lon + deg_offset),
     ).all()
+
+    if not zones:
+        # Fallback: no nearby zones, search all
+        zones = db.query(Zone).filter(
+            Zone.centroid_lat.isnot(None),
+            Zone.centroid_lon.isnot(None),
+        ).all()
 
     best_zone = None
     best_dist = float("inf")
@@ -177,11 +194,17 @@ def _nearest_zone_by_centroid(db: Session, lat: float, lon: float) -> Optional[Z
 def _nearest_substation(
     db: Session, lat: float, lon: float, iso_id: int,
 ) -> tuple[Optional[Substation], Optional[float]]:
-    """Find nearest substation within threshold."""
+    """Find nearest substation within threshold.
+
+    Uses a bounding-box pre-filter to avoid loading all substations for the ISO.
+    """
+    deg_offset = SUBSTATION_MAX_DISTANCE_KM / KM_PER_DEG
     substations = db.query(Substation).filter(
         Substation.iso_id == iso_id,
         Substation.lat.isnot(None),
         Substation.lon.isnot(None),
+        Substation.lat.between(lat - deg_offset, lat + deg_offset),
+        Substation.lon.between(lon - deg_offset, lon + deg_offset),
     ).all()
 
     best = None
@@ -201,11 +224,18 @@ def _nearest_substation(
 def _nearest_pnode(
     db: Session, lat: float, lon: float, iso_id: int,
 ) -> tuple[Optional[Pnode], Optional[float]]:
-    """Find nearest pnode within threshold."""
+    """Find nearest pnode within threshold.
+
+    Uses a bounding-box pre-filter to avoid loading all pnodes for the ISO
+    (PJM alone has 10,000+ pnodes).
+    """
+    deg_offset = PNODE_MAX_DISTANCE_KM / KM_PER_DEG
     pnodes = db.query(Pnode).filter(
         Pnode.iso_id == iso_id,
         Pnode.lat.isnot(None),
         Pnode.lon.isnot(None),
+        Pnode.lat.between(lat - deg_offset, lat + deg_offset),
+        Pnode.lon.between(lon - deg_offset, lon + deg_offset),
     ).all()
 
     best = None

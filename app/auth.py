@@ -20,20 +20,30 @@ def _load_api_keys() -> Set[str]:
     return {k.strip() for k in raw.split(",") if k.strip()}
 
 
+def _auth_disabled() -> bool:
+    """Check if auth is explicitly disabled (requires GCC_AUTH_DISABLED=true)."""
+    return os.environ.get("GCC_AUTH_DISABLED", "").lower() == "true"
+
+
 def require_api_key(
     api_key: Optional[str] = Security(_api_key_header),
 ) -> str:
     """FastAPI dependency that enforces API key authentication.
 
-    Returns the validated key on success.
+    Fail-closed: when GCC_API_KEYS is not configured, requests are rejected
+    unless GCC_AUTH_DISABLED=true is explicitly set.
     """
     if api_key is None:
         raise HTTPException(status_code=401, detail="Missing X-API-Key header")
 
     valid_keys = _load_api_keys()
     if not valid_keys:
-        logger.warning("GCC_API_KEYS not configured: API key auth disabled (dev mode)")
-        return api_key
+        if _auth_disabled():
+            return api_key
+        raise HTTPException(
+            status_code=403,
+            detail="API key auth not configured. Set GCC_API_KEYS or GCC_AUTH_DISABLED=true.",
+        )
 
     if api_key not in valid_keys:
         raise HTTPException(status_code=403, detail="Invalid API key")

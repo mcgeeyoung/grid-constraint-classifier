@@ -34,8 +34,10 @@ router = APIRouter(prefix="/api/valuations", tags=["valuations"])
 
 
 @router.post("/prospective")
-async def prospective_valuation(
+@limiter.limit("60/minute")
+def prospective_valuation(
     request_body: ProspectiveValuationRequest,
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Compute value stack for a DER at a lat/lon."""
@@ -68,17 +70,18 @@ async def prospective_valuation(
         .first()
     )
 
-    # Get annotations
+    # Get annotations (batch query)
     profiles = (
         db.query(ConstraintProfile)
         .filter_by(location_level="zone", location_id=zone_id)
         .all()
     )
-    all_annotations = []
-    for cp in profiles:
-        annots = db.query(ConstraintAnnotation).filter_by(
-            constraint_profile_id=cp.id).all()
-        all_annotations.extend(annots)
+    cp_ids = [cp.id for cp in profiles]
+    all_annotations = (
+        db.query(ConstraintAnnotation)
+        .filter(ConstraintAnnotation.constraint_profile_id.in_(cp_ids))
+        .all()
+    ) if cp_ids else []
 
     if stack:
         return {
@@ -138,9 +141,11 @@ async def prospective_valuation(
 
 
 @router.get("/compare")
-async def compare_der_types(
+@limiter.limit("60/minute")
+def compare_der_types(
     lat: float = Query(...),
     lon: float = Query(...),
+    request: Request = None,
     db: Session = Depends(get_db),
 ):
     """Compare all DER types at a location."""
@@ -191,7 +196,7 @@ async def compare_der_types(
 
 @router.get("/rankings")
 @cache_response("rankings", ttl=600)
-async def value_rankings(
+def value_rankings(
     iso_code: str = Query(...),
     der_type: str = Query(...),
     limit: int = Query(50, le=200),
@@ -245,7 +250,7 @@ async def value_rankings(
 
 @router.post("/batch")
 @limiter.limit("10/minute")
-async def batch_valuation(
+def batch_valuation(
     request_body: BatchValuationRequest,
     request: Request = None,
     api_key: str = Depends(require_api_key),
@@ -255,7 +260,7 @@ async def batch_valuation(
     results = []
     for item in request_body.items:
         try:
-            result = await prospective_valuation(item, db)
+            result = prospective_valuation(item, db)
             results.append(result)
         except HTTPException:
             results.append({"error": f"Could not resolve ({item.lat}, {item.lon})"})
