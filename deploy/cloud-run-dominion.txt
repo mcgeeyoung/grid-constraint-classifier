@@ -10,6 +10,11 @@ Prereqs
 - Postgres reachable from Cloud Run (Cloud SQL recommended in the same region).
 - Alembic migrations already applied to that database (alembic upgrade head from your laptop).
 - dominion_devices seeded so dispatch rebuild has rows to join.
+- wcgrid GitHub deploy token stored in Secret Manager as `wcgrid-gh-token`
+  (see "wcgrid token setup" below); Cloud Build needs it to install the
+  private wcgrid package during the image build.
+- DATABASE_URL and PJM_SUBSCRIPTION_KEY stored in Secret Manager as
+  `dominion-db-url` and `pjm-key` respectively.
 
 Why Cloud Run fits
 ------------------
@@ -17,30 +22,51 @@ Why Cloud Run fits
 - Scales to zero between demos (lower cost).
 - Dockerfile in repo root listens on $PORT (Cloud Run sets PORT, often 8080).
 
-First deploy (build from source in this directory)
----------------------------------------------------
+wcgrid token setup
+------------------
+The backend depends on wcgrid which is private. Cloud Build reads a
+GitHub fine-grained PAT from Secret Manager and streams it into the
+docker build via BuildKit's --mount=type=secret so the token never
+lands in any image layer.
+
+1. Create a fine-grained PAT at
+   https://github.com/settings/personal-access-tokens/new:
+   - Resource owner: wattcarbon
+   - Repository access: select wattcarbon/wcgrid only
+   - Repository permissions: Contents: Read
+   - Expiration: 90 days (set a calendar reminder to rotate)
+2. Store it in Secret Manager:
+     echo -n "github_pat_..." | gcloud secrets create wcgrid-gh-token --data-file=-
+3. Let the Cloud Build service account read it:
+     PROJECT_NUMBER=$(gcloud projects describe wattcarbon-internal --format='value(projectNumber)')
+     gcloud secrets add-iam-policy-binding wcgrid-gh-token \
+         --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+         --role="roles/secretmanager.secretAccessor"
+4. When the PAT rotates, add a new version:
+     echo -n "github_pat_new..." | gcloud secrets versions add wcgrid-gh-token --data-file=-
+   cloudbuild.yaml references `:latest`, so no other change needed.
+
+First deploy (build via cloudbuild.yaml)
+----------------------------------------
 From grid-constraint-classifier (repo root):
 
-  gcloud run deploy dominion-api \
-    --source . \
-    --region us-central1 \
-    --allow-unauthenticated \
-    --memory 1Gi \
-    --timeout 300 \
-    --set-env-vars "\
-DATABASE_URL=postgresql://USER:PASS@/DBNAME?host=/cloudsql/PROJECT:REGION:INSTANCE,\
-PJM_SUBSCRIPTION_KEY=your-key,\
-CORS_EXTRA_ORIGINS=https://storage.googleapis.com"
+  gcloud builds submit --config=cloudbuild.yaml
 
-Notes on the example above
---------------------------
-- Replace dominion-api, region, DATABASE_URL, PJM key, and Cloud SQL socket path with yours.
-- If you are not using Cloud SQL Unix socket, use a normal TCP host in DATABASE_URL (and ensure
-  Cloud Run egress can reach it; VPC connector may be required for private IP).
-- For anything except a throwaway demo, put secrets in Secret Manager and use --set-secrets
-  instead of plain env vars.
-- CORS_EXTRA_ORIGINS is required for the static UI served from https://storage.googleapis.com/...
-  Add comma-separated origins if you use a custom domain for the GCS site.
+That runs the steps in cloudbuild.yaml: build with the wcgrid token,
+push to Artifact Registry, and roll a new Cloud Run revision wired to
+Cloud SQL + the dominion-db-url + pjm-key secrets.
+
+Notes on the cloudbuild.yaml
+----------------------------
+- The previous `gcloud run deploy --source .` flow doesn't surface the
+  BuildKit secret mount we need for the wcgrid install, hence the move
+  to cloudbuild.yaml + `gcloud builds submit`.
+- Defaults assume PROJECT_ID=wattcarbon-internal, REGION=us-central1,
+  SERVICE=dominion-api, REPO=dominion-api,
+  DB_INSTANCE=wattcarbon-internal:us-central1:dominion-demo-db.
+  Override with `--substitutions=_KEY=value,...` on the submit call.
+- For anything except a throwaway demo, secrets stay in Secret Manager
+  (already the pattern in cloudbuild.yaml's `--set-secrets`).
 
 Cloud SQL (typical pattern)
 ---------------------------
@@ -68,7 +94,9 @@ After deploy
 
 Redeploy after code changes
 ---------------------------
-Same gcloud run deploy dominion-api --source . ... command; Cloud Run rebuilds the image.
+Same `gcloud builds submit --config=cloudbuild.yaml` command from the
+repo root; Cloud Build rebuilds the image and Cloud Run rolls a new
+revision automatically.
 
 Optional hardening (later)
 --------------------------

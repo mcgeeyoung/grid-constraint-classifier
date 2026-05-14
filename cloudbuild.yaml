@@ -1,0 +1,82 @@
+# Cloud Build pipeline for dominion-api.
+#
+# Replaces the previous `gcloud run deploy --source .` flow because the
+# wcgrid install needs a BuildKit secret mount that the source-deploy
+# path doesn't surface. Builds the image, pushes to Artifact Registry,
+# then rolls a new Cloud Run revision.
+#
+# Submit with:
+#   gcloud builds submit --config=cloudbuild.yaml
+#
+# Required Secret Manager secrets:
+#   wcgrid-gh-token   GitHub fine-grained PAT with Contents:Read on
+#                     wattcarbon/wcgrid only. See deploy/cloud-run-dominion.txt
+#                     for setup steps.
+#   dominion-db-url   Postgres DATABASE_URL (Cloud SQL unix socket form).
+#   pjm-key           PJM Data Miner subscription key (used at runtime).
+
+steps:
+  # Build with BuildKit secret mount so the wcgrid PAT never persists in
+  # an image layer.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build
+    env:
+      - 'DOCKER_BUILDKIT=1'
+    secretEnv:
+      - 'WCGRID_GH_TOKEN'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        printf "%s" "$$WCGRID_GH_TOKEN" > /workspace/wcgrid_gh_token.txt
+        docker build \
+          -f Dockerfile \
+          --secret id=github_token,src=/workspace/wcgrid_gh_token.txt \
+          -t ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID} \
+          -t ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:latest \
+          .
+        rm -f /workspace/wcgrid_gh_token.txt
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: deploy
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE}'
+      - '--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--add-cloudsql-instances=${_DB_INSTANCE}'
+      - '--set-secrets=DATABASE_URL=dominion-db-url:latest,PJM_SUBSCRIPTION_KEY=pjm-key:latest'
+      - '--memory=1Gi'
+      - '--timeout=300'
+      - '--min-instances=0'
+      - '--max-instances=4'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/${PROJECT_ID}/secrets/wcgrid-gh-token/versions/latest
+      env: WCGRID_GH_TOKEN
+
+substitutions:
+  _REGION: us-central1
+  _SERVICE: dominion-api
+  _REPO: dominion-api
+  _DB_INSTANCE: wattcarbon-internal:us-central1:dominion-demo-db
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:latest'
