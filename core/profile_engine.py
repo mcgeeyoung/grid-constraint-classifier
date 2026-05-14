@@ -42,6 +42,68 @@ from core.profile_utils import (
 
 logger = logging.getLogger(__name__)
 
+
+def _upsert_constraint_profile(session: Session, **kwargs) -> ConstraintProfile:
+    """Insert or update a ConstraintProfile by its unique key."""
+    existing = (
+        session.query(ConstraintProfile)
+        .filter_by(
+            location_level=kwargs["location_level"],
+            location_id=kwargs["location_id"],
+            constraint_type=kwargs["constraint_type"],
+            source_type=kwargs["source_type"],
+            period_year=kwargs["period_year"],
+        )
+        .first()
+    )
+    if existing:
+        for k, v in kwargs.items():
+            setattr(existing, k, v)
+        return existing
+    profile = ConstraintProfile(**kwargs)
+    session.add(profile)
+    return profile
+
+
+def _upsert_intersection(session: Session, **kwargs) -> ConstraintDERIntersection:
+    """Insert or update a ConstraintDERIntersection by its unique key."""
+    existing = (
+        session.query(ConstraintDERIntersection)
+        .filter_by(
+            constraint_profile_id=kwargs["constraint_profile_id"],
+            der_profile_id=kwargs["der_profile_id"],
+        )
+        .first()
+    )
+    if existing:
+        for k, v in kwargs.items():
+            setattr(existing, k, v)
+        return existing
+    obj = ConstraintDERIntersection(**kwargs)
+    session.add(obj)
+    return obj
+
+
+def _upsert_value_stack(session: Session, **kwargs) -> LocationValueStack:
+    """Insert or update a LocationValueStack by its unique key."""
+    existing = (
+        session.query(LocationValueStack)
+        .filter_by(
+            location_level=kwargs["location_level"],
+            location_id=kwargs["location_id"],
+            der_profile_id=kwargs["der_profile_id"],
+            period_year=kwargs["period_year"],
+        )
+        .first()
+    )
+    if existing:
+        for k, v in kwargs.items():
+            setattr(existing, k, v)
+        return existing
+    obj = LocationValueStack(**kwargs)
+    session.add(obj)
+    return obj
+
 # ============================================================
 # Constants (preserved from existing codebase)
 # ============================================================
@@ -216,7 +278,8 @@ def build_zone_congestion_profiles(
     normalized = normalize_min_max(all_raw)
 
     for (zone, raw_score, p12x24, stats, avg_mc, ann_cost, chp), norm_score in zip(raw_scores, normalized):
-        profile = ConstraintProfile(
+        profile = _upsert_constraint_profile(
+            session,
             location_level="zone",
             location_id=zone.id,
             constraint_type="congestion",
@@ -235,7 +298,6 @@ def build_zone_congestion_profiles(
             annual_cost=round(ann_cost, 2),
             computation_run_id=run.id,
         )
-        session.merge(profile)
         profiles.append(profile)
 
     session.flush()
@@ -304,7 +366,8 @@ def build_substation_loading_profiles(
         # Use current year since loading data is typically current
         period_year = datetime.now().year
 
-        profile = ConstraintProfile(
+        profile = _upsert_constraint_profile(
+            session,
             location_level="substation",
             location_id=sub.id,
             constraint_type="loading",
@@ -323,7 +386,6 @@ def build_substation_loading_profiles(
             annual_cost=round(annual_cost, 2),
             computation_run_id=run.id,
         )
-        session.merge(profile)
         profiles.append(profile)
 
     session.flush()
@@ -405,7 +467,8 @@ def build_feeder_capacity_profiles(
 
         avg_mc = AVOIDED_FEEDER_COST_PER_KW_YEAR * utilization
 
-        profile = ConstraintProfile(
+        profile = _upsert_constraint_profile(
+            session,
             location_level="feeder",
             location_id=feeder.id,
             constraint_type="capacity",
@@ -424,7 +487,6 @@ def build_feeder_capacity_profiles(
             annual_cost=round(avg_mc * total_cap * 1000, 2),
             computation_run_id=run.id,
         )
-        session.merge(profile)
         profiles.append(profile)
 
     session.flush()
@@ -522,7 +584,8 @@ def build_ba_import_stress_profiles(
     normalized = normalize_min_max(all_raw)
 
     for (ba, raw, p12x24, stats, avg_mc), norm_score in zip(raw_scores, normalized):
-        profile = ConstraintProfile(
+        profile = _upsert_constraint_profile(
+            session,
             location_level="ba",
             location_id=ba.id,
             constraint_type="import_stress",
@@ -541,7 +604,6 @@ def build_ba_import_stress_profiles(
             annual_cost=None,
             computation_run_id=run.id,
         )
-        session.merge(profile)
         profiles.append(profile)
 
     session.flush()
@@ -599,7 +661,8 @@ def compute_intersections(
             val = base_cost * coincidence * constrained_fraction
             val = round(val, 2)
 
-            intersection = ConstraintDERIntersection(
+            _upsert_intersection(
+                session,
                 constraint_profile_id=cp.id,
                 der_profile_id=dp.id,
                 coincidence_factor=round(coincidence, 4),
@@ -608,7 +671,6 @@ def compute_intersections(
                 value_per_kw_year=val,
                 value_tier=value_tier(val),
             )
-            session.merge(intersection)
             count += 1
 
     session.flush()
@@ -700,7 +762,8 @@ def compute_value_stacks(
             for layer in layers:
                 layer["contribution_pct"] = round(layer["value"] / total * 100, 1) if total > 0 else 0.0
 
-            stack = LocationValueStack(
+            _upsert_value_stack(
+                session,
                 location_level=level,
                 location_id=loc_id,
                 der_profile_id=dp.id,
@@ -714,7 +777,6 @@ def compute_value_stacks(
                 constraint_layers=layers,
                 period_year=period_year,
             )
-            session.merge(stack)
             count += 1
 
     session.flush()
@@ -730,24 +792,55 @@ def link_annotations(
     session: Session,
     run: ComputationRun,
 ) -> int:
-    """Link existing regulatory data to constraint profiles."""
+    """Link existing regulatory data to constraint profiles.
+
+    Matches annotations to constraint profiles by utility service territory:
+    utility_id -> zones served by that utility (via Zone.utility_id or
+    substation.iso_id matching). Falls back to all profiles in the run only
+    when no utility-based match is possible.
+    """
     from app.models.grid_constraint import GridConstraint
     from app.models.load_forecast import LoadForecast
     from app.models.resource_need import ResourceNeed
     from app.models.filing import Filing
+    from app.models.utility import Utility
 
     count = 0
+
+    # Pre-load all zone profiles from this run, indexed by zone_id
+    all_zone_profiles = (
+        session.query(ConstraintProfile)
+        .filter_by(location_level="zone", computation_run_id=run.id)
+        .all()
+    )
+    profiles_by_zone_id = {cp.location_id: cp for cp in all_zone_profiles}
+
+    # Build utility_id -> zone_ids mapping via substations
+    # A utility serves zones where its substations are located
+    utility_zone_map: dict[int, set[int]] = {}
+    from app.models.substation import Substation as Sub
+    util_zone_rows = (
+        session.query(Sub.utility_id, Sub.zone_id)
+        .filter(Sub.utility_id.isnot(None), Sub.zone_id.isnot(None))
+        .distinct()
+        .all()
+    )
+    for uid, zid in util_zone_rows:
+        utility_zone_map.setdefault(uid, set()).add(zid)
+
+    def _find_profiles_for_utility(utility_id: int | None) -> list[ConstraintProfile]:
+        """Find constraint profiles in zones served by this utility."""
+        if utility_id and utility_id in utility_zone_map:
+            zone_ids = utility_zone_map[utility_id]
+            return [profiles_by_zone_id[zid] for zid in zone_ids if zid in profiles_by_zone_id]
+        # Fallback: if no zone mapping exists, don't link blindly
+        return []
 
     # Link grid constraints
     grid_constraints = session.query(GridConstraint).all()
     for gc in grid_constraints:
-        # Find constraint profiles for zones served by this utility
-        profiles = (
-            session.query(ConstraintProfile)
-            .filter_by(location_level="zone", computation_run_id=run.id)
-            .all()
-        )
-        for cp in profiles:
+        matched_profiles = _find_profiles_for_utility(gc.utility_id)
+        for cp in matched_profiles:
             annotation = ConstraintAnnotation(
                 constraint_profile_id=cp.id,
                 annotation_type="grid_plan",
@@ -760,7 +853,6 @@ def link_annotations(
             )
             session.add(annotation)
             count += 1
-            break  # One annotation per constraint, linked to first matching profile
 
     # Link load forecasts with high growth
     load_forecasts = (
@@ -769,12 +861,8 @@ def link_annotations(
         .all()
     )
     for lf in load_forecasts:
-        profiles = (
-            session.query(ConstraintProfile)
-            .filter_by(location_level="zone", computation_run_id=run.id)
-            .all()
-        )
-        for cp in profiles:
+        matched_profiles = _find_profiles_for_utility(lf.utility_id)
+        for cp in matched_profiles:
             annotation = ConstraintAnnotation(
                 constraint_profile_id=cp.id,
                 annotation_type="grid_plan",
@@ -786,17 +874,12 @@ def link_annotations(
             )
             session.add(annotation)
             count += 1
-            break
 
     # Link resource needs
     resource_needs = session.query(ResourceNeed).all()
     for rn in resource_needs:
-        profiles = (
-            session.query(ConstraintProfile)
-            .filter_by(location_level="zone", computation_run_id=run.id)
-            .all()
-        )
-        for cp in profiles:
+        matched_profiles = _find_profiles_for_utility(rn.utility_id)
+        for cp in matched_profiles:
             annotation = ConstraintAnnotation(
                 constraint_profile_id=cp.id,
                 annotation_type="resource_need",
@@ -807,7 +890,6 @@ def link_annotations(
             )
             session.add(annotation)
             count += 1
-            break
 
     # Link IRP/DRP filings
     filings = (
@@ -816,12 +898,8 @@ def link_annotations(
         .all()
     )
     for filing in filings:
-        profiles = (
-            session.query(ConstraintProfile)
-            .filter_by(location_level="zone", computation_run_id=run.id)
-            .all()
-        )
-        for cp in profiles:
+        matched_profiles = _find_profiles_for_utility(filing.utility_id)
+        for cp in matched_profiles:
             annotation = ConstraintAnnotation(
                 constraint_profile_id=cp.id,
                 annotation_type="irp_citation",
@@ -835,7 +913,6 @@ def link_annotations(
             )
             session.add(annotation)
             count += 1
-            break
 
     session.flush()
     logger.info(f"Linked {count} annotations to constraint profiles")
