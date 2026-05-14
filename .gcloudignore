@@ -24,3 +24,14 @@ output
 .DS_Store
 .idea
 .vscode
+
+# Large local-only dirs — never need to ship to Cloud Build
+backups
+logs
+test-results
+Rfa5yiDWUQ
+*.zip
+
+# This repo is the dominion-api; frontend/ is a prototype-era Vue app
+# that the iso-platform branch doesn't serve. Not needed at build time.
+frontend
