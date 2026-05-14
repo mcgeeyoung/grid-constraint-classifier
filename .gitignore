@@ -14,3 +14,12 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Generated/local-only dirs
+venv/
+logs/
+test-results/
+backups/
+Rfa5yiDWUQ/
+.coverage
+*.zip
