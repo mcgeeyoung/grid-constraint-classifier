@@ -58,6 +58,7 @@ steps:
       - '--allow-unauthenticated'
       - '--add-cloudsql-instances=${_DB_INSTANCE}'
       - '--set-secrets=DATABASE_URL=dominion-db-url:latest,PJM_SUBSCRIPTION_KEY=pjm-key:latest,GCC_API_KEYS=gcc-api-keys:latest'
+      - '--set-env-vars=CORS_EXTRA_ORIGINS=https://storage.googleapis.com'
       - '--memory=1Gi'
       - '--timeout=300'
       - '--min-instances=0'
