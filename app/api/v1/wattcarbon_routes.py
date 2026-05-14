@@ -82,10 +82,10 @@ def get_wattcarbon_asset(
     if not loc:
         raise HTTPException(404, f"WattCarbon asset {wattcarbon_asset_id} not found")
 
-    iso = db.query(ISO).get(loc.iso_id)
-    zone = db.query(Zone).get(loc.zone_id) if loc.zone_id else None
-    sub = db.query(Substation).get(loc.substation_id) if loc.substation_id else None
-    pnode = db.query(Pnode).get(loc.nearest_pnode_id) if loc.nearest_pnode_id else None
+    iso = db.get(ISO, loc.iso_id)
+    zone = db.get(Zone, loc.zone_id) if loc.zone_id else None
+    sub = db.get(Substation, loc.substation_id) if loc.substation_id else None
+    pnode = db.get(Pnode, loc.nearest_pnode_id) if loc.nearest_pnode_id else None
 
     pnode_dist = None
     if pnode and loc.lat and loc.lon and pnode.lat and pnode.lon:

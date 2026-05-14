@@ -254,7 +254,7 @@ def _compute_sub_retro(
     if not substation_id or not hourly_data:
         return 0.0
 
-    sub = db.query(Substation).get(substation_id)
+    sub = db.get(Substation, substation_id)
     if not sub or not sub.peak_loading_pct:
         return 0.0
 
@@ -297,7 +297,7 @@ def _compute_feeder_retro(
     if not feeder_id or not hourly_data:
         return 0.0
 
-    feeder = db.query(Feeder).get(feeder_id)
+    feeder = db.get(Feeder, feeder_id)
     if not feeder or not feeder.peak_loading_pct:
         return 0.0
 

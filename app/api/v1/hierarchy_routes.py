@@ -113,12 +113,12 @@ def get_substation(
     db: Session = Depends(get_db),
 ):
     """Get a single substation with full detail."""
-    sub = db.query(Substation).get(substation_id)
+    sub = db.get(Substation, substation_id)
     if not sub:
         raise HTTPException(404, f"Substation {substation_id} not found")
 
-    zone = db.query(Zone).get(sub.zone_id) if sub.zone_id else None
-    pnode = db.query(Pnode).get(sub.nearest_pnode_id) if sub.nearest_pnode_id else None
+    zone = db.get(Zone, sub.zone_id) if sub.zone_id else None
+    pnode = db.get(Pnode, sub.nearest_pnode_id) if sub.nearest_pnode_id else None
     feeder_count = db.query(func.count(Feeder.id)).filter(
         Feeder.substation_id == sub.id
     ).scalar()
@@ -148,7 +148,7 @@ def list_feeders(
     db: Session = Depends(get_db),
 ):
     """List feeders for a substation."""
-    sub = db.query(Substation).get(substation_id)
+    sub = db.get(Substation, substation_id)
     if not sub:
         raise HTTPException(404, f"Substation {substation_id} not found")
 
@@ -184,7 +184,7 @@ def get_substation_loadshape(
     Returns hourly low/high load in kW. If a specific month is given,
     returns that month's profile. Otherwise averages across all 12 months.
     """
-    sub = db.query(Substation).get(substation_id)
+    sub = db.get(Substation, substation_id)
     if not sub:
         raise HTTPException(404, f"Substation {substation_id} not found")
 
@@ -222,7 +222,7 @@ def get_substation_profile_12x24(
     Returns a dict with keys "1"-"12" (months), each a list of 24 hourly values
     representing average high load in kW.
     """
-    sub = db.query(Substation).get(substation_id)
+    sub = db.get(Substation, substation_id)
     if not sub:
         raise HTTPException(404, f"Substation {substation_id} not found")
 

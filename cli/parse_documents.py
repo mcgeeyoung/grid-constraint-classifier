@@ -270,7 +270,8 @@ def _save_to_db(
         if utility_name:
             utility = (
                 session.query(Utility)
-                .filter(Utility.utility_name.ilike(f"%{utility_name}%"))
+                .filter(Utility.utility_name.ilike(
+                    f"%{utility_name.replace('%', r'\\%').replace('_', r'\\_')}%", escape="\\"))
                 .first()
             )
 

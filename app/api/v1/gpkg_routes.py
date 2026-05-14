@@ -81,7 +81,8 @@ def list_power_lines(
         query = query.filter(GPKGPowerLine.max_voltage_kv >= min_voltage_kv)
 
     if operator:
-        query = query.filter(GPKGPowerLine.operator.ilike(f"%{operator}%"))
+        safe_op = operator.replace("%", r"\%").replace("_", r"\_")
+        query = query.filter(GPKGPowerLine.operator.ilike(f"%{safe_op}%", escape="\\"))
 
     records = query.offset(offset).limit(limit).all()
     return [
@@ -214,7 +215,8 @@ def list_substations(
         query = query.filter(GPKGSubstation.substation_type == substation_type)
 
     if operator:
-        query = query.filter(GPKGSubstation.operator.ilike(f"%{operator}%"))
+        safe_op = operator.replace("%", r"\%").replace("_", r"\_")
+        query = query.filter(GPKGSubstation.operator.ilike(f"%{safe_op}%", escape="\\"))
 
     if min_voltage_kv is not None:
         query = query.filter(GPKGSubstation.max_voltage_kv >= min_voltage_kv)
@@ -346,7 +348,8 @@ def list_power_plants(
         query = query.filter(GPKGPowerPlant.source == source)
 
     if operator:
-        query = query.filter(GPKGPowerPlant.operator.ilike(f"%{operator}%"))
+        safe_op = operator.replace("%", r"\%").replace("_", r"\_")
+        query = query.filter(GPKGPowerPlant.operator.ilike(f"%{safe_op}%", escape="\\"))
 
     if min_output_mw is not None:
         query = query.filter(GPKGPowerPlant.output_mw >= min_output_mw)

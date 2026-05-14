@@ -67,7 +67,7 @@ def _complete_event(event_id: int, **kwargs):
 
         session = SessionLocal()
         try:
-            event = session.query(MonitorEvent).get(event_id)
+            event = session.get(MonitorEvent, event_id)
             if event:
                 event.completed_at = datetime.now(timezone.utc)
                 event.duration_sec = (

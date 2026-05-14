@@ -161,7 +161,7 @@ def _get_pipeline_run(
 ) -> Optional[PipelineRun]:
     """Get the pipeline run to use for valuation data."""
     if pipeline_run_id:
-        return db.query(PipelineRun).get(pipeline_run_id)
+        return db.get(PipelineRun, pipeline_run_id)
 
     if not iso_id:
         return None
@@ -335,7 +335,7 @@ def _compute_substation_value(
     if not substation_id:
         return 0.0
 
-    sub = db.query(Substation).get(substation_id)
+    sub = db.get(Substation, substation_id)
     if not sub or not sub.peak_loading_pct:
         return 0.0
 
@@ -391,7 +391,7 @@ def _compute_feeder_value(
     if not feeder_id:
         return 0.0
 
-    feeder = db.query(Feeder).get(feeder_id)
+    feeder = db.get(Feeder, feeder_id)
     if not feeder or not feeder.peak_loading_pct:
         return 0.0
 
