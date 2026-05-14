@@ -17,6 +17,7 @@ Design notes:
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import Optional
@@ -37,30 +38,69 @@ OASIS_TIME_FMT = "%Y%m%dT%H:%M-0000"
 # Max window for PRC_LMP DAM queries (error 1004 if exceeded).
 MAX_PRC_LMP_WINDOW_DAYS = 31
 
+# OASIS doesn't publish QPS limits, but ~1 request per 5-10 s is the
+# practical safe rate. We enforce a min inter-request delay and back off
+# on 429/5xx with exponential growth.
+MIN_REQUEST_INTERVAL_S = 5.0
+RETRY_STATUS = {429, 500, 502, 503, 504}
+BACKOFF_SCHEDULE_S = (10.0, 30.0, 60.0)
+
 
 class CAISOClient:
-    """Thin client for CAISO OASIS public reports."""
+    """Thin client for CAISO OASIS public reports.
+
+    Enforces a min inter-request delay and retries on 429 / 5xx with the
+    backoff schedule above. Sufficient for sequential pulls; for very
+    aggressive backfills add an outer rate limiter at the caller.
+    """
 
     def __init__(
         self,
         *,
         timeout: int = DEFAULT_TIMEOUT,
         user_agent: str = DEFAULT_USER_AGENT,
+        min_request_interval_s: float = MIN_REQUEST_INTERVAL_S,
     ):
         self.timeout = timeout
+        self.min_request_interval_s = min_request_interval_s
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": user_agent})
+        self._last_request_at: float = 0.0
+
+    def _enforce_min_interval(self) -> None:
+        elapsed = time.monotonic() - self._last_request_at
+        if elapsed < self.min_request_interval_s:
+            wait = self.min_request_interval_s - elapsed
+            logger.debug("CAISO rate limit: sleeping %.1fs", wait)
+            time.sleep(wait)
 
     def _get_zip(self, params: dict) -> bytes:
-        """GET /SingleZip and return the raw zip bytes."""
-        r = self.session.get(
-            f"{BASE_URL}/SingleZip",
-            params=params,
-            timeout=self.timeout,
-            allow_redirects=True,
-        )
-        r.raise_for_status()
-        return r.content
+        """GET /SingleZip and return the raw zip bytes. Retries on 429/5xx."""
+        url = f"{BASE_URL}/SingleZip"
+        last_exc: Exception | None = None
+        for attempt, backoff in enumerate((*BACKOFF_SCHEDULE_S, None)):
+            self._enforce_min_interval()
+            self._last_request_at = time.monotonic()
+            r = self.session.get(
+                url, params=params, timeout=self.timeout, allow_redirects=True
+            )
+            if r.status_code in RETRY_STATUS and backoff is not None:
+                logger.warning(
+                    "OASIS %s on attempt %d; backing off %.0fs",
+                    r.status_code, attempt + 1, backoff,
+                )
+                time.sleep(backoff)
+                continue
+            try:
+                r.raise_for_status()
+            except requests.HTTPError as e:
+                last_exc = e
+                raise
+            return r.content
+        # Loop exited without returning -> exhausted retries.
+        if last_exc is not None:
+            raise last_exc
+        raise RuntimeError("CAISO _get_zip exhausted retries without HTTP error")
 
     def _zip_to_df(self, blob: bytes) -> pd.DataFrame:
         """Unzip in memory and concatenate any CSV files into a DataFrame."""
